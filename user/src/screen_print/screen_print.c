@@ -5,7 +5,7 @@
 #include "screen_print.h"
 #include <stdio.h>
 
-#define SCREEN_PRINT_LINE_COUNT     (6)
+#define SCREEN_PRINT_LINE_COUNT     (7)
 #define SCREEN_PRINT_LINE_HEIGHT    (24)
 #define SCREEN_PRINT_LINE_WIDTH     (240)
 #define SCREEN_PRINT_BUFFER_SIZE    (40)
@@ -52,9 +52,15 @@ void screen_print_motor_duty(int16 motor1_duty, int16 motor2_duty, int16 motor3_
 {
     char buffer[SCREEN_PRINT_BUFFER_SIZE];
 
-    sprintf(buffer, "M1:%4d M2:%4d", motor1_duty, motor2_duty);
+    sprintf(buffer, "M1:%4d%% M2:%4d%%", motor1_duty, motor2_duty);
     screen_print_line(0, buffer);
 
-    sprintf(buffer, "M3:%4d M4:%4d", motor3_duty, motor4_duty);
+    sprintf(buffer, "M3:%4d%% M4:%4d%%", motor3_duty, motor4_duty);
     screen_print_line(1, buffer);
+
+    screen_print_line(2, "      Front");
+    screen_print_line(3, "Left M1    M2 Right");
+    screen_print_line(4, "     |      |");
+    screen_print_line(5, "Left M3    M4 Right");
+    screen_print_line(6, "       Rear");
 }
