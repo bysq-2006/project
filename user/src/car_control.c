@@ -1,20 +1,20 @@
 /*********************************************************************************************************************
-* RT1064DVL6A Open Source Library
-* car_control.c
+* RT1064DVL6A 开源库
+* 小车电机控制
 *********************************************************************************************************************/
 
 #include "car_control.h"
 
-#define CAR_MAX_DUTY                (20)
+#define CAR_MAX_DUTY                (60)
 
-// Motor output gain percent. 100 means no compensation.
-// Tune these values after measuring encoder count at the same PWM duty.
+// 电机输出增益百分比，100 表示不补偿。
+// 用相同 PWM 测完编码器计数后，后续主要调这里。
 #define MOTOR1_GAIN_PERCENT         (100)
 #define MOTOR2_GAIN_PERCENT         (112)
 #define MOTOR3_GAIN_PERCENT         (92)
 #define MOTOR4_GAIN_PERCENT         (96)
 
-// Motor position mapping measured on the car:
+// 电机实际安装位置：
 //       前
 // 左 MOTOR4    MOTOR1 右
 //     ●          ●
@@ -23,8 +23,8 @@
 //     ●          ●
 // 左 MOTOR2    MOTOR3 右
 //       后
-// Front motors are reversed to match the rear wheel forward direction.
-// Left motors are reversed to match the right wheel forward direction.
+// 前轮方向已在最终输出时取反，用来匹配后轮的前进方向。
+// 左轮方向已在最终输出时取反，用来匹配右轮的前进方向。
 
 #define MOTOR1_DIR                  (C9)
 #define MOTOR1_PWM                  (PWM2_MODULE1_CHA_C8)
@@ -113,11 +113,12 @@ void car_move_xy(int8 x, int8 y)
     x = limit_motor_duty(x);
     y = limit_motor_duty(y);
 
-    // x > 0: right, x < 0: left, y > 0: forward, y < 0: backward.
-    motor1_duty = y - x;  // front right
-    motor2_duty = y - x;  // rear left
-    motor3_duty = y + x;  // rear right
-    motor4_duty = y + x;  // front left
+    // x > 0 向右，x < 0 向左，y > 0 向前，y < 0 向后。
+    // 向右时：MOTOR1/MOTOR3 反转，MOTOR2/MOTOR4 正转。
+    motor1_duty = y - x;  // 右前轮
+    motor2_duty = y + x;  // 左后轮
+    motor3_duty = y - x;  // 右后轮
+    motor4_duty = y + x;  // 左前轮
 
     motor1_duty = motor_apply_gain(motor1_duty, MOTOR1_GAIN_PERCENT);
     motor2_duty = motor_apply_gain(motor2_duty, MOTOR2_GAIN_PERCENT);
@@ -137,8 +138,8 @@ void car_move_xy(int8 x, int8 y)
         motor4_duty = motor4_duty * CAR_MAX_DUTY / max_duty;
     }
 
-    motor_set_one((int8)-motor1_duty, MOTOR1_DIR, MOTOR1_PWM);
-    motor_set_one((int8)-motor2_duty, MOTOR2_DIR, MOTOR2_PWM);
-    motor_set_one((int8) motor3_duty, MOTOR3_DIR, MOTOR3_PWM);
-    motor_set_one((int8) motor4_duty, MOTOR4_DIR, MOTOR4_PWM);
+    motor_set_one((int8)motor1_duty, MOTOR1_DIR, MOTOR1_PWM);
+    motor_set_one((int8)motor2_duty, MOTOR2_DIR, MOTOR2_PWM);
+    motor_set_one((int8)motor3_duty, MOTOR3_DIR, MOTOR3_PWM);
+    motor_set_one((int8)motor4_duty, MOTOR4_DIR, MOTOR4_PWM);
 }
