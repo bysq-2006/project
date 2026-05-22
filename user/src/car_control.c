@@ -4,25 +4,17 @@
 *********************************************************************************************************************/
 
 #include "car_control.h"
+#include "screen_print/screen_print.h"
 
-#define CAR_MAX_DUTY                (60)
+#define CAR_MAX_DUTY                (90)
 
 // 电机输出增益百分比，100 表示不补偿。
 // 用相同 PWM 测完编码器计数后，后续主要调这里。
 #define MOTOR1_GAIN_PERCENT         (100)
-#define MOTOR2_GAIN_PERCENT         (112)
-#define MOTOR3_GAIN_PERCENT         (92)
-#define MOTOR4_GAIN_PERCENT         (96)
+#define MOTOR2_GAIN_PERCENT         (100)
+#define MOTOR3_GAIN_PERCENT         (100)
+#define MOTOR4_GAIN_PERCENT         (300)
 
-// 电机实际安装位置：
-//       前
-// 左 MOTOR4    MOTOR1 右
-//     ●          ●
-//     │          │
-//     │          │
-//     ●          ●
-// 左 MOTOR2    MOTOR3 右
-//       后
 // 前轮方向已在最终输出时取反，用来匹配后轮的前进方向。
 // 左轮方向已在最终输出时取反，用来匹配右轮的前进方向。
 
@@ -66,12 +58,12 @@ static void motor_set_one(int8 duty, gpio_pin_enum dir_pin, pwm_channel_enum pwm
 {
     if(duty <= 0)
     {
-        gpio_set_level(dir_pin, GPIO_HIGH);
+        gpio_set_level(dir_pin, GPIO_LOW);
         duty = -duty;
     }
     else
     {
-        gpio_set_level(dir_pin, GPIO_LOW);
+        gpio_set_level(dir_pin, GPIO_HIGH);
     }
 
     pwm_set_duty(pwm_pin, duty * (PWM_DUTY_MAX / 100));
@@ -91,6 +83,7 @@ void car_init(void)
     gpio_init(MOTOR4_DIR, GPO, GPIO_HIGH, GPO_PUSH_PULL);
     pwm_init(MOTOR4_PWM, 17000, 0);
 
+    screen_print_init();
     car_stop();
 }
 
@@ -110,11 +103,21 @@ void car_move_xy(int8 x, int8 y)
     int16 motor4_duty;
     int16 max_duty;
 
-    x = limit_motor_duty(x);
+    // Normalize the observed x-axis direction once here; keep final motor output direct.
+    x = -limit_motor_duty(x);
     y = limit_motor_duty(y);
 
     // x > 0 向右，x < 0 向左，y > 0 向前，y < 0 向后。
     // 向右时：MOTOR1/MOTOR3 反转，MOTOR2/MOTOR4 正转。
+    // 电机实际安装位置：
+    //       前
+    // 左 MOTOR1    MOTOR2 右
+    //     ●          ●
+    //     │          │
+    //     │          │
+    //     ●          ●
+    // 左 MOTOR3    MOTOR4 右
+    //       后
     motor1_duty = y - x;  // 右前轮
     motor2_duty = y + x;  // 左后轮
     motor3_duty = y - x;  // 右后轮
@@ -125,6 +128,7 @@ void car_move_xy(int8 x, int8 y)
     motor3_duty = motor_apply_gain(motor3_duty, MOTOR3_GAIN_PERCENT);
     motor4_duty = motor_apply_gain(motor4_duty, MOTOR4_GAIN_PERCENT);
 
+    // 找到绝对值最大的电机占空比，若超过最大值则按比例缩放所有电机占空比。
     max_duty = abs_int16(motor1_duty);
     if(max_duty < abs_int16(motor2_duty)) max_duty = abs_int16(motor2_duty);
     if(max_duty < abs_int16(motor3_duty)) max_duty = abs_int16(motor3_duty);
@@ -138,8 +142,10 @@ void car_move_xy(int8 x, int8 y)
         motor4_duty = motor4_duty * CAR_MAX_DUTY / max_duty;
     }
 
+    screen_print_motor_duty(motor1_duty, motor2_duty, motor3_duty, motor4_duty);
+
     motor_set_one((int8)motor1_duty, MOTOR1_DIR, MOTOR1_PWM);
     motor_set_one((int8)motor2_duty, MOTOR2_DIR, MOTOR2_PWM);
-    motor_set_one((int8)motor3_duty, MOTOR3_DIR, MOTOR3_PWM);
-    motor_set_one((int8)motor4_duty, MOTOR4_DIR, MOTOR4_PWM);
+    motor_set_one((int8)-motor3_duty, MOTOR3_DIR, MOTOR3_PWM);
+    motor_set_one((int8)-motor4_duty, MOTOR4_DIR, MOTOR4_PWM);
 }

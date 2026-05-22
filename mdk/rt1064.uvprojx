@@ -399,6 +399,11 @@
               <FileType>1</FileType>
               <FilePath>..\user\src\car_control.c</FilePath>
             </File>
+            <File>
+              <FileName>screen_print.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user\src\screen_print\screen_print.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -408,6 +413,11 @@
               <FileName>isr.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\user\inc\isr.h</FilePath>
+            </File>
+            <File>
+              <FileName>screen_print.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\user\src\screen_print\screen_print.h</FilePath>
             </File>
           </Files>
         </Group>

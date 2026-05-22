@@ -1,7 +1,7 @@
 #include "zf_common_headfile.h"
 #include "car_control.h"
 
-#define TEST_MOVE_SPEED             (20)
+#define TEST_MOVE_SPEED             (25)
 
 int main(void)
 {
@@ -12,7 +12,7 @@ int main(void)
     system_delay_ms(100);
 
     // x > 0 为向右平移，y = 0 表示不前进/后退。
-    car_move_xy(TEST_MOVE_SPEED, 0);
+    car_move_xy(15, 0);
 
     while(1)
     {

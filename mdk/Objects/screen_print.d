@@ -1,5 +1,5 @@
-./objects/car_control.o: ..\user\src\car_control.c \
-  ..\user\src\car_control.h \
+./objects/screen_print.o: ..\user\src\screen_print\screen_print.c \
+  ..\user\src\screen_print\screen_print.h \
   ..\..\libraries\zf_common\zf_common_headfile.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdio.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdint.h \
@@ -108,5 +108,4 @@
   ..\..\libraries\sdk\drives\fsl_usdhc.h \
   ..\..\libraries\components\sdmmc\common\fsl_sdmmc_spec.h \
   ..\..\libraries\components\sdmmc\sdmmc_config.h \
-  ..\..\libraries\sdk\board\clock_config.h \
-  ..\user\src\screen_print\screen_print.h
+  ..\..\libraries\sdk\board\clock_config.h
