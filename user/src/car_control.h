@@ -11,6 +11,5 @@
 void car_init(void);
 void car_stop(void);
 void car_move_xy(int8 x, int8 y);
-void car_motor_test(uint8 motor_index, int8 duty);
 
 #endif

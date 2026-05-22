@@ -7,11 +7,22 @@
 
 #define CAR_MAX_DUTY                (20)
 
+// Motor output gain percent. 100 means no compensation.
+// Tune these values after measuring encoder count at the same PWM duty.
+#define MOTOR1_GAIN_PERCENT         (100)
+#define MOTOR2_GAIN_PERCENT         (112)
+#define MOTOR3_GAIN_PERCENT         (92)
+#define MOTOR4_GAIN_PERCENT         (96)
+
 // Motor position mapping measured on the car:
-// MOTOR1 = front right
-// MOTOR2 = rear left
-// MOTOR3 = rear right
-// MOTOR4 = front left
+//       前
+// 左 MOTOR4    MOTOR1 右
+//     ●          ●
+//     │          │
+//     │          │
+//     ●          ●
+// 左 MOTOR2    MOTOR3 右
+//       后
 // Front motors are reversed to match the rear wheel forward direction.
 // Left motors are reversed to match the right wheel forward direction.
 
@@ -44,6 +55,11 @@ static int8 limit_motor_duty(int16 duty)
     }
 
     return (int8)duty;
+}
+
+static int16 motor_apply_gain(int16 duty, uint16 gain_percent)
+{
+    return (int16)((int32)duty * gain_percent / 100);
 }
 
 static void motor_set_one(int8 duty, gpio_pin_enum dir_pin, pwm_channel_enum pwm_pin)
@@ -86,34 +102,6 @@ void car_stop(void)
     motor_set_one(0, MOTOR4_DIR, MOTOR4_PWM);
 }
 
-void car_motor_test(uint8 motor_index, int8 duty)
-{
-    car_stop();
-    duty = limit_motor_duty(duty);
-
-    switch(motor_index)
-    {
-        case 1:
-            motor_set_one(-duty, MOTOR1_DIR, MOTOR1_PWM);
-            break;
-
-        case 2:
-            motor_set_one(-duty, MOTOR2_DIR, MOTOR2_PWM);
-            break;
-
-        case 3:
-            motor_set_one(duty, MOTOR3_DIR, MOTOR3_PWM);
-            break;
-
-        case 4:
-            motor_set_one(duty, MOTOR4_DIR, MOTOR4_PWM);
-            break;
-
-        default:
-            break;
-    }
-}
-
 void car_move_xy(int8 x, int8 y)
 {
     int16 motor1_duty;
@@ -127,9 +115,14 @@ void car_move_xy(int8 x, int8 y)
 
     // x > 0: right, x < 0: left, y > 0: forward, y < 0: backward.
     motor1_duty = y - x;  // front right
-    motor2_duty = y + x;  // rear left
-    motor3_duty = y - x;  // rear right
+    motor2_duty = y - x;  // rear left
+    motor3_duty = y + x;  // rear right
     motor4_duty = y + x;  // front left
+
+    motor1_duty = motor_apply_gain(motor1_duty, MOTOR1_GAIN_PERCENT);
+    motor2_duty = motor_apply_gain(motor2_duty, MOTOR2_GAIN_PERCENT);
+    motor3_duty = motor_apply_gain(motor3_duty, MOTOR3_GAIN_PERCENT);
+    motor4_duty = motor_apply_gain(motor4_duty, MOTOR4_GAIN_PERCENT);
 
     max_duty = abs_int16(motor1_duty);
     if(max_duty < abs_int16(motor2_duty)) max_duty = abs_int16(motor2_duty);
