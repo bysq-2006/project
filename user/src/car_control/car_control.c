@@ -4,16 +4,16 @@
 *********************************************************************************************************************/
 
 #include "car_control.h"
-#include "screen_print/screen_print.h"
+#include "../screen_print/screen_print.h"
 
 #define CAR_MAX_DUTY                (90)
 
-// 电机输出增益百分比，100 表示不补偿。
+// 电机输出增益百分比，100 表示不补偿，200表示两倍电压。
 // 用相同 PWM 测完编码器计数后，后续主要调这里。
 #define MOTOR1_GAIN_PERCENT         (100)
 #define MOTOR2_GAIN_PERCENT         (100)
 #define MOTOR3_GAIN_PERCENT         (100)
-#define MOTOR4_GAIN_PERCENT         (300)
+#define MOTOR4_GAIN_PERCENT         (100)
 
 // 前轮方向已在最终输出时取反，用来匹配后轮的前进方向。
 // 左轮方向已在最终输出时取反，用来匹配右轮的前进方向。
@@ -97,6 +97,11 @@ void car_stop(void)
 
 void car_move_xy(int8 x, int8 y)
 {
+    car_move_xyw(x, y, 0);
+}
+
+void car_move_xyw(int8 x, int8 y, int8 w)
+{
     int16 motor1_duty;
     int16 motor2_duty;
     int16 motor3_duty;
@@ -106,6 +111,7 @@ void car_move_xy(int8 x, int8 y)
     // Normalize the observed x-axis direction once here; keep final motor output direct.
     x = -limit_motor_duty(x);
     y = limit_motor_duty(y);
+    w = limit_motor_duty(w);
 
     // x > 0 向右，x < 0 向左，y > 0 向前，y < 0 向后。
     // 向右时：MOTOR1/MOTOR3 反转，MOTOR2/MOTOR4 正转。
@@ -118,10 +124,10 @@ void car_move_xy(int8 x, int8 y)
     //     ●          ●
     // 左 MOTOR3    MOTOR4 右
     //       后
-    motor1_duty = y - x;  // 右前轮
-    motor2_duty = y + x;  // 左后轮
-    motor3_duty = y - x;  // 右后轮
-    motor4_duty = y + x;  // 左前轮
+    motor1_duty = y - x + w;
+    motor2_duty = y + x - w;
+    motor3_duty = y - x + w;
+    motor4_duty = y + x - w;
 
     motor1_duty = motor_apply_gain(motor1_duty, MOTOR1_GAIN_PERCENT);
     motor2_duty = motor_apply_gain(motor2_duty, MOTOR2_GAIN_PERCENT);

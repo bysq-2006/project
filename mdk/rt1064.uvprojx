@@ -397,7 +397,12 @@
             <File>
               <FileName>car_control.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\user\src\car_control.c</FilePath>
+              <FilePath>..\user\src\car_control\car_control.c</FilePath>
+            </File>
+            <File>
+              <FileName>heading_control.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user\src\car_control\heading_control.c</FilePath>
             </File>
             <File>
               <FileName>screen_print.c</FileName>
@@ -415,9 +420,19 @@
               <FilePath>..\user\inc\isr.h</FilePath>
             </File>
             <File>
+              <FileName>car_control.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\user\src\car_control\car_control.h</FilePath>
+            </File>
+            <File>
               <FileName>screen_print.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\user\src\screen_print\screen_print.h</FilePath>
+            </File>
+            <File>
+              <FileName>heading_control.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\user\src\car_control\heading_control.h</FilePath>
             </File>
           </Files>
         </Group>
