@@ -1,119 +1,88 @@
 /*********************************************************************************************************************
-* 角度保持控制
+* IMU660RB 角度传感器基础框架
 *********************************************************************************************************************/
 
 #include "heading_control.h"
 #include "car_control.h"
 #include "../car_params.h"
 
-// 可调参数在 car_params.h：
-// HEADING_KP_PERCENT, HEADING_DEADBAND_DEG_X10, HEADING_TURN_MIN,
-// HEADING_TURN_MAX, HEADING_UPDATE_PERIOD_S, HEADING_GYRO_Z_SIGN,
-// HEADING_GYRO_CALIBRATION_COUNT, HEADING_GYRO_CALIBRATION_DELAY_MS。
+// 注意单位不是弧度，也不是角度
+static uint8 heading_sensor_ready = 0;
+static int16 heading_initial_x_raw = 0;
+static int16 heading_x_raw_error = 0;
+static int16 heading_last_x_raw_error = 0;
+static float heading_x_raw_error_sum = 0.0f;
 
-static uint8 heading_ready = 0;
-static float heading_target_yaw = 0.0f;
-static float heading_current_yaw = 0.0f;
-static float heading_gyro_z_bias = 0.0f;
-
-static float heading_normalize_yaw(float yaw)
+// 读取 IMU 原始数据
+static void heading_sensor_read_raw(void)
 {
-    while(yaw >= 360.0f)
-    {
-        yaw -= 360.0f;
-    }
-    while(yaw < 0.0f)
-    {
-        yaw += 360.0f;
-    }
-
-    return yaw;
+    imu660rb_get_acc();
+    imu660rb_get_gyro();
 }
 
-static float heading_calc_error(float target, float now)
+// 限制旋转输出范围
+static int8 heading_limit_w(float w)
 {
-    float error = heading_normalize_yaw(target) - heading_normalize_yaw(now);
-
-    while(error > 180.0f)
+    if(w > 100.0f)
     {
-        error -= 360.0f;
-    }
-    while(error < -180.0f)
-    {
-        error += 360.0f;
+        return 100;
     }
 
-    return error;
+    if(w < -100.0f)
+    {
+        return -100;
+    }
+
+    return (int8)w;
 }
 
-uint8 heading_control_init(void)
+// 累加并限制积分项
+static void heading_update_integral(void)
+{
+    heading_x_raw_error_sum += heading_x_raw_error;
+
+    if(heading_x_raw_error_sum > HEADING_CONTROL_I_LIMIT)
+    {
+        heading_x_raw_error_sum = HEADING_CONTROL_I_LIMIT;
+    }
+    else if(heading_x_raw_error_sum < -HEADING_CONTROL_I_LIMIT)
+    {
+        heading_x_raw_error_sum = -HEADING_CONTROL_I_LIMIT;
+    }
+}
+
+// 初始化传感器并记录初始值
+uint8 heading_sensor_init(void)
+uint8 heading_sensor_init(void)
 {
     uint8 state = imu660rb_init();
-    uint16 i;
-    float gyro_z_sum = 0.0f;
 
-    heading_ready = (0 == state);
-    if(heading_ready)
+    heading_sensor_ready = (0 == state);
+
+    if(heading_sensor_ready)
     {
-        for(i = 0; i < HEADING_GYRO_CALIBRATION_COUNT; i ++)
-        {
-            imu660rb_get_gyro();
-            gyro_z_sum += imu660rb_gyro_transition(imu660rb_gyro_z);
-            system_delay_ms(HEADING_GYRO_CALIBRATION_DELAY_MS);
-        }
-
-        heading_gyro_z_bias = gyro_z_sum / HEADING_GYRO_CALIBRATION_COUNT;
-        heading_current_yaw = 0.0f;
-        heading_target_yaw = 0.0f;
+        heading_sensor_read_raw();
+        heading_initial_x_raw = imu660rb_acc_x;
     }
 
     return state;
 }
 
-void heading_control_lock_current(void)
+// 更新传感器并执行 PI 控制
+// 更新传感器并执行 PID 控制
+void heading_sensor_update(int8 x, int8 y)
 {
-    heading_target_yaw = heading_normalize_yaw(heading_current_yaw);
-}
-
-void heading_control_set_target(float yaw_deg)
-{
-    heading_target_yaw = heading_normalize_yaw(yaw_deg);
-}
-
-void car_move_xy_heading(int8 x, int8 y)
-{
-    int16 turn = 0;
-    float error;
-    float gyro_z_dps;
-
-    if(heading_ready)
+    if(heading_sensor_ready)
     {
-        imu660rb_get_gyro();
-        gyro_z_dps = imu660rb_gyro_transition(imu660rb_gyro_z) - heading_gyro_z_bias;
-        heading_current_yaw = heading_normalize_yaw(heading_current_yaw + gyro_z_dps * HEADING_UPDATE_PERIOD_S * HEADING_GYRO_Z_SIGN);
+        int8 w;
 
-        error = heading_calc_error(heading_target_yaw, heading_current_yaw);
-        if((error * 10.0f > HEADING_DEADBAND_DEG_X10) || (error * 10.0f < -HEADING_DEADBAND_DEG_X10))
-        {
-            turn = (int16)(error * HEADING_KP_PERCENT / 100.0f);
-            if(turn > HEADING_TURN_MAX)
-            {
-                turn = HEADING_TURN_MAX;
-            }
-            else if(turn < -HEADING_TURN_MAX)
-            {
-                turn = -HEADING_TURN_MAX;
-            }
-            else if((turn > 0) && (turn < HEADING_TURN_MIN))
-            {
-                turn = HEADING_TURN_MIN;
-            }
-            else if((turn < 0) && (turn > -HEADING_TURN_MIN))
-            {
-                turn = -HEADING_TURN_MIN;
-            }
-        }
+        heading_sensor_read_raw();
+        heading_last_x_raw_error = heading_x_raw_error;
+        heading_x_raw_error = imu660rb_acc_x - heading_initial_x_raw;
+        heading_update_integral();
+        w = heading_limit_w((float)heading_x_raw_error * HEADING_CONTROL_P
+            + heading_x_raw_error_sum * HEADING_CONTROL_I
+            + (float)(heading_x_raw_error - heading_last_x_raw_error) * HEADING_CONTROL_D);
+        car_move_xyw(x, y, w);
     }
-
-    car_move_xyw(x, y, (int8)turn);
 }

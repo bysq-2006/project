@@ -16,8 +16,7 @@ int main(void)
     car_init();
     car_stop();
 
-    imu_state = heading_control_init();
-    heading_control_lock_current();
+    imu_state = heading_sensor_init();
 
     if(imu_state)
     {
@@ -32,7 +31,7 @@ int main(void)
 
     while(1)
     {
-        car_move_xy_heading(current_x, current_y);
+        heading_sensor_update(current_x, current_y);
         system_delay_ms(10);
     }
 }

@@ -1,5 +1,5 @@
 /*********************************************************************************************************************
-* 角度保持控制
+* IMU660RB 角度传感器基础框架
 *********************************************************************************************************************/
 
 #ifndef _heading_control_h_
@@ -7,9 +7,7 @@
 
 #include "zf_common_headfile.h"
 
-uint8 heading_control_init(void);
-void heading_control_lock_current(void);
-void heading_control_set_target(float yaw_deg);
-void car_move_xy_heading(int8 x, int8 y);
+uint8 heading_sensor_init(void);
+void heading_sensor_update(int8 x, int8 y);
 
 #endif
