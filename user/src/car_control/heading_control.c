@@ -1,17 +1,15 @@
 /*********************************************************************************************************************
-* Heading hold control.
+* 角度保持控制
 *********************************************************************************************************************/
 
 #include "heading_control.h"
 #include "car_control.h"
+#include "../car_params.h"
 
-#define HEADING_KP_PERCENT              (80)
-#define HEADING_DEADBAND_DEG_X10        (10)
-#define HEADING_TURN_MIN                (10)
-#define HEADING_TURN_MAX                (35)
-#define HEADING_UPDATE_PERIOD_S         (0.01f)
-#define HEADING_GYRO_Z_SIGN             (1.0f)
-#define HEADING_GYRO_CALIBRATION_COUNT  (100)
+// 可调参数在 car_params.h：
+// HEADING_KP_PERCENT, HEADING_DEADBAND_DEG_X10, HEADING_TURN_MIN,
+// HEADING_TURN_MAX, HEADING_UPDATE_PERIOD_S, HEADING_GYRO_Z_SIGN,
+// HEADING_GYRO_CALIBRATION_COUNT, HEADING_GYRO_CALIBRATION_DELAY_MS。
 
 static uint8 heading_ready = 0;
 static float heading_target_yaw = 0.0f;
@@ -61,7 +59,7 @@ uint8 heading_control_init(void)
         {
             imu660rb_get_gyro();
             gyro_z_sum += imu660rb_gyro_transition(imu660rb_gyro_z);
-            system_delay_ms(5);
+            system_delay_ms(HEADING_GYRO_CALIBRATION_DELAY_MS);
         }
 
         heading_gyro_z_bias = gyro_z_sum / HEADING_GYRO_CALIBRATION_COUNT;

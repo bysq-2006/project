@@ -5,15 +5,14 @@
 
 #include "car_control.h"
 #include "../screen_print/screen_print.h"
+#include "../car_params.h"
 
-#define CAR_MAX_DUTY                (90)
+// 可调参数在 car_params.h：
+// CAR_MAX_DUTY, CAR_MOTOR_PWM_FREQ_HZ,
+// MOTOR1_GAIN_PERCENT, MOTOR2_GAIN_PERCENT, MOTOR3_GAIN_PERCENT, MOTOR4_GAIN_PERCENT。
 
 // 电机输出增益百分比，100 表示不补偿，200表示两倍电压。
 // 用相同 PWM 测完编码器计数后，后续主要调这里。
-#define MOTOR1_GAIN_PERCENT         (100)
-#define MOTOR2_GAIN_PERCENT         (100)
-#define MOTOR3_GAIN_PERCENT         (100)
-#define MOTOR4_GAIN_PERCENT         (100)
 
 // 前轮方向已在最终输出时取反，用来匹配后轮的前进方向。
 // 左轮方向已在最终输出时取反，用来匹配右轮的前进方向。
@@ -72,16 +71,16 @@ static void motor_set_one(int8 duty, gpio_pin_enum dir_pin, pwm_channel_enum pwm
 void car_init(void)
 {
     gpio_init(MOTOR1_DIR, GPO, GPIO_HIGH, GPO_PUSH_PULL);
-    pwm_init(MOTOR1_PWM, 17000, 0);
+    pwm_init(MOTOR1_PWM, CAR_MOTOR_PWM_FREQ_HZ, 0);
 
     gpio_init(MOTOR2_DIR, GPO, GPIO_HIGH, GPO_PUSH_PULL);
-    pwm_init(MOTOR2_PWM, 17000, 0);
+    pwm_init(MOTOR2_PWM, CAR_MOTOR_PWM_FREQ_HZ, 0);
 
     gpio_init(MOTOR3_DIR, GPO, GPIO_HIGH, GPO_PUSH_PULL);
-    pwm_init(MOTOR3_PWM, 17000, 0);
+    pwm_init(MOTOR3_PWM, CAR_MOTOR_PWM_FREQ_HZ, 0);
 
     gpio_init(MOTOR4_DIR, GPO, GPIO_HIGH, GPO_PUSH_PULL);
-    pwm_init(MOTOR4_PWM, 17000, 0);
+    pwm_init(MOTOR4_PWM, CAR_MOTOR_PWM_FREQ_HZ, 0);
 
     screen_print_init();
     car_stop();
@@ -108,8 +107,8 @@ void car_move_xyw(int8 x, int8 y, int8 w)
     int16 motor4_duty;
     int16 max_duty;
 
-    // Normalize the observed x-axis direction once here; keep final motor output direct.
-    x = -limit_motor_duty(x);
+    // 混合 x/y 平移和自转之前，先限制输入速度范围。
+    x = limit_motor_duty(x);
     y = limit_motor_duty(y);
     w = limit_motor_duty(w);
 
@@ -124,8 +123,9 @@ void car_move_xyw(int8 x, int8 y, int8 w)
     //     ●          ●
     // 左 MOTOR3    MOTOR4 右
     //       后
-    motor1_duty = y - x + w;
-    motor2_duty = y + x - w;
+    // 麦克纳姆/全向轮混控：x、y、w 分别保持独立控制轴。
+    motor1_duty = y + x + w;
+    motor2_duty = y - x - w;
     motor3_duty = y - x + w;
     motor4_duty = y + x - w;
 
