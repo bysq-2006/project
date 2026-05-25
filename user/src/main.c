@@ -1,7 +1,7 @@
 #include "zf_common_headfile.h"
 #include "car_control/car_control.h"
 #include "car_control/heading_control.h"
-#include "screen_print/screen_print.h"
+#include "gyro_z_angle/gyro_z_angle.h"
 
 int8 current_x = 5;
 int8 current_y = 0;
@@ -22,15 +22,15 @@ int main(void)
     {
         while(1)
         {
-            screen_print_line(0, "IMU660RB init ERR");
-            screen_print_line(1, "check sensor type");
-            screen_print_line(2, "or wiring pins");
             system_delay_ms(200);
         }
     }
 
+    gyro_z_angle_init();
+
     while(1)
     {
+        gyro_z_angle_update(10);
         heading_sensor_update(current_x, current_y);
         system_delay_ms(10);
     }

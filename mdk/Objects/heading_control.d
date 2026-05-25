@@ -109,4 +109,6 @@
   ..\..\libraries\components\sdmmc\common\fsl_sdmmc_spec.h \
   ..\..\libraries\components\sdmmc\sdmmc_config.h \
   ..\..\libraries\sdk\board\clock_config.h \
-  ..\user\src\car_control\car_control.h
+  ..\user\src\car_control\car_control.h \
+  ..\user\src\car_control\..\gyro_z_angle\gyro_z_angle.h \
+  ..\user\src\car_control\..\car_params.h

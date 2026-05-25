@@ -4,13 +4,14 @@
 
 #include "heading_control.h"
 #include "car_control.h"
+#include "../gyro_z_angle/gyro_z_angle.h"
 #include "../car_params.h"
 
 // 注意单位不是弧度，也不是角度
 static uint8 heading_sensor_ready = 0;
 static int16 heading_initial_x_raw = 0;
-static int16 heading_x_raw_error = 0;
-static int16 heading_last_x_raw_error = 0;
+static float heading_x_raw_error = 0.0f;
+static float heading_last_x_raw_error = 0.0f;
 static float heading_x_raw_error_sum = 0.0f;
 
 // 读取 IMU 原始数据
@@ -77,11 +78,12 @@ void heading_sensor_update(int8 x, int8 y)
 
         heading_sensor_read_raw();
         heading_last_x_raw_error = heading_x_raw_error;
-        heading_x_raw_error = imu660rb_acc_x - heading_initial_x_raw;
+        heading_x_raw_error = gyro_z_angle_get_output();
         heading_update_integral();
         w = heading_limit_w((float)heading_x_raw_error * HEADING_CONTROL_P
             + heading_x_raw_error_sum * HEADING_CONTROL_I
             + (float)(heading_x_raw_error - heading_last_x_raw_error) * HEADING_CONTROL_D);
+        gyro_z_angle_set_w(w);
         car_move_xyw(x, y, w);
     }
 }

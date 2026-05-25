@@ -4,7 +4,6 @@
 *********************************************************************************************************************/
 
 #include "car_control.h"
-#include "../screen_print/screen_print.h"
 #include "../car_params.h"
 
 // 可调参数在 car_params.h：
@@ -82,7 +81,6 @@ void car_init(void)
     gpio_init(MOTOR4_DIR, GPO, GPIO_HIGH, GPO_PUSH_PULL);
     pwm_init(MOTOR4_PWM, CAR_MOTOR_PWM_FREQ_HZ, 0);
 
-    screen_print_init();
     car_stop();
 }
 
@@ -124,10 +122,10 @@ void car_move_xyw(int8 x, int8 y, int8 w)
     // 左 MOTOR3    MOTOR4 右
     //       后
     // 麦克纳姆/全向轮混控：x、y、w 分别保持独立控制轴。
-    motor1_duty = y + x + w;
-    motor2_duty = y - x - w;
-    motor3_duty = y - x + w;
-    motor4_duty = y + x - w;
+    motor1_duty = y - x + w;
+    motor2_duty = y + x - w;
+    motor3_duty = y + x - w;
+    motor4_duty = y - x + w;
 
     motor1_duty = motor_apply_gain(motor1_duty, MOTOR1_GAIN_PERCENT);
     motor2_duty = motor_apply_gain(motor2_duty, MOTOR2_GAIN_PERCENT);
@@ -147,8 +145,6 @@ void car_move_xyw(int8 x, int8 y, int8 w)
         motor3_duty = motor3_duty * CAR_MAX_DUTY / max_duty;
         motor4_duty = motor4_duty * CAR_MAX_DUTY / max_duty;
     }
-
-    screen_print_motor_duty(motor1_duty, motor2_duty, motor3_duty, motor4_duty);
 
     motor_set_one((int8)motor1_duty, MOTOR1_DIR, MOTOR1_PWM);
     motor_set_one((int8)motor2_duty, MOTOR2_DIR, MOTOR2_PWM);

@@ -1,4 +1,5 @@
-./objects/main.o: ..\user\src\main.c \
+./objects/gyro_z_angle.o: ..\user\src\gyro_z_angle\gyro_z_angle.c \
+  ..\user\src\gyro_z_angle\gyro_z_angle.h \
   ..\..\libraries\zf_common\zf_common_headfile.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdio.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdint.h \
@@ -108,6 +109,5 @@
   ..\..\libraries\components\sdmmc\common\fsl_sdmmc_spec.h \
   ..\..\libraries\components\sdmmc\sdmmc_config.h \
   ..\..\libraries\sdk\board\clock_config.h \
-  ..\user\src\car_control\car_control.h \
-  ..\user\src\car_control\heading_control.h \
-  ..\user\src\gyro_z_angle\gyro_z_angle.h
+  ..\user\src\gyro_z_angle\..\screen_print\screen_print.h \
+  ..\user\src\gyro_z_angle\..\car_params.h

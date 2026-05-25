@@ -409,6 +409,11 @@
               <FileType>1</FileType>
               <FilePath>..\user\src\screen_print\screen_print.c</FilePath>
             </File>
+            <File>
+              <FileName>gyro_z_angle.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user\src\gyro_z_angle\gyro_z_angle.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -433,6 +438,11 @@
               <FileName>heading_control.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\user\src\car_control\heading_control.h</FilePath>
+            </File>
+            <File>
+              <FileName>gyro_z_angle.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\user\src\gyro_z_angle\gyro_z_angle.h</FilePath>
             </File>
           </Files>
         </Group>
