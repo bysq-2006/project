@@ -122,10 +122,10 @@ void car_move_xyw(int8 x, int8 y, int8 w)
     // 左 MOTOR3    MOTOR4 右
     //       后
     // 麦克纳姆/全向轮混控：x、y、w 分别保持独立控制轴。
-    motor1_duty = y - x + w;
-    motor2_duty = y + x - w;
-    motor3_duty = y + x - w;
-    motor4_duty = y - x + w;
+    motor1_duty = y + x - w;
+    motor2_duty = y - x + w;
+    motor3_duty = y + x + w;
+    motor4_duty = y - x - w;
 
     motor1_duty = motor_apply_gain(motor1_duty, MOTOR1_GAIN_PERCENT);
     motor2_duty = motor_apply_gain(motor2_duty, MOTOR2_GAIN_PERCENT);
