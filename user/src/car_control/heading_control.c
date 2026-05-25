@@ -53,7 +53,6 @@ static void heading_update_integral(void)
 
 // 初始化传感器并记录初始值
 uint8 heading_sensor_init(void)
-uint8 heading_sensor_init(void)
 {
     uint8 state = imu660rb_init();
 
