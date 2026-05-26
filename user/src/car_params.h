@@ -44,9 +44,9 @@
  * 如果回正方向反了，可以把 HEADING_CONTROL_P 改成负数，
  * 或者在代码里反转误差方向。
  */
-#define HEADING_CONTROL_P                   (0.05f)
-#define HEADING_CONTROL_I                   (0.0005f)
-#define HEADING_CONTROL_D                   (0.0f)
+#define HEADING_CONTROL_P                   (0.1f)
+#define HEADING_CONTROL_I                   (0.001f)
+#define HEADING_CONTROL_D                   (0.5f)
 #define HEADING_CONTROL_I_LIMIT             (5000.0f)
 
 /*
