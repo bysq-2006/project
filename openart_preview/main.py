@@ -1,4 +1,4 @@
-# OpenART Plus color target detection preview.
+# OpenART Plus 颜色目标检测预览。
 
 import sensor
 import time
@@ -6,24 +6,35 @@ import math
 from machine import Pin
 import cmm
 
+from blob_detect import detect_targets
+from draw_utils import draw_blob, draw_split_blob
+from point_locator import get_detect_roi
 
+
+# OpenMV 的 LAB 阈值格式：（L最小，L最大，A最小，A最大，B最小，B最大）。
 PRINT_EVERY_N_FRAMES = 5
 MAX_BLOBS_PER_COLOR = 6
 SPLIT_RATIO_MIN = 1.5
+# 手动识别范围，格式：((左上x, 左上y), (右下x, 右下y))；不想手动限制就填 None。
+MANUAL_RANGE_POINTS = None
 
 
-# OpenMV LAB thresholds: (L min, L max, A min, A max, B min, B max).
-# First pass only detects the pure-color targets:
-# box.png, Target.png, and car.png. WallBlock.png and bomb.png are disabled.
+# 每一项格式：
+# 位置1：目标名字，用来区分检测到的是什么。
+# 位置2：LAB 阈值范围，格式是 ((L最小, L最大, A最小, A最大, B最小, B最大),)。
+# 位置3：画框颜色，只影响显示，不影响识别。
+# 位置4：最少像素/面积，小于这个值的色块会被过滤。
+# 位置5：是否拆框显示，True 表示长条色块会被拆成几段画。
 TARGETS = (
     ("yellow_box", ((80, 100, -25, 5, 70, 110),), (255, 255, 0), 30, True),
     ("purple_goal", ((45, 75, 70, 110, -75, -35),), (255, 0, 255), 25, True),
-    # Initial LAB values converted from RGB samples.
+    # 由 RGB 采样值换算得到的初始 LAB 阈值。
     ("cyan_marker", ((78, 100, -65, -25, -35, 10),), (0, 255, 255), 25, False),
     ("green_marker", ((72, 100, -110, -60, 55, 100),), (0, 255, 0), 25, False),
 )
 
 
+# 生成可用的引脚对象。
 def make_pin(name):
     try:
         return Pin(name)
@@ -31,6 +42,7 @@ def make_pin(name):
         return None
 
 
+# 初始化并注册 cmm 的引脚映射。
 def load_cmm_config():
     pin_map = {
         "hw.-": ("rt117x", "seekfree_art_plus", None, None),
@@ -50,87 +62,6 @@ def load_cmm_config():
     print("cmm config ok")
 
 
-def inverse_color(color):
-    return (255 - color[0], 255 - color[1], 255 - color[2])
-
-
-def draw_blob(img, name, blob, target_color, should_print):
-    color = inverse_color(target_color)
-    img.draw_rectangle(blob.rect(), color=color)
-    img.draw_cross(blob.cx(), blob.cy(), color=color)
-    if should_print:
-        print("obj:", name,
-              "cx:", blob.cx(), "cy:", blob.cy(),
-              "w:", blob.w(), "h:", blob.h(),
-              "pixels:", blob.pixels())
-
-
-def good_blob(blob):
-    w = blob.w()
-    h = blob.h()
-    if w < 3 or h < 3:
-        return False
-    if w > 90 or h > 90:
-        return False
-    ratio = w / h
-    if ratio < 0.35 or ratio > 2.8:
-        return False
-    return True
-
-
-def split_rect(rect):
-    x, y, w, h = rect
-    if w <= 0 or h <= 0:
-        return [rect]
-
-    # Split along the longer axis into roughly square pieces.
-    if w >= h:
-        ratio = w / h
-        if ratio < SPLIT_RATIO_MIN:
-            return [rect]
-        parts = max(1, int((w + h / 2) / h))
-        step = w // parts
-        if step < 1:
-            return [rect]
-        result = []
-        for i in range(parts):
-            sx = x + i * step
-            sw = step if i < parts - 1 else (x + w) - sx
-            if sw > 0:
-                result.append((sx, y, sw, h))
-        return result
-
-    ratio = h / w
-    if ratio < SPLIT_RATIO_MIN:
-        return [rect]
-    parts = max(1, int((h + w / 2) / w))
-    step = h // parts
-    if step < 1:
-        return [rect]
-    result = []
-    for i in range(parts):
-        sy = y + i * step
-        sh = step if i < parts - 1 else (y + h) - sy
-        if sh > 0:
-            result.append((x, sy, w, sh))
-    return result
-
-
-def draw_split_blob(img, name, blob, target_color, should_print):
-    color = inverse_color(target_color)
-    rects = split_rect(blob.rect())
-    for rect in rects:
-        rx, ry, rw, rh = rect
-        img.draw_rectangle(rect, color=color)
-        img.draw_cross(rx + rw // 2, ry + rh // 2, color=color)
-    if should_print:
-        print("obj:", name,
-              "cx:", blob.cx(), "cy:", blob.cy(),
-              "w:", blob.w(), "h:", blob.h(),
-              "pixels:", blob.pixels(),
-              "split:", len(rects))
-
-
 load_cmm_config()
 
 sensor.reset()
@@ -145,28 +76,18 @@ while True:
     frame_id += 1
     should_print = PRINT_EVERY_N_FRAMES and (frame_id % PRINT_EVERY_N_FRAMES) == 0
     clock.tick()
-    t0 = time.ticks_ms()
     img = sensor.snapshot()
-    t1 = time.ticks_ms()
 
-    found = 0
+    detect_roi = get_detect_roi(img, MANUAL_RANGE_POINTS)
+
     marker_centers = {}
-    detections = []
-    for target in TARGETS:
-        name, thresholds, target_color, min_pixels, should_split = target
-        blobs = img.find_blobs(thresholds,
-                               pixels_threshold=min_pixels,
-                               area_threshold=min_pixels,
-                               merge=False)
-        blobs = [blob for blob in blobs if good_blob(blob)]
-        blobs = sorted(blobs, key=lambda b: b.pixels(), reverse=True)
-        for blob in blobs[:MAX_BLOBS_PER_COLOR]:
-            detections.append((name, blob, target_color, should_split))
-            found += 1
+    detections = detect_targets(img, TARGETS, MAX_BLOBS_PER_COLOR, detect_roi)
+    if detect_roi is not None:
+        img.draw_rectangle(detect_roi, color=(255, 255, 255))
 
     for name, blob, target_color, should_split in detections:
         if should_split:
-            draw_split_blob(img, name, blob, target_color, should_print)
+            draw_split_blob(img, name, blob, target_color, should_print, SPLIT_RATIO_MIN)
         else:
             draw_blob(img, name, blob, target_color, should_print)
             if name in ("cyan_marker", "green_marker") and name not in marker_centers:
@@ -185,10 +106,6 @@ while True:
         if should_print:
             print("cyan->green angle:", angle, "deg",
                   "cyan:", c1, "green:", c2)
-    t2 = time.ticks_ms()
 
     if should_print:
-        print("t1 snapshot cost:", time.ticks_diff(t1, t0), "ms")
-        print("t2 detect cost  :", time.ticks_diff(t2, t1), "ms",
-              "found:", found)
         print("fps:", clock.fps())
