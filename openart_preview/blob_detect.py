@@ -14,7 +14,7 @@ def good_blob(blob):
 
 # 找出某一个目标颜色下的有效色块。
 def find_target_blobs(img, target, max_blobs_per_color, roi=None):
-    name, thresholds, target_color, min_pixels, should_split = target
+    name, thresholds, target_color, min_pixels = target
     if roi is None:
         blobs = img.find_blobs(thresholds,
                                pixels_threshold=min_pixels,
@@ -31,7 +31,7 @@ def find_target_blobs(img, target, max_blobs_per_color, roi=None):
 
     detections = []
     for blob in blobs[:max_blobs_per_color]:
-        detections.append((name, blob, target_color, should_split))
+        detections.append((name, blob, target_color))
     return detections
 
 
