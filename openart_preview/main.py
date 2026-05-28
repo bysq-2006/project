@@ -12,6 +12,8 @@ from point_locator import get_detect_rois
 
 
 # OpenMV 的 LAB 阈值格式：（L最小，L最大，A最小，A最大，B最小，B最大）。
+# 是否在图像上画调试框、搜索线和中心点；False 时更接近真实 FPS。
+DRAW_DEBUG = True
 # 每隔多少帧打印一次调试信息和 FPS。
 PRINT_EVERY_N_FRAMES = 5
 # 每一种目标颜色最多保留多少个色块。
@@ -104,34 +106,35 @@ while True:
                                            AUTO_RANGE_SCALE_W,
                                            AUTO_RANGE_SCALE_H,
                                            AUTO_RANGE_SEARCH_RATIO)
-    search_line_x = int(img.width() * AUTO_RANGE_SEARCH_RATIO)
-    try:
-        img.draw_line((search_line_x, 0, search_line_x, img.height()), color=(255, 255, 0), thickness=2)
-    except TypeError:
-        img.draw_line(search_line_x, 0, search_line_x, img.height(), color=(255, 255, 0))
-
     marker_centers = {}
     detections = detect_targets(img, TARGETS, MAX_BLOBS_PER_COLOR, detect_roi)
-    if detect_roi is not None:
-        img.draw_rectangle(detect_roi, color=(255, 0, 0))
-    if base_roi is not None:
-        img.draw_rectangle(base_roi, color=(255, 255, 255))
+    if DRAW_DEBUG:
+        search_line_x = int(img.width() * AUTO_RANGE_SEARCH_RATIO)
+        try:
+            img.draw_line((search_line_x, 0, search_line_x, img.height()), color=(255, 255, 0), thickness=2)
+        except TypeError:
+            img.draw_line(search_line_x, 0, search_line_x, img.height(), color=(255, 255, 0))
+        if detect_roi is not None:
+            img.draw_rectangle(detect_roi, color=(255, 0, 0))
+        if base_roi is not None:
+            img.draw_rectangle(base_roi, color=(255, 255, 255))
 
     for name, blob, target_color, should_split in detections:
         if should_split:
-            draw_split_blob(img, name, blob, target_color, should_print, SPLIT_RATIO_MIN)
+            draw_split_blob(img, name, blob, target_color, should_print, SPLIT_RATIO_MIN, DRAW_DEBUG)
         else:
-            draw_blob(img, name, blob, target_color, should_print)
+            draw_blob(img, name, blob, target_color, should_print, DRAW_DEBUG)
             if name in ("cyan_marker", "green_marker") and name not in marker_centers:
                 marker_centers[name] = (blob.cx(), blob.cy())
 
     if "cyan_marker" in marker_centers and "green_marker" in marker_centers:
         c1 = marker_centers["cyan_marker"]
         c2 = marker_centers["green_marker"]
-        try:
-            img.draw_line((c1[0], c1[1], c2[0], c2[1]), color=(255, 255, 255), thickness=2)
-        except TypeError:
-            img.draw_line(c1[0], c1[1], c2[0], c2[1], color=(255, 255, 255))
+        if DRAW_DEBUG:
+            try:
+                img.draw_line((c1[0], c1[1], c2[0], c2[1]), color=(255, 255, 255), thickness=2)
+            except TypeError:
+                img.draw_line(c1[0], c1[1], c2[0], c2[1], color=(255, 255, 255))
         angle = math.degrees(math.atan2(c2[1] - c1[1], c2[0] - c1[0]))
         if angle < 0:
             angle += 360

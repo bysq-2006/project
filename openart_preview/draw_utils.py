@@ -4,10 +4,11 @@ def inverse_color(color):
 
 
 # 画单个色块的外框和中心点。
-def draw_blob(img, name, blob, target_color, should_print):
+def draw_blob(img, name, blob, target_color, should_print, draw_debug=True):
     color = inverse_color(target_color)
-    img.draw_rectangle(blob.rect(), color=color)
-    img.draw_cross(blob.cx(), blob.cy(), color=color)
+    if draw_debug:
+        img.draw_rectangle(blob.rect(), color=color)
+        img.draw_cross(blob.cx(), blob.cy(), color=color)
     if should_print:
         print("obj:", name,
               "cx:", blob.cx(), "cy:", blob.cy(),
@@ -55,13 +56,14 @@ def split_rect(rect, split_ratio_min):
 
 
 # 画拆分后的色块框。
-def draw_split_blob(img, name, blob, target_color, should_print, split_ratio_min):
+def draw_split_blob(img, name, blob, target_color, should_print, split_ratio_min, draw_debug=True):
     color = inverse_color(target_color)
     rects = split_rect(blob.rect(), split_ratio_min)
-    for rect in rects:
-        rx, ry, rw, rh = rect
-        img.draw_rectangle(rect, color=color)
-        img.draw_cross(rx + rw // 2, ry + rh // 2, color=color)
+    if draw_debug:
+        for rect in rects:
+            rx, ry, rw, rh = rect
+            img.draw_rectangle(rect, color=color)
+            img.draw_cross(rx + rw // 2, ry + rh // 2, color=color)
     if should_print:
         print("obj:", name,
               "cx:", blob.cx(), "cy:", blob.cy(),
