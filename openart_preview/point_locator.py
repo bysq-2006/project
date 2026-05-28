@@ -65,9 +65,15 @@ def scale_roi(img, roi, scale_w, scale_h):
     return points_to_roi(img, ((x1, y1), (x2, y2)))
 
 
-# 根据手动输入或自动识别返回原始 roi 和放大后的检测 roi。
-def get_detect_rois(img, manual_points, thresholds, min_pixels,
-                    scale_w, scale_h, search_ratio):
+# 根据范围配置返回原始 roi 和放大后的检测 roi。
+def get_detect_rois(img, config):
+    manual_points = config["manual_points"]
+    thresholds = config["thresholds"]
+    min_pixels = config["min_pixels"]
+    scale_w = config["scale_w"]
+    scale_h = config["scale_h"]
+    search_ratio = config["search_ratio"]
+
     if manual_points is None:
         range_points = auto_range_points(img, thresholds, min_pixels, search_ratio)
     else:
@@ -82,10 +88,6 @@ def get_detect_rois(img, manual_points, thresholds, min_pixels,
 
 
 # 只返回真正用于检测的 roi。
-def get_detect_roi(img, manual_points, thresholds, min_pixels,
-                   scale_w, scale_h, search_ratio):
-    base_roi, detect_roi = get_detect_rois(img, manual_points,
-                                           thresholds, min_pixels,
-                                           scale_w, scale_h,
-                                           search_ratio)
+def get_detect_roi(img, config):
+    base_roi, detect_roi = get_detect_rois(img, config)
     return detect_roi
