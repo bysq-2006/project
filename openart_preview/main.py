@@ -28,6 +28,7 @@ GRID_COLOR_MEANS = (
     ("goal", (58.83, 81.49, -54.12)),
     ("background", (38.46, 62.17, -96.33)),
     ("wall", (45.17, 23.12, -28.49)),
+    ("yellow_box", (95.88, -21.98, 90.96)),
 )
 # 网格分类最大误差；超过这个值就回退成背景方块。
 GRID_COLOR_MAX_SCORE = 0.18
@@ -36,13 +37,14 @@ DRAW_GRID_DEBUG = True
 # 网格线显示颜色。
 GRID_LINE_COLOR = (255, 255, 0)
 # 网格识别字符显示颜色。
-GRID_TEXT_COLOR = (255, 255, 255)
+GRID_TEXT_COLOR = (0, 255, 0)
 # 每种网格识别结果对应的显示字符。
 GRID_DEBUG_SYMBOLS = {
     "wall": "#",
     "unknown": "?",
     "background": "-",
     "goal": "+",
+    "yellow_box": "$",
 }
 # 每隔多少帧打印一次调试信息和 FPS。
 PRINT_EVERY_N_FRAMES = 5
