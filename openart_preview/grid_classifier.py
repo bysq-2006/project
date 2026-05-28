@@ -43,6 +43,11 @@ def classify_grid(img, roi=None, grid_cols=12, grid_rows=16,
     for row in range(grid_rows):
         grid_row = []
         for col in range(grid_cols):
+            # 地图最外圈固定是围墙，直接写入结果，不再做颜色采样。
+            if row == 0 or row == grid_rows - 1 or col == 0 or col == grid_cols - 1:
+                grid_row.append("wall")
+                continue
+
             cell_x1 = x1 + col * w // grid_cols
             cell_y1 = y1 + row * h // grid_rows
             cell_x2 = x1 + (col + 1) * w // grid_cols
