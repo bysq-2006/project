@@ -12,8 +12,11 @@ from point_locator import get_detect_rois
 
 
 # OpenMV 的 LAB 阈值格式：（L最小，L最大，A最小，A最大，B最小，B最大）。
+# 每隔多少帧打印一次调试信息和 FPS。
 PRINT_EVERY_N_FRAMES = 5
+# 每一种目标颜色最多保留多少个色块。
 MAX_BLOBS_PER_COLOR = 6
+# 长条色块超过这个宽高比例后，会被拆成几段显示。
 SPLIT_RATIO_MIN = 1.5
 # 手动识别范围，格式：((左上x, 左上y), (右下x, 右下y))；不想手动限制就填 None。
 MANUAL_RANGE_POINTS = None
@@ -25,9 +28,14 @@ AUTO_RANGE_THRESHOLDS = (
     (78, 100, -65, -25, -35, 10),
     (72, 100, -110, -60, 55, 100),
 )
+# 自动识别地图范围时，过滤小色块的最小像素/面积。
 AUTO_RANGE_MIN_PIXELS = 200
+# 自动 ROI 放大时，宽度乘以这个系数。
 AUTO_RANGE_SCALE_W = 1.2
+# 自动 ROI 放大时，高度乘以这个系数。
 AUTO_RANGE_SCALE_H = 1.12
+# 自动识别地图范围时，只搜索画面左侧的比例。
+AUTO_RANGE_SEARCH_RATIO = 2 / 3
 
 
 # 每一项格式：
@@ -36,9 +44,9 @@ AUTO_RANGE_SCALE_H = 1.12
 # 位置3：画框颜色，只影响显示，不影响识别。
 # 位置4：最少像素/面积，小于这个值的色块会被过滤。
 # 位置5：是否拆框显示，True 表示长条色块会被拆成几段画。
+# 要检测的目标色块配置。
 TARGETS = (
     ("yellow_box", ((80, 100, -25, 5, 70, 110),), (255, 255, 0), 30, True),
-    ("purple_goal", ((45, 75, 70, 110, -75, -35),), (255, 0, 255), 25, True),
     # 由 RGB 采样值换算得到的初始 LAB 阈值。
     ("cyan_marker", ((78, 100, -65, -25, -35, 10),), (0, 255, 255), 25, False),
     ("green_marker", ((72, 100, -110, -60, 55, 100),), (0, 255, 0), 25, False),
@@ -94,7 +102,13 @@ while True:
                                            AUTO_RANGE_THRESHOLDS,
                                            AUTO_RANGE_MIN_PIXELS,
                                            AUTO_RANGE_SCALE_W,
-                                           AUTO_RANGE_SCALE_H)
+                                           AUTO_RANGE_SCALE_H,
+                                           AUTO_RANGE_SEARCH_RATIO)
+    search_line_x = int(img.width() * AUTO_RANGE_SEARCH_RATIO)
+    try:
+        img.draw_line((search_line_x, 0, search_line_x, img.height()), color=(255, 255, 0), thickness=2)
+    except TypeError:
+        img.draw_line(search_line_x, 0, search_line_x, img.height(), color=(255, 255, 0))
 
     marker_centers = {}
     detections = detect_targets(img, TARGETS, MAX_BLOBS_PER_COLOR, detect_roi)

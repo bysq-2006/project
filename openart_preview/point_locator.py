@@ -1,8 +1,12 @@
 # 自动识别地图范围，返回左上角和右下角两个点。
-def auto_range_points(img, thresholds, min_pixels):
+def auto_range_points(img, thresholds, min_pixels, search_ratio):
     best_blob = None
+    search_w = int(img.width() * search_ratio)
+    if search_w <= 0:
+        return None
 
     blobs = img.find_blobs(thresholds,
+                           roi=(0, 0, search_w, img.height()),
                            pixels_threshold=min_pixels,
                            area_threshold=min_pixels,
                            merge=False)
@@ -62,9 +66,10 @@ def scale_roi(img, roi, scale_w, scale_h):
 
 
 # 根据手动输入或自动识别返回原始 roi 和放大后的检测 roi。
-def get_detect_rois(img, manual_points, thresholds, min_pixels, scale_w, scale_h):
+def get_detect_rois(img, manual_points, thresholds, min_pixels,
+                    scale_w, scale_h, search_ratio):
     if manual_points is None:
-        range_points = auto_range_points(img, thresholds, min_pixels)
+        range_points = auto_range_points(img, thresholds, min_pixels, search_ratio)
     else:
         range_points = manual_points
 
@@ -77,8 +82,10 @@ def get_detect_rois(img, manual_points, thresholds, min_pixels, scale_w, scale_h
 
 
 # 只返回真正用于检测的 roi。
-def get_detect_roi(img, manual_points, thresholds, min_pixels, scale_w, scale_h):
+def get_detect_roi(img, manual_points, thresholds, min_pixels,
+                   scale_w, scale_h, search_ratio):
     base_roi, detect_roi = get_detect_rois(img, manual_points,
                                            thresholds, min_pixels,
-                                           scale_w, scale_h)
+                                           scale_w, scale_h,
+                                           search_ratio)
     return detect_roi
