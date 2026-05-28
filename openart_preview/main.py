@@ -23,15 +23,13 @@ GRID_MAP_COLS = 12
 GRID_MAP_ROWS = 16
 # 地图 ROI 纠正和网格识别每隔多少毫秒运行一次。
 MAP_UPDATE_INTERVAL_MS = 1000
-# 网格分类用的 LAB 均值；可以用 lab_roi_tool_gui.py 的“复制均值”结果替换。
-GRID_COLOR_MEANS = (
-    ("goal", (58.83, 81.49, -54.12)),
-    ("background", (38.46, 62.17, -96.33)),
-    ("wall", (45.17, 23.12, -28.49)),
-    ("yellow_box", (95.88, -21.98, 90.96)),
+# 网格分类用的颜色占比规则，格式：（名字，LAB阈值，最小占比）。
+GRID_COLOR_RATIOS = (
+    ("yellow_box", ((80, 100, -25, 5, 70, 110),), 0.20),
+    ("wall", ((0, 100, -14, 70, -74, 25),), 0.25),
+    ("goal", ((50, 72, 66, 104, -72, -27),), 0.25),
+    ("background", ((32, 52, 33, 72, -106, -75),), 0.25),
 )
-# 网格分类最大误差；超过这个值就回退成背景方块。
-GRID_COLOR_MAX_SCORE = 0.18
 # 是否把缓存的网格识别结果画到图像上。
 DRAW_GRID_DEBUG = True
 # 网格线显示颜色。
@@ -156,8 +154,7 @@ while True:
     if should_update_map and CLASSIFY_GRID_MAP and detect_roi is not None:
         grid_map = classify_grid(img, detect_roi,
                                  GRID_MAP_COLS, GRID_MAP_ROWS,
-                                 GRID_COLOR_MEANS,
-                                 GRID_COLOR_MAX_SCORE,
+                                 GRID_COLOR_RATIOS,
                                  "background")
         if grid_map:
             last_grid_map = grid_map
