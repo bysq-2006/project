@@ -8,7 +8,7 @@ import cmm
 
 from blob_detect import detect_targets
 from draw_utils import draw_blob, draw_split_blob
-from point_locator import get_detect_roi
+from point_locator import get_detect_rois
 
 
 # OpenMV 的 LAB 阈值格式：（L最小，L最大，A最小，A最大，B最小，B最大）。
@@ -17,6 +17,17 @@ MAX_BLOBS_PER_COLOR = 6
 SPLIT_RATIO_MIN = 1.5
 # 手动识别范围，格式：((左上x, 左上y), (右下x, 右下y))；不想手动限制就填 None。
 MANUAL_RANGE_POINTS = None
+# 自动识别范围的阈值，多个颜色放在同一次联通检测里。
+AUTO_RANGE_THRESHOLDS = (
+    (25, 56, 17, 86, -113, -57),
+    (80, 100, -25, 5, 70, 110),
+    (45, 75, 70, 110, -75, -35),
+    (78, 100, -65, -25, -35, 10),
+    (72, 100, -110, -60, 55, 100),
+)
+AUTO_RANGE_MIN_PIXELS = 200
+AUTO_RANGE_SCALE_W = 1.2
+AUTO_RANGE_SCALE_H = 1.12
 
 
 # 每一项格式：
@@ -78,12 +89,19 @@ while True:
     clock.tick()
     img = sensor.snapshot()
 
-    detect_roi = get_detect_roi(img, MANUAL_RANGE_POINTS)
+    base_roi, detect_roi = get_detect_rois(img,
+                                           MANUAL_RANGE_POINTS,
+                                           AUTO_RANGE_THRESHOLDS,
+                                           AUTO_RANGE_MIN_PIXELS,
+                                           AUTO_RANGE_SCALE_W,
+                                           AUTO_RANGE_SCALE_H)
 
     marker_centers = {}
     detections = detect_targets(img, TARGETS, MAX_BLOBS_PER_COLOR, detect_roi)
     if detect_roi is not None:
-        img.draw_rectangle(detect_roi, color=(255, 255, 255))
+        img.draw_rectangle(detect_roi, color=(255, 0, 0))
+    if base_roi is not None:
+        img.draw_rectangle(base_roi, color=(255, 255, 255))
 
     for name, blob, target_color, should_split in detections:
         if should_split:
