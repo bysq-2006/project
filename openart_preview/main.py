@@ -21,8 +21,8 @@ PRINT_EVERY_N_FRAMES = 5
 MAX_BLOBS_PER_COLOR = 6
 # 网格分类配置，集中放这里方便调地图行列、阈值和调试显示。
 GRID_CONFIG = {
-    # 是否识别地图里的每一个网格。
-    "classify": True,
+    # 是否绘制网格和字符。
+    "classify": False,
     # 地图宽度方向的格子数量。
     "cols": 12,
     # 地图高度方向的格子数量。
@@ -144,11 +144,20 @@ while True:
     grid_map = last_grid_map
     # 每隔一段时间更新一次地图识别范围和网格识别结果，其他时候继续使用上次的结果，避免频繁运行耗时的识别函数。
     if should_update_map:
+        # 识别地图位置
         new_base_roi, new_detect_roi = get_detect_rois(img, RANGE_CONFIG)
         last_map_update_ms = now_ms
         if new_detect_roi is not None:
             last_base_roi = new_base_roi
             last_detect_roi = new_detect_roi
+            # 识别地图里的网格信息
+            if GRID_CONFIG["classify"]:
+                grid_map = classify_grid(img, new_detect_roi,
+                                         GRID_CONFIG["cols"], GRID_CONFIG["rows"],
+                                         GRID_CONFIG["color_ratios"],
+                                         GRID_CONFIG["fallback"])
+                if grid_map:
+                    last_grid_map = grid_map
 
     base_roi = last_base_roi
     detect_roi = last_detect_roi
@@ -156,30 +165,34 @@ while True:
     marker_centers = {}
     # 检测目标色块
     detections = detect_targets(img, TARGETS, MAX_BLOBS_PER_COLOR, detect_roi)
-    if should_update_map and GRID_CONFIG["classify"] and detect_roi is not None:
-        grid_map = classify_grid(img, detect_roi,
-                                 GRID_CONFIG["cols"], GRID_CONFIG["rows"],
-                                 GRID_CONFIG["color_ratios"],
-                                 GRID_CONFIG["fallback"])
-        if grid_map:
-            last_grid_map = grid_map
 
     for name, blob, target_color in detections:
         if name in ("cyan_marker", "green_marker") and name not in marker_centers:
             marker_centers[name] = (blob.cx(), blob.cy())
 
+    # 检测小车朝向和位置
     angle = None
     angle_points = None
+    car_center = None
+    car_map_pos = None
     if "cyan_marker" in marker_centers and "green_marker" in marker_centers:
-        c1 = marker_centers["cyan_marker"]
-        c2 = marker_centers["green_marker"]
-        angle_points = (c1, c2)
-        angle = math.degrees(math.atan2(c2[1] - c1[1], c2[0] - c1[0]))
+        front = marker_centers["cyan_marker"]
+        back = marker_centers["green_marker"]
+        angle_points = (front, back)
+        car_center = ((front[0] + back[0]) / 2, (front[1] + back[1]) / 2)
+        if detect_roi is not None:
+            car_map_pos = (car_center[0] - detect_roi[0], car_center[1] - detect_roi[1])
+
+        # 绿色在车尾，青色在车头；角度使用 x 向右、y 向上的坐标系。
+        dx = front[0] - back[0]
+        dy = back[1] - front[1]
+        angle = math.degrees(math.atan2(dy, dx))
         if angle < 0:
             angle += 360
         if should_print:
-            print("cyan->green angle:", angle, "deg",
-                  "cyan:", c1, "green:", c2)
+            print("car angle:", angle, "deg",
+                  "center:", car_center, "map_pos:", car_map_pos,
+                  "cyan_front:", front, "green_back:", back)
 
     should_draw_grid_debug = (GRID_CONFIG["draw_debug"] and detect_roi is not None and
                               last_grid_map is not None)
