@@ -35,13 +35,13 @@ static char cell_to_char(uint8 cell)
     switch(cell)
     {
         case OPENART_CELL_BACKGROUND:
-            return '.';
+            return '-';
         case OPENART_CELL_WALL:
             return '#';
         case OPENART_CELL_GOAL:
-            return 'G';
+            return '+';
         case OPENART_CELL_YELLOW_BOX:
-            return 'Y';
+            return '$';
         default:
             return '?';
     }
