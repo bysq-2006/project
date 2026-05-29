@@ -18,12 +18,18 @@ from openart_uart import send_detected_car, send_detected_map
 DRAW_DEBUG = True
 # 每隔多少帧打印一次调试信息和 FPS。
 PRINT_EVERY_N_FRAMES = 5
+FIXED_TX_TEST = False
+FIXED_CAR_MAP_POS = (24.5, 119.5)
+FIXED_CAR_ANGLE_DEG = 101.3
+FIXED_MAP_ROI = (0, 0, 145, 166)
+FIXED_MAP_COLS = 12
+FIXED_MAP_ROWS = 16
 # 每一种目标颜色最多保留多少个色块。
 MAX_BLOBS_PER_COLOR = 6
 # 网格分类配置，集中放这里方便调地图行列、阈值和调试显示。
 GRID_CONFIG = {
     # 是否绘制网格和字符。
-    "classify": False,
+    "classify": True,
     # 地图宽度方向的格子数量。
     "cols": 12,
     # 地图高度方向的格子数量。
@@ -113,11 +119,24 @@ def load_cmm_config():
         "pin.M4": ("-", "LPSR_04", make_pin("LPSR_04"), None),
         "pin.M5": ("-", "LPSR_05", make_pin("LPSR_05"), None),
         "pin.J6": ("-", "AD_07", make_pin("AD_07"), None),
-        "uart.5.TXD": ("-", "AD_28", make_pin("AD_28"), None),
-        "uart.5.RXD": ("-", "AD_29", make_pin("AD_29"), None),
+        "uart.12.TXD": ("-", "LPSR_06", make_pin("LPSR_06"), None),
+        "uart.12.RXD": ("-", "LPSR_07", make_pin("LPSR_07"), None),
     }
     cmm.add(pin_map)
     print("cmm config ok")
+
+
+def build_fixed_grid_map(cols, rows):
+    grid_map = []
+    for row in range(rows):
+        row_cells = []
+        for col in range(cols):
+            if row == 0 or row == rows - 1 or col == 0 or col == cols - 1:
+                row_cells.append("wall")
+            else:
+                row_cells.append("background")
+        grid_map.append(row_cells)
+    return grid_map
 
 
 load_cmm_config()
@@ -133,11 +152,22 @@ last_map_update_ms = None
 last_base_roi = None
 last_detect_roi = None
 last_grid_map = None
+fixed_grid_map = build_fixed_grid_map(FIXED_MAP_COLS, FIXED_MAP_ROWS)
 
 while True:
     frame_id += 1
     should_print = PRINT_EVERY_N_FRAMES and (frame_id % PRINT_EVERY_N_FRAMES) == 0
     clock.tick()
+
+    if FIXED_TX_TEST:
+        if should_print:
+            print("fps:", clock.fps())
+        send_detected_car(FIXED_CAR_MAP_POS, FIXED_CAR_ANGLE_DEG)
+        send_detected_map(fixed_grid_map, FIXED_MAP_ROI,
+                          FIXED_MAP_COLS, FIXED_MAP_ROWS)
+        time.sleep_ms(200)
+        continue
+
     img = sensor.snapshot()
 
     now_ms = time.ticks_ms()

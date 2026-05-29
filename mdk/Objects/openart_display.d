@@ -1,4 +1,5 @@
-./objects/main.o: ..\user\src\main.c \
+./objects/openart_display.o: ..\user\src\screen_print\openart_display.c \
+  ..\user\src\screen_print\openart_display.h \
   ..\..\libraries\zf_common\zf_common_headfile.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdio.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdint.h \
@@ -108,6 +109,5 @@
   ..\..\libraries\components\sdmmc\common\fsl_sdmmc_spec.h \
   ..\..\libraries\components\sdmmc\sdmmc_config.h \
   ..\..\libraries\sdk\board\clock_config.h \
-  ..\user\src\car_control\car_control.h \
-  ..\user\src\openart_uart\openart_uart.h \
-  ..\user\src\screen_print\openart_display.h
+  ..\user\src\screen_print\..\openart_uart\openart_uart.h \
+  ..\user\src\screen_print\screen_print.h

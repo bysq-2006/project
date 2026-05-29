@@ -410,6 +410,11 @@
               <FilePath>..\user\src\screen_print\screen_print.c</FilePath>
             </File>
             <File>
+              <FileName>openart_display.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user\src\screen_print\openart_display.c</FilePath>
+            </File>
+            <File>
               <FileName>gyro_z_angle.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\user\src\gyro_z_angle\gyro_z_angle.c</FilePath>
@@ -438,6 +443,11 @@
               <FileName>screen_print.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\user\src\screen_print\screen_print.h</FilePath>
+            </File>
+            <File>
+              <FileName>openart_display.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\user\src\screen_print\openart_display.h</FilePath>
             </File>
             <File>
               <FileName>heading_control.h</FileName>

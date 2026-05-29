@@ -4,6 +4,7 @@
 ".\objects\car_control.o"
 ".\objects\heading_control.o"
 ".\objects\screen_print.o"
+".\objects\openart_display.o"
 ".\objects\gyro_z_angle.o"
 ".\objects\openart_uart.o"
 ".\objects\zf_common_clock.o"

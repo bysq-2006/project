@@ -102,6 +102,28 @@ static char cell_to_char(uint8 cell)
 }
 
 
+static void display_uart_status_rows(void)
+{
+    char buffer[OPENART_DISPLAY_BUFFER_SIZE];
+
+    sprintf(buffer, "RX:%u PK:%u",
+            openart_uart_status.rx_bytes,
+            openart_uart_status.packet_count);
+    screen_print_line(4, buffer);
+
+    sprintf(buffer, "PO:%u MP:%u",
+            openart_uart_status.pose_packets,
+            openart_uart_status.map_packets);
+    screen_print_line(5, buffer);
+
+    sprintf(buffer, "CK:%u FM:%u OV:%u",
+            openart_uart_status.checksum_errors,
+            openart_uart_status.format_errors,
+            openart_uart_status.rx_overflows);
+    screen_print_line(6, buffer);
+}
+
+
 static void display_pose(void)
 {
     char x_text[12];
@@ -177,9 +199,7 @@ static void display_map_rows(void)
 
     if(!openart_map.valid)
     {
-        screen_print_line(4, "");
-        screen_print_line(5, "");
-        screen_print_line(6, "");
+        display_uart_status_rows();
         return;
     }
 
