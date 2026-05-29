@@ -1,4 +1,5 @@
-./objects/main.o: ..\user\src\main.c \
+./objects/openart_uart.o: ..\user\src\openart_uart\openart_uart.c \
+  ..\user\src\openart_uart\openart_uart.h \
   ..\..\libraries\zf_common\zf_common_headfile.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdio.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdint.h \
@@ -107,8 +108,4 @@
   ..\..\libraries\sdk\drives\fsl_usdhc.h \
   ..\..\libraries\components\sdmmc\common\fsl_sdmmc_spec.h \
   ..\..\libraries\components\sdmmc\sdmmc_config.h \
-  ..\..\libraries\sdk\board\clock_config.h \
-  ..\user\src\car_control\car_control.h \
-  ..\user\src\car_control\heading_control.h \
-  ..\user\src\gyro_z_angle\gyro_z_angle.h \
-  ..\user\src\openart_uart\openart_uart.h
+  ..\..\libraries\sdk\board\clock_config.h

@@ -10,6 +10,7 @@ from blob_detect import detect_targets
 from draw_utils import draw_blob, draw_grid, draw_grid_results
 from grid_classifier import classify_grid
 from point_locator import get_detect_rois
+from openart_uart import send_detected_car, send_detected_map
 
 
 # OpenMV 的 LAB 阈值格式：（L最小，L最大，A最小，A最大，B最小，B最大）。
@@ -22,7 +23,7 @@ MAX_BLOBS_PER_COLOR = 6
 # 网格分类配置，集中放这里方便调地图行列、阈值和调试显示。
 GRID_CONFIG = {
     # 是否绘制网格和字符。
-    "classify": False,
+    "classify": True,
     # 地图宽度方向的格子数量。
     "cols": 12,
     # 地图高度方向的格子数量。
@@ -83,7 +84,6 @@ RANGE_CONFIG = {
 # 位置4：最少像素/面积，小于这个值的色块会被过滤。
 # 要检测的目标色块配置。
 TARGETS = (
-    ("yellow_box", ((80, 100, -25, 5, 70, 110),), (255, 255, 0), 30),
     # 由 RGB 采样值换算得到的初始 LAB 阈值。
     ("cyan_marker", ((78, 100, -65, -25, -35, 10),), (0, 255, 255), 25),
     ("green_marker", ((72, 100, -110, -60, 55, 100),), (0, 255, 0), 25),
@@ -113,6 +113,8 @@ def load_cmm_config():
         "pin.M4": ("-", "LPSR_04", make_pin("LPSR_04"), None),
         "pin.M5": ("-", "LPSR_05", make_pin("LPSR_05"), None),
         "pin.J6": ("-", "AD_07", make_pin("AD_07"), None),
+        "uart.5.TXD": ("-", "AD_28", make_pin("AD_28"), None),
+        "uart.5.RXD": ("-", "AD_29", make_pin("AD_29"), None),
     }
     cmm.add(pin_map)
     print("cmm config ok")
@@ -228,3 +230,8 @@ while True:
 
     if should_print:
         print("fps:", clock.fps())
+
+    send_detected_car(car_map_pos, angle)
+    if should_update_map:
+        send_detected_map(last_grid_map, detect_roi,
+                          GRID_CONFIG["cols"], GRID_CONFIG["rows"])

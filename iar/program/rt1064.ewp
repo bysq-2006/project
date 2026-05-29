@@ -1785,11 +1785,23 @@
         <file>
             <name>$PROJ_DIR$\..\..\user\src\main.c</name>
         </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\user\src\openart_uart\openart_uart.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\user\src\screen_print\openart_display.c</name>
+        </file>
     </group>
     <group>
         <name>user_h</name>
         <file>
             <name>$PROJ_DIR$\..\..\user\inc\isr.h</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\user\src\openart_uart\openart_uart.h</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\user\src\screen_print\openart_display.h</name>
         </file>
     </group>
     <group>

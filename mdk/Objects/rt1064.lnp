@@ -5,6 +5,7 @@
 ".\objects\heading_control.o"
 ".\objects\screen_print.o"
 ".\objects\gyro_z_angle.o"
+".\objects\openart_uart.o"
 ".\objects\zf_common_clock.o"
 ".\objects\zf_common_debug.o"
 ".\objects\zf_common_fifo.o"
