@@ -84,7 +84,7 @@ typedef struct
     uint16 checksum_errors;
     // Packets rejected because type, length, or map size was invalid.
     uint16 format_errors;
-    // Bytes dropped because the interrupt receive buffer was full.
+    // Bytes dropped because the receive buffer was full.
     uint16 rx_overflows;
 } openart_uart_status_t;
 
@@ -100,7 +100,7 @@ extern openart_uart_status_t openart_uart_status;
 void openart_uart_init(void);
 // Non-blocking UART parser. Call this repeatedly in the main loop.
 void openart_uart_update(void);
-// LPUART1 RX interrupt byte collector. Called by LPUART1_IRQHandler.
+// Pull pending UART bytes into the software receive buffer.
 void openart_uart_interrupt_handler(void);
 // Clear both updated flags without clearing the received data itself.
 void openart_uart_clear_updated(void);

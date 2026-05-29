@@ -3,12 +3,13 @@
 *********************************************************************************************************************/
 
 #include "screen_print.h"
+#include "../openart_uart/openart_uart.h"
 #include <stdio.h>
 
 #define SCREEN_PRINT_LINE_COUNT     (7)
 #define SCREEN_PRINT_LINE_HEIGHT    (24)
 #define SCREEN_PRINT_LINE_WIDTH     (240)
-#define SCREEN_PRINT_BUFFER_SIZE    (40)
+#define SCREEN_PRINT_BUFFER_SIZE    (64)
 
 static uint16 screen_print_page_id;
 static uint16 screen_print_label_id[SCREEN_PRINT_LINE_COUNT];
@@ -63,4 +64,65 @@ void screen_print_motor_duty(int16 motor1_duty, int16 motor2_duty, int16 motor3_
     screen_print_line(4, "     |      |");
     screen_print_line(5, "Left M3    M4 Right");
     screen_print_line(6, "       Rear");
+}
+
+static void screen_print_format_fixed10(char *buffer, int16 value10)
+{
+    int16 abs_value;
+
+    abs_value = value10;
+    if(value10 < 0)
+    {
+        abs_value = (int16)-value10;
+        sprintf(buffer, "-%d.%d", abs_value / 10, abs_value % 10);
+    }
+    else
+    {
+        sprintf(buffer, "%d.%d", abs_value / 10, abs_value % 10);
+    }
+}
+
+void screen_print_openart_packet_status(void)
+{
+    char buffer[SCREEN_PRINT_BUFFER_SIZE];
+    char x_text[16];
+    char y_text[16];
+    char angle_text[16];
+
+    sprintf(buffer, "RX:%lu PK:%u",
+            (unsigned long)openart_uart_status.rx_bytes,
+            openart_uart_status.packet_count);
+    screen_print_line(0, buffer);
+
+    sprintf(buffer, "PO:%u MP:%u",
+            openart_uart_status.pose_packets,
+            openart_uart_status.map_packets);
+    screen_print_line(1, buffer);
+
+    sprintf(buffer, "CK:%u FM:%u OV:%u",
+            openart_uart_status.checksum_errors,
+            openart_uart_status.format_errors,
+            openart_uart_status.rx_overflows);
+    screen_print_line(2, buffer);
+
+    sprintf(buffer, "Pose v:%u s:%u",
+            openart_pose.valid,
+            openart_pose.seq);
+    screen_print_line(3, buffer);
+
+    screen_print_format_fixed10(x_text, openart_pose.x10);
+    screen_print_format_fixed10(y_text, openart_pose.y10);
+    sprintf(buffer, "X:%s Y:%s", x_text, y_text);
+    screen_print_line(4, buffer);
+
+    screen_print_format_fixed10(angle_text, (int16)openart_pose.angle10);
+    sprintf(buffer, "Ang:%s", angle_text);
+    screen_print_line(5, buffer);
+
+    sprintf(buffer, "Map v:%u s:%u C:%u R:%u",
+            openart_map.valid,
+            openart_map.seq,
+            openart_map.cols,
+            openart_map.rows);
+    screen_print_line(6, buffer);
 }

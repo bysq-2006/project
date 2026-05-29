@@ -104,6 +104,7 @@ void openart_uart_init(void)
 
     uart_init(OPENART_UART_INDEX, OPENART_UART_BAUD,
               OPENART_UART_TX_PIN, OPENART_UART_RX_PIN);
+    uart_rx_interrupt(OPENART_UART_INDEX, 1);
 }
 
 

@@ -36,6 +36,7 @@
 #include "zf_common_headfile.h"
 #include "zf_common_debug.h"
 #include "isr.h"
+#include "openart_uart/openart_uart.h"
 
 
 
@@ -75,70 +76,88 @@ void LPUART1_IRQHandler(void)
 {
     if(kLPUART_RxDataRegFullFlag & LPUART_GetStatusFlags(LPUART1))
     {
-        // 接收中断
-    #if DEBUG_UART_USE_INTERRUPT                        // 如果开启 debug 串口中断
-        debug_interrupr_handler();                      // 调用 debug 串口接收处理函数 数据会被 debug 环形缓冲区读取
-    #endif                                              // 如果修改了 DEBUG_UART_INDEX 那这段代码需要放到对应的串口中断去
+        if(OPENART_UART_INDEX == UART_1)
+        {
+            openart_uart_interrupt_handler();
+        }
+        else
+        {
+    #if DEBUG_UART_USE_INTERRUPT
+            debug_interrupr_handler();
+    #endif
+        }
     }
         
-    LPUART_ClearStatusFlags(LPUART1, kLPUART_RxOverrunFlag);    // 不允许删除
+    LPUART_ClearStatusFlags(LPUART1, kLPUART_RxOverrunFlag);
 }
 
 void LPUART2_IRQHandler(void)
 {
     if(kLPUART_RxDataRegFullFlag & LPUART_GetStatusFlags(LPUART2))
     {
-        // 接收中断
-        
+        if(OPENART_UART_INDEX == UART_2)
+        {
+            openart_uart_interrupt_handler();
+        }
     }
         
-    LPUART_ClearStatusFlags(LPUART2, kLPUART_RxOverrunFlag);    // 不允许删除
+    LPUART_ClearStatusFlags(LPUART2, kLPUART_RxOverrunFlag);
 }
 
 void LPUART3_IRQHandler(void)
 {
     if(kLPUART_RxDataRegFullFlag & LPUART_GetStatusFlags(LPUART3))
     {
-        // 接收中断
-        
+        if(OPENART_UART_INDEX == UART_3)
+        {
+            openart_uart_interrupt_handler();
+        }
     }
         
-    LPUART_ClearStatusFlags(LPUART3, kLPUART_RxOverrunFlag);    // 不允许删除
+    LPUART_ClearStatusFlags(LPUART3, kLPUART_RxOverrunFlag);
 }
 
 void LPUART4_IRQHandler(void)
 {
     if(kLPUART_RxDataRegFullFlag & LPUART_GetStatusFlags(LPUART4))
     {
-        // 接收中断 
+        if(OPENART_UART_INDEX == UART_4)
+        {
+            openart_uart_interrupt_handler();
+        }
         flexio_camera_uart_handler();
         
         gnss_uart_callback();
     }
         
-    LPUART_ClearStatusFlags(LPUART4, kLPUART_RxOverrunFlag);    // 不允许删除
+    LPUART_ClearStatusFlags(LPUART4, kLPUART_RxOverrunFlag);
 }
 
 void LPUART5_IRQHandler(void)
 {
     if(kLPUART_RxDataRegFullFlag & LPUART_GetStatusFlags(LPUART5))
     {
-        // 接收中断
+        if(OPENART_UART_INDEX == UART_5)
+        {
+            openart_uart_interrupt_handler();
+        }
         camera_uart_handler();
     }
         
-    LPUART_ClearStatusFlags(LPUART5, kLPUART_RxOverrunFlag);    // 不允许删除
+    LPUART_ClearStatusFlags(LPUART5, kLPUART_RxOverrunFlag);
 }
 
 void LPUART6_IRQHandler(void)
 {
     if(kLPUART_RxDataRegFullFlag & LPUART_GetStatusFlags(LPUART6))
     {
-        // 接收中断
-        
+        if(OPENART_UART_INDEX == UART_6)
+        {
+            openart_uart_interrupt_handler();
+        }
     }
         
-    LPUART_ClearStatusFlags(LPUART6, kLPUART_RxOverrunFlag);    // 不允许删除
+    LPUART_ClearStatusFlags(LPUART6, kLPUART_RxOverrunFlag);
 }
 
 
@@ -146,12 +165,15 @@ void LPUART8_IRQHandler(void)
 {
     if(kLPUART_RxDataRegFullFlag & LPUART_GetStatusFlags(LPUART8))
     {
-        // 接收中断
+        if(OPENART_UART_INDEX == UART_8)
+        {
+            openart_uart_interrupt_handler();
+        }
         wireless_module_uart_handler();
         
     }
         
-    LPUART_ClearStatusFlags(LPUART8, kLPUART_RxOverrunFlag);    // 不允许删除
+    LPUART_ClearStatusFlags(LPUART8, kLPUART_RxOverrunFlag);
 }
 
 
