@@ -23,7 +23,7 @@ MAX_BLOBS_PER_COLOR = 6
 # 网格分类配置，集中放这里方便调地图行列、阈值和调试显示。
 GRID_CONFIG = {
     # 是否绘制网格和字符。
-    "classify": True,
+    "classify": False,
     # 地图宽度方向的格子数量。
     "cols": 12,
     # 地图高度方向的格子数量。

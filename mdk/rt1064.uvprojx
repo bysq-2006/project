@@ -419,11 +419,6 @@
               <FileType>1</FileType>
               <FilePath>..\user\src\openart_uart\openart_uart.c</FilePath>
             </File>
-            <File>
-              <FileName>openart_display.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\user\src\screen_print\openart_display.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -458,11 +453,6 @@
               <FileName>openart_uart.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\user\src\openart_uart\openart_uart.h</FilePath>
-            </File>
-            <File>
-              <FileName>openart_display.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\user\src\screen_print\openart_display.h</FilePath>
             </File>
           </Files>
         </Group>

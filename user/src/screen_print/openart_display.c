@@ -14,6 +14,60 @@ static uint16 display_tick;
 static uint8 map_page;
 
 
+static char angle_to_car_char(uint16 angle10)
+{
+    static const char direction_chars[8] = {'>', '/', '^', '\\', '<', '/', 'v', '\\'};
+    uint16 sector;
+
+    sector = (uint16)(((angle10 % 3600) + 225) / 450);
+    if(sector >= 8)
+    {
+        sector = 0;
+    }
+
+    return direction_chars[sector];
+}
+
+
+static uint8 get_car_grid_position(uint8 *car_col, uint8 *car_row)
+{
+    int32 col;
+    int32 row;
+
+    if((!openart_pose.valid) || (!openart_map.valid) ||
+       (openart_map.cols == 0) || (openart_map.rows == 0) ||
+       (openart_map.width10 == 0) || (openart_map.height10 == 0))
+    {
+        return 0;
+    }
+
+    col = ((int32)openart_pose.x10 * openart_map.cols) / openart_map.width10;
+    row = ((int32)openart_pose.y10 * openart_map.rows) / openart_map.height10;
+
+    if(col < 0)
+    {
+        col = 0;
+    }
+    else if(col >= openart_map.cols)
+    {
+        col = openart_map.cols - 1;
+    }
+
+    if(row < 0)
+    {
+        row = 0;
+    }
+    else if(row >= openart_map.rows)
+    {
+        row = openart_map.rows - 1;
+    }
+
+    *car_col = (uint8)col;
+    *car_row = (uint8)row;
+    return 1;
+}
+
+
 static void format_fixed10(char *buffer, int16 value10)
 {
     int16 abs_value = value10;
@@ -81,6 +135,8 @@ static void display_map_header(void)
     char width_text[12];
     char height_text[12];
     char buffer[OPENART_DISPLAY_BUFFER_SIZE];
+    uint8 car_col;
+    uint8 car_row;
 
     if(openart_map.valid)
     {
@@ -88,7 +144,14 @@ static void display_map_header(void)
         format_fixed10(height_text, (int16)openart_map.height10);
         sprintf(buffer, "Map %dx%d W:%s", openart_map.cols, openart_map.rows, width_text);
         screen_print_line(2, buffer);
-        sprintf(buffer, "H:%s Seq:%d P:%d", height_text, openart_map.seq, map_page);
+        if(get_car_grid_position(&car_col, &car_row))
+        {
+            sprintf(buffer, "H:%s C:%02d,%02d P:%d", height_text, car_col, car_row, map_page);
+        }
+        else
+        {
+            sprintf(buffer, "H:%s Seq:%d P:%d", height_text, openart_map.seq, map_page);
+        }
         screen_print_line(3, buffer);
     }
     else
@@ -106,6 +169,9 @@ static void display_map_rows(void)
     uint8 col;
     uint8 row;
     uint8 start_row;
+    uint8 car_col;
+    uint8 car_row;
+    uint8 has_car;
     uint16 cell_index;
     char buffer[OPENART_DISPLAY_BUFFER_SIZE];
 
@@ -117,6 +183,7 @@ static void display_map_rows(void)
         return;
     }
 
+    has_car = get_car_grid_position(&car_col, &car_row);
     start_row = (uint8)(map_page * 3);
     for(line = 0; line < 3; line++)
     {
@@ -132,6 +199,10 @@ static void display_map_rows(void)
         {
             cell_index = (uint16)row * openart_map.cols + col;
             buffer[3 + col] = cell_to_char(openart_map.cells[cell_index]);
+        }
+        if((has_car) && (row == car_row) && (car_col < col))
+        {
+            buffer[3 + car_col] = angle_to_car_char(openart_pose.angle10);
         }
         buffer[3 + col] = '\0';
         screen_print_line((uint8)(4 + line), buffer);
@@ -157,6 +228,8 @@ void openart_display_init(void)
 void openart_display_update(void)
 {
     uint8 page_count;
+    uint8 car_col;
+    uint8 car_row;
 
     if(openart_map.valid && openart_map.rows > 0)
     {
@@ -165,14 +238,27 @@ void openart_display_update(void)
         {
             page_count = 1;
         }
-        display_tick++;
-        if(display_tick >= OPENART_DISPLAY_PAGE_TICKS)
+
+        if(get_car_grid_position(&car_col, &car_row))
         {
             display_tick = 0;
-            map_page++;
+            map_page = (uint8)(car_row / 3);
             if(map_page >= page_count)
             {
-                map_page = 0;
+                map_page = (uint8)(page_count - 1);
+            }
+        }
+        else
+        {
+            display_tick++;
+            if(display_tick >= OPENART_DISPLAY_PAGE_TICKS)
+            {
+                display_tick = 0;
+                map_page++;
+                if(map_page >= page_count)
+                {
+                    map_page = 0;
+                }
             }
         }
     }
