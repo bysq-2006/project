@@ -1,24 +1,18 @@
 #include "main_control.h"
 
-#define MAIN_CONTROL_ASTAR_MOVE_COST    (1u)
-#define MAIN_CONTROL_ASTAR_DIR_UP       (0u)
-#define MAIN_CONTROL_ASTAR_DIR_RIGHT    (1u)
-#define MAIN_CONTROL_ASTAR_DIR_DOWN     (2u)
-#define MAIN_CONTROL_ASTAR_DIR_LEFT     (3u)
-#define MAIN_CONTROL_ASTAR_DIR_NONE     (4u)
-#define MAIN_CONTROL_ASTAR_DIR_COUNT    (5u)
-#define MAIN_CONTROL_ASTAR_STATE_MAX    (OPENART_MAP_CELL_MAX * MAIN_CONTROL_ASTAR_DIR_COUNT)
-
+// 判断地图格子是否允许 A* 通行。
 static uint8 main_control_is_walkable_cell(uint8 cell)
 {
     return ((OPENART_CELL_BACKGROUND == cell) || (OPENART_CELL_GOAL == cell));
 }
 
+// 把二维地图坐标转换成 cells[] 一维下标。
 static uint16 main_control_map_index(const openart_map_t *map, uint8 x, uint8 y)
 {
     return (uint16)y * map->cols + x;
 }
 
+// 计算当前点到目标点的曼哈顿距离启发值。
 static uint32 main_control_astar_heuristic(main_control_map_pos_t pos, main_control_map_pos_t target)
 {
     uint32 dx;
@@ -30,6 +24,7 @@ static uint32 main_control_astar_heuristic(main_control_map_pos_t pos, main_cont
     return (dx + dy) * MAIN_CONTROL_ASTAR_MOVE_COST;
 }
 
+// 把 A* 内部状态编号还原成地图坐标。
 static main_control_map_pos_t main_control_astar_state_pos(const openart_map_t *map, uint16 state)
 {
     uint16 index;
@@ -42,6 +37,7 @@ static main_control_map_pos_t main_control_astar_state_pos(const openart_map_t *
     return pos;
 }
 
+// 在地图中查找所有箱子坐标。
 uint16 main_control_find_boxes(const openart_map_t *map, main_control_map_pos_t *boxes, uint16 max_boxes)
 {
     uint8 row;
@@ -77,6 +73,7 @@ uint16 main_control_find_boxes(const openart_map_t *map, main_control_map_pos_t 
     return count;
 }
 
+// 在地图中查找所有目标点坐标。
 uint16 main_control_find_goals(const openart_map_t *map, main_control_map_pos_t *goals, uint16 max_goals)
 {
     uint8 row;
@@ -112,6 +109,7 @@ uint16 main_control_find_goals(const openart_map_t *map, main_control_map_pos_t 
     return count;
 }
 
+// 把车的精确坐标换算成地图上的格子坐标。
 uint8 main_control_get_car_map_pos(const openart_pose_t *pose, const openart_map_t *map, main_control_map_pos_t *car_pos)
 {
     int32 col;
@@ -134,6 +132,7 @@ uint8 main_control_get_car_map_pos(const openart_pose_t *pose, const openart_map
     return 1;
 }
 
+// 带转向惩罚的 A* 路径搜索，路径从目标点倒着回写到起点。
 uint32 main_control_astar_find_path(const openart_map_t *map,
                                     main_control_map_pos_t start,
                                     main_control_map_pos_t target,

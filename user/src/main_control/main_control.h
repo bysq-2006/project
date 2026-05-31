@@ -11,6 +11,14 @@ typedef struct
 } main_control_map_pos_t;
 
 #define MAIN_CONTROL_PATH_COST_INVALID  (0xFFFFFFFFu)
+#define MAIN_CONTROL_ASTAR_MOVE_COST    (1u)
+#define MAIN_CONTROL_ASTAR_DIR_UP       (0u)
+#define MAIN_CONTROL_ASTAR_DIR_RIGHT    (1u)
+#define MAIN_CONTROL_ASTAR_DIR_DOWN     (2u)
+#define MAIN_CONTROL_ASTAR_DIR_LEFT     (3u)
+#define MAIN_CONTROL_ASTAR_DIR_NONE     (4u)
+#define MAIN_CONTROL_ASTAR_DIR_COUNT    (5u)
+#define MAIN_CONTROL_ASTAR_STATE_MAX    (OPENART_MAP_CELL_MAX * MAIN_CONTROL_ASTAR_DIR_COUNT)
 
 uint16 main_control_find_boxes(const openart_map_t *map, main_control_map_pos_t *boxes, uint16 max_boxes);
 uint16 main_control_find_goals(const openart_map_t *map, main_control_map_pos_t *goals, uint16 max_goals);
