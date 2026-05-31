@@ -35,6 +35,7 @@
 #define MAP_WALL_COLOR              RGB565(240, 240, 240)
 #define MAP_GOAL_COLOR              RGB565(180, 60, 255)
 #define MAP_BOX_COLOR               RGB565(240, 180, 0)
+#define MAP_CROSS_COLOR             RGB565(0, 255, 0)
 #define MAP_UNKNOWN_COLOR           RGB565(96, 96, 192)
 #define MAP_CAR_COLOR               RGB565(255, 64, 64)
 #define MAP_CAR_HEAD_COLOR          RGB565(0, 255, 255)
@@ -82,9 +83,51 @@ static uint16 map_cell_color(uint8 cell)
             return MAP_GOAL_COLOR;
         case OPENART_CELL_YELLOW_BOX:
             return MAP_BOX_COLOR;
+        case OPENART_CELL_CROSS:
+            return MAP_BG_COLOR;
         default:
             return MAP_UNKNOWN_COLOR;
     }
+}
+
+
+static void canvas_draw_cross(uint16 *canvas, uint16 width, uint16 height,
+                              int16 x, int16 y, uint16 cell_w, uint16 cell_h, uint16 color)
+{
+    int16 center_x;
+    int16 center_y;
+    int16 half_w;
+    int16 half_h;
+
+    center_x = (int16)(x + (int16)(cell_w / 2U));
+    center_y = (int16)(y + (int16)(cell_h / 2U));
+
+    half_w = (int16)(cell_w / 2U);
+    half_h = (int16)(cell_h / 2U);
+    if(half_w > 2)
+    {
+        half_w = (int16)(half_w - 2);
+    }
+    if(half_h > 2)
+    {
+        half_h = (int16)(half_h - 2);
+    }
+
+    if(half_w < 1)
+    {
+        half_w = 1;
+    }
+    if(half_h < 1)
+    {
+        half_h = 1;
+    }
+
+    canvas_draw_line(canvas, width, height,
+                     (int16)(center_x - half_w), center_y,
+                     (int16)(center_x + half_w), center_y, color);
+    canvas_draw_line(canvas, width, height,
+                     center_x, (int16)(center_y - half_h),
+                     center_x, (int16)(center_y + half_h), color);
 }
 
 
@@ -455,9 +498,20 @@ static void render_map_canvas(void)
                 }
             }
 
-            canvas_fill_rect(map_canvas, MAP_CANVAS_W, MAP_CANVAS_H,
-                             (int16)x + 1, (int16)y + 1,
-                             MAP_CELL_W - 2, MAP_CELL_H - 2, map_cell_color(cell));
+            if(OPENART_CELL_CROSS == cell)
+            {
+                canvas_fill_rect(map_canvas, MAP_CANVAS_W, MAP_CANVAS_H,
+                                 (int16)x + 1, (int16)y + 1,
+                                 MAP_CELL_W - 2, MAP_CELL_H - 2, MAP_BG_COLOR);
+                canvas_draw_cross(map_canvas, MAP_CANVAS_W, MAP_CANVAS_H,
+                                  (int16)x, (int16)y, MAP_CELL_W, MAP_CELL_H, MAP_CROSS_COLOR);
+            }
+            else
+            {
+                canvas_fill_rect(map_canvas, MAP_CANVAS_W, MAP_CANVAS_H,
+                                 (int16)x + 1, (int16)y + 1,
+                                 MAP_CELL_W - 2, MAP_CELL_H - 2, map_cell_color(cell));
+            }
             canvas_draw_rect(map_canvas, MAP_CANVAS_W, MAP_CANVAS_H,
                              (int16)x, (int16)y, MAP_CELL_W, MAP_CELL_H, MAP_GRID_COLOR);
         }

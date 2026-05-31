@@ -132,7 +132,7 @@ uint8 main_control_get_car_map_pos(const openart_pose_t *pose, const openart_map
     return 1;
 }
 
-// Plain A* for car movement. The output path is written from start to target.
+// 普通 A*，用于小车自身寻路。输出路径按起点到终点顺序写入。
 uint32 main_control_astar_find_car_path(const openart_map_t *map,
                                         main_control_map_pos_t start,
                                         main_control_map_pos_t target,
