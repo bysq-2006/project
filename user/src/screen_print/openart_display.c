@@ -71,6 +71,10 @@ static int16 abs16(int16 value)
 }
 
 
+static void canvas_draw_line(uint16 *canvas, uint16 width, uint16 height,
+                             int16 x0, int16 y0, int16 x1, int16 y1, uint16 color);
+
+
 static uint16 map_cell_color(uint8 cell)
 {
     switch(cell)

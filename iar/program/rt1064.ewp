@@ -1786,6 +1786,9 @@
             <name>$PROJ_DIR$\..\..\user\src\main.c</name>
         </file>
         <file>
+            <name>$PROJ_DIR$\..\..\user\src\car_control\path_follow_control.c</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\..\..\user\src\openart_uart\openart_uart.c</name>
         </file>
         <file>

@@ -3,12 +3,11 @@
 
 #include "zf_common_headfile.h"
 
-
 // 主控板接收 OpenART 数据包使用的 UART。
 #define OPENART_UART_INDEX          (UART_1)
 // UART 波特率，必须和 OpenART 端一致。
 #define OPENART_UART_BAUD           (115200)
-// 主控板 UART 发送引脚。当前只接收数据时，这个引脚可不接。
+// 主控板 UART 发送引脚。当前只接收数据时，这个引脚可以不接。
 #define OPENART_UART_TX_PIN         (UART1_TX_B12)
 // 主控板 UART 接收引脚，连接到 OpenART 的 TX。
 #define OPENART_UART_RX_PIN         (UART1_RX_B13)
@@ -20,18 +19,18 @@
 // 接收缓存中可保存的最大地图格子数量。
 #define OPENART_MAP_CELL_MAX        (OPENART_MAP_COLS_MAX * OPENART_MAP_ROWS_MAX)
 
-// 地图格子值：背景或空白区域。
+// 地图格子数值：背景或空白区域。
 #define OPENART_CELL_BACKGROUND     (0)
-// 地图格子值：墙。
+// 地图格子数值：墙。
 #define OPENART_CELL_WALL           (1)
-// 地图格子值：目标点。
+// 地图格子数值：目标点。
 #define OPENART_CELL_GOAL           (2)
-// 地图格子值：黄色箱子。
+// 地图格子数值：黄色箱子。
 #define OPENART_CELL_YELLOW_BOX     (3)
+// 地图格子数值：绿色正十字标记。
 #define OPENART_CELL_CROSS          (4)
-// 地图格子值：未知或不匹配结果。
+// 地图格子数值：未知或不匹配结果。
 #define OPENART_CELL_UNKNOWN        (255)
-
 
 typedef struct
 {
@@ -48,7 +47,6 @@ typedef struct
     // 车的角度，单位是角度乘以 10。
     uint16 angle10;
 } openart_pose_t;
-
 
 typedef struct
 {
@@ -70,7 +68,6 @@ typedef struct
     uint8 cells[OPENART_MAP_CELL_MAX];
 } openart_map_t;
 
-
 typedef struct
 {
     // 从 OpenART 接收到的 UART 总字节数。
@@ -85,10 +82,9 @@ typedef struct
     uint16 checksum_errors;
     // 因类型、长度或地图尺寸非法而丢弃的数据包数量。
     uint16 format_errors;
-    // 因接收缓冲区满而丢弃的字节数。
+    // 因接收缓存区满而丢弃的字节数。
     uint16 rx_overflows;
 } openart_uart_status_t;
-
 
 // 最新解析到的车位姿数据。
 extern openart_pose_t openart_pose;

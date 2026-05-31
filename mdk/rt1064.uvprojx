@@ -405,6 +405,11 @@
               <FilePath>..\user\src\car_control\heading_control.c</FilePath>
             </File>
             <File>
+              <FileName>path_follow_control.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user\src\car_control\path_follow_control.c</FilePath>
+            </File>
+            <File>
               <FileName>screen_print.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\user\src\screen_print\screen_print.c</FilePath>

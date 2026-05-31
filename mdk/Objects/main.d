@@ -109,5 +109,7 @@
   ..\..\libraries\components\sdmmc\sdmmc_config.h \
   ..\..\libraries\sdk\board\clock_config.h \
   ..\user\src\car_control\car_control.h \
+  ..\user\src\main_control\main_control.h \
+  ..\user\src\main_control\..\openart_uart\openart_uart.h \
   ..\user\src\openart_uart\openart_uart.h \
   ..\user\src\screen_print\openart_display.h
