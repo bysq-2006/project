@@ -1,5 +1,47 @@
 #include "main_control.h"
 
+#define MAIN_CONTROL_ASTAR_MOVE_COST    (1u)
+#define MAIN_CONTROL_ASTAR_DIR_UP       (0u)
+#define MAIN_CONTROL_ASTAR_DIR_RIGHT    (1u)
+#define MAIN_CONTROL_ASTAR_DIR_DOWN     (2u)
+#define MAIN_CONTROL_ASTAR_DIR_LEFT     (3u)
+#define MAIN_CONTROL_ASTAR_DIR_NONE     (4u)
+#define MAIN_CONTROL_ASTAR_DIR_COUNT    (5u)
+#define MAIN_CONTROL_ASTAR_STATE_MAX    (OPENART_MAP_CELL_MAX * MAIN_CONTROL_ASTAR_DIR_COUNT)
+
+static uint8 main_control_is_walkable_cell(uint8 cell)
+{
+    return ((OPENART_CELL_BACKGROUND == cell) || (OPENART_CELL_GOAL == cell));
+}
+
+static uint16 main_control_map_index(const openart_map_t *map, uint8 x, uint8 y)
+{
+    return (uint16)y * map->cols + x;
+}
+
+static uint32 main_control_astar_heuristic(main_control_map_pos_t pos, main_control_map_pos_t target)
+{
+    uint32 dx;
+    uint32 dy;
+
+    dx = (pos.x > target.x) ? (uint32)(pos.x - target.x) : (uint32)(target.x - pos.x);
+    dy = (pos.y > target.y) ? (uint32)(pos.y - target.y) : (uint32)(target.y - pos.y);
+
+    return (dx + dy) * MAIN_CONTROL_ASTAR_MOVE_COST;
+}
+
+static main_control_map_pos_t main_control_astar_state_pos(const openart_map_t *map, uint16 state)
+{
+    uint16 index;
+    main_control_map_pos_t pos;
+
+    index = state / MAIN_CONTROL_ASTAR_DIR_COUNT;
+    pos.x = (uint8)(index % map->cols);
+    pos.y = (uint8)(index / map->cols);
+
+    return pos;
+}
+
 uint16 main_control_find_boxes(const openart_map_t *map, main_control_map_pos_t *boxes, uint16 max_boxes)
 {
     uint8 row;
@@ -68,4 +110,200 @@ uint16 main_control_find_goals(const openart_map_t *map, main_control_map_pos_t 
     }
 
     return count;
+}
+
+uint8 main_control_get_car_map_pos(const openart_pose_t *pose, const openart_map_t *map, main_control_map_pos_t *car_pos)
+{
+    int32 col;
+    int32 row;
+
+    if((0 == pose) || (0 == map) || (0 == car_pos) || (!pose->valid) || (!map->valid) ||
+       (0 == map->cols) || (0 == map->rows) || (0 == map->width10) || (0 == map->height10) ||
+       (pose->x10 < 0) || (pose->y10 < 0) ||
+       ((int32)pose->x10 >= (int32)map->width10) || ((int32)pose->y10 >= (int32)map->height10))
+    {
+        return 0;
+    }
+
+    col = ((int32)pose->x10 * map->cols) / map->width10;
+    row = ((int32)pose->y10 * map->rows) / map->height10;
+
+    car_pos->x = (uint8)col;
+    car_pos->y = (uint8)row;
+
+    return 1;
+}
+
+uint32 main_control_astar_find_path(const openart_map_t *map,
+                                    main_control_map_pos_t start,
+                                    main_control_map_pos_t target,
+                                    main_control_map_pos_t *path,
+                                    uint16 turn_cost)
+{
+    static uint32 g_cost[MAIN_CONTROL_ASTAR_STATE_MAX];
+    static int16 parent[MAIN_CONTROL_ASTAR_STATE_MAX];
+    static uint8 open[MAIN_CONTROL_ASTAR_STATE_MAX];
+    static uint8 closed[MAIN_CONTROL_ASTAR_STATE_MAX];
+    static const int16 dx[4] = {0, 1, 0, -1};
+    static const int16 dy[4] = {-1, 0, 1, 0};
+
+    uint16 cell_count;
+    uint16 state_count;
+    uint16 i;
+    uint16 current;
+    uint16 current_index;
+    uint16 next_index;
+    uint16 next_state;
+    uint16 start_index;
+    uint16 target_index;
+    uint16 best_target_state;
+    uint16 path_index;
+    uint8 dir;
+    uint8 current_dir;
+    int16 next_x;
+    int16 next_y;
+    uint32 best_f;
+    uint32 next_g;
+    uint32 target_cost;
+    main_control_map_pos_t current_pos;
+
+    if((0 == map) || (0 == path) || (!map->valid) ||
+       (0 == map->cols) || (0 == map->rows))
+    {
+        return MAIN_CONTROL_PATH_COST_INVALID;
+    }
+
+    cell_count = (uint16)map->cols * map->rows;
+    if((OPENART_MAP_CELL_MAX < cell_count) ||
+       (start.x >= map->cols) || (start.y >= map->rows) ||
+       (target.x >= map->cols) || (target.y >= map->rows))
+    {
+        return MAIN_CONTROL_PATH_COST_INVALID;
+    }
+
+    start_index = main_control_map_index(map, start.x, start.y);
+    target_index = main_control_map_index(map, target.x, target.y);
+    if((!main_control_is_walkable_cell(map->cells[start_index])) ||
+       (!main_control_is_walkable_cell(map->cells[target_index])))
+    {
+        return MAIN_CONTROL_PATH_COST_INVALID;
+    }
+
+    state_count = cell_count * MAIN_CONTROL_ASTAR_DIR_COUNT;
+    for(i = 0; i < state_count; i++)
+    {
+        g_cost[i] = MAIN_CONTROL_PATH_COST_INVALID;
+        parent[i] = -1;
+        open[i] = 0;
+        closed[i] = 0;
+    }
+
+    current = start_index * MAIN_CONTROL_ASTAR_DIR_COUNT + MAIN_CONTROL_ASTAR_DIR_NONE;
+    g_cost[current] = 0;
+    open[current] = 1;
+    best_target_state = MAIN_CONTROL_ASTAR_STATE_MAX;
+    target_cost = MAIN_CONTROL_PATH_COST_INVALID;
+
+    while(1)
+    {
+        current = MAIN_CONTROL_ASTAR_STATE_MAX;
+        best_f = MAIN_CONTROL_PATH_COST_INVALID;
+
+        for(i = 0; i < state_count; i++)
+        {
+            if(open[i])
+            {
+                current_pos = main_control_astar_state_pos(map, i);
+                next_g = g_cost[i] + main_control_astar_heuristic(current_pos, target);
+                if(next_g < best_f)
+                {
+                    best_f = next_g;
+                    current = i;
+                }
+            }
+        }
+
+        if(MAIN_CONTROL_ASTAR_STATE_MAX == current)
+        {
+            return MAIN_CONTROL_PATH_COST_INVALID;
+        }
+
+        open[current] = 0;
+        closed[current] = 1;
+        current_index = current / MAIN_CONTROL_ASTAR_DIR_COUNT;
+
+        if(current_index == target_index)
+        {
+            best_target_state = current;
+            target_cost = g_cost[current];
+            break;
+        }
+
+        current_pos = main_control_astar_state_pos(map, current);
+        current_dir = (uint8)(current % MAIN_CONTROL_ASTAR_DIR_COUNT);
+
+        for(dir = MAIN_CONTROL_ASTAR_DIR_UP; dir <= MAIN_CONTROL_ASTAR_DIR_LEFT; dir++)
+        {
+            next_x = (int16)current_pos.x + dx[dir];
+            next_y = (int16)current_pos.y + dy[dir];
+
+            if((next_x < 0) || (next_y < 0) ||
+               (next_x >= map->cols) || (next_y >= map->rows))
+            {
+                continue;
+            }
+
+            next_index = main_control_map_index(map, (uint8)next_x, (uint8)next_y);
+            if(!main_control_is_walkable_cell(map->cells[next_index]))
+            {
+                continue;
+            }
+
+            next_state = next_index * MAIN_CONTROL_ASTAR_DIR_COUNT + dir;
+            if(closed[next_state])
+            {
+                continue;
+            }
+
+            next_g = g_cost[current] + MAIN_CONTROL_ASTAR_MOVE_COST;
+            if((MAIN_CONTROL_ASTAR_DIR_NONE != current_dir) && (current_dir != dir))
+            {
+                next_g += turn_cost;
+            }
+
+            if(next_g < g_cost[next_state])
+            {
+                g_cost[next_state] = next_g;
+                parent[next_state] = (int16)current;
+                open[next_state] = 1;
+            }
+        }
+    }
+
+    current = best_target_state;
+    path_index = 0;
+
+    while(MAIN_CONTROL_ASTAR_STATE_MAX != current)
+    {
+        if(path_index >= OPENART_MAP_CELL_MAX)
+        {
+            return MAIN_CONTROL_PATH_COST_INVALID;
+        }
+
+        path[path_index] = main_control_astar_state_pos(map, current);
+        if((path[path_index].x == start.x) && (path[path_index].y == start.y))
+        {
+            return target_cost;
+        }
+
+        if(parent[current] < 0)
+        {
+            return MAIN_CONTROL_PATH_COST_INVALID;
+        }
+
+        current = (uint16)parent[current];
+        path_index++;
+    }
+
+    return MAIN_CONTROL_PATH_COST_INVALID;
 }

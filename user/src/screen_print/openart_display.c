@@ -513,37 +513,11 @@ static void render_status_canvas(void)
 }
 
 
-static void format_map_pos_line(char *buffer, const char *name,
-                                const main_control_map_pos_t *pos, uint16 count)
-{
-    if(0U == count)
-    {
-        sprintf(buffer, "%s:0", name);
-    }
-    else if(1U == count)
-    {
-        sprintf(buffer, "%s:1 (%u,%u)", name, pos[0].x, pos[0].y);
-    }
-    else if(2U == count)
-    {
-        sprintf(buffer, "%s:2 (%u,%u)(%u,%u)", name,
-                pos[0].x, pos[0].y,
-                pos[1].x, pos[1].y);
-    }
-    else
-    {
-        sprintf(buffer, "%s:%u (%u,%u)(%u,%u)(%u,%u)", name, count,
-                pos[0].x, pos[0].y,
-                pos[1].x, pos[1].y,
-                pos[2].x, pos[2].y);
-    }
-}
-
-
 static void render_status_debug_text(void)
 {
     static main_control_map_pos_t boxes[OPENART_MAP_CELL_MAX];
     static main_control_map_pos_t goals[OPENART_MAP_CELL_MAX];
+    main_control_map_pos_t car_pos;
     char line[STATUS_DEBUG_BUFFER_SIZE];
     uint16 box_count;
     uint16 goal_count;
@@ -551,10 +525,17 @@ static void render_status_debug_text(void)
     box_count = main_control_find_boxes(&openart_map, boxes, OPENART_MAP_CELL_MAX);
     goal_count = main_control_find_goals(&openart_map, goals, OPENART_MAP_CELL_MAX);
 
-    format_map_pos_line(line, "Box", boxes, box_count);
+    if(main_control_get_car_map_pos(&openart_pose, &openart_map, &car_pos))
+    {
+        sprintf(line, "Car:(%u,%u)", car_pos.x, car_pos.y);
+    }
+    else
+    {
+        sprintf(line, "Car:invalid");
+    }
     ips200pro_label_show_string(status_debug_label_id[0], line);
 
-    format_map_pos_line(line, "Goal", goals, goal_count);
+    sprintf(line, "Box:%u Goal:%u", box_count, goal_count);
     ips200pro_label_show_string(status_debug_label_id[1], line);
 }
 
