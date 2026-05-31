@@ -1,491 +1,395 @@
 #include "main_control.h"
 
-// 判断地图格子是否允许 A* 通行。
-static uint8 main_control_is_walkable_cell(uint8 cell)
+// 清空主控本次 update 的输出结果。
+static void main_control_clear_output(main_control_output_t *output)
 {
-    return ((OPENART_CELL_BACKGROUND == cell) || (OPENART_CELL_GOAL == cell));
+    if(0 == output)
+    {
+        return;
+    }
+
+    output->state = MAIN_CONTROL_STATE_IDLE;
+    output->valid = 0;
+    output->plan_ready = 0;
 }
 
-// 把二维地图坐标转换成 cells[] 一维下标。
-static uint16 main_control_map_index(const openart_map_t *map, uint8 x, uint8 y)
+// 复制一段地图路径，最多复制 OPENART_MAP_CELL_MAX 个点。
+static void main_control_copy_path(main_control_map_pos_t *dst,
+                                   const main_control_map_pos_t *src,
+                                   uint16 count)
 {
-    return (uint16)y * map->cols + x;
+    uint16 i;
+
+    if((0 == dst) || (0 == src))
+    {
+        return;
+    }
+
+    if(count > OPENART_MAP_CELL_MAX)
+    {
+        count = OPENART_MAP_CELL_MAX;
+    }
+
+    for(i = 0; i < count; i++)
+    {
+        dst[i] = src[i];
+    }
 }
 
-// 计算当前点到目标点的曼哈顿距离启发值。
-static uint32 main_control_astar_heuristic(main_control_map_pos_t pos, main_control_map_pos_t target)
+// 统计路径从起点到指定目标点一共有多少个有效点。
+static uint16 main_control_count_path_to_target(const main_control_map_pos_t *path,
+                                                main_control_map_pos_t target)
 {
-    uint32 dx;
-    uint32 dy;
+    uint16 i;
 
-    dx = (pos.x > target.x) ? (uint32)(pos.x - target.x) : (uint32)(target.x - pos.x);
-    dy = (pos.y > target.y) ? (uint32)(pos.y - target.y) : (uint32)(target.y - pos.y);
-
-    return (dx + dy) * MAIN_CONTROL_ASTAR_MOVE_COST;
-}
-
-// 把 A* 内部状态编号还原成地图坐标。
-static main_control_map_pos_t main_control_astar_state_pos(const openart_map_t *map, uint16 state)
-{
-    uint16 index;
-    main_control_map_pos_t pos;
-
-    index = state / MAIN_CONTROL_ASTAR_DIR_COUNT;
-    pos.x = (uint8)(index % map->cols);
-    pos.y = (uint8)(index / map->cols);
-
-    return pos;
-}
-
-// 在地图中查找所有箱子坐标。
-uint16 main_control_find_boxes(const openart_map_t *map, main_control_map_pos_t *boxes, uint16 max_boxes)
-{
-    uint8 row;
-    uint8 col;
-    uint16 count;
-    uint16 index;
-
-    count = 0;
-
-    if((0 == map) || (0 == boxes) || (0 == max_boxes) || (!map->valid) ||
-       (0 == map->cols) || (0 == map->rows))
+    if(0 == path)
     {
         return 0;
     }
 
-    for(row = 0; row < map->rows; row++)
+    for(i = 0; i < OPENART_MAP_CELL_MAX; i++)
     {
-        for(col = 0; col < map->cols; col++)
+        if((path[i].x == target.x) && (path[i].y == target.y))
         {
-            index = (uint16)row * map->cols + col;
-            if(OPENART_CELL_YELLOW_BOX == map->cells[index])
-            {
-                if(count < max_boxes)
-                {
-                    boxes[count].x = col;
-                    boxes[count].y = row;
-                }
-                count++;
-            }
+            return (uint16)(i + 1);
         }
     }
 
-    return count;
+    return 0;
 }
 
-// 在地图中查找所有目标点坐标。
-uint16 main_control_find_goals(const openart_map_t *map, main_control_map_pos_t *goals, uint16 max_goals)
+// 根据箱子路径第一步反推出小车需要站立的推点。
+static uint8 main_control_calc_push_pos(const main_control_map_pos_t *box_path,
+                                        main_control_map_pos_t *push_pos)
 {
-    uint8 row;
-    uint8 col;
-    uint16 count;
-    uint16 index;
+    int16 dx;
+    int16 dy;
+    int16 push_x;
+    int16 push_y;
 
-    count = 0;
-
-    if((0 == map) || (0 == goals) || (0 == max_goals) || (!map->valid) ||
-       (0 == map->cols) || (0 == map->rows))
+    if((0 == box_path) || (0 == push_pos))
     {
         return 0;
     }
 
-    for(row = 0; row < map->rows; row++)
-    {
-        for(col = 0; col < map->cols; col++)
-        {
-            index = (uint16)row * map->cols + col;
-            if(OPENART_CELL_GOAL == map->cells[index])
-            {
-                if(count < max_goals)
-                {
-                    goals[count].x = col;
-                    goals[count].y = row;
-                }
-                count++;
-            }
-        }
-    }
+    dx = (int16)box_path[1].x - (int16)box_path[0].x;
+    dy = (int16)box_path[1].y - (int16)box_path[0].y;
+    push_x = (int16)box_path[0].x - dx;
+    push_y = (int16)box_path[0].y - dy;
 
-    return count;
-}
-
-// 把车的精确坐标换算成地图上的格子坐标。
-uint8 main_control_get_car_map_pos(const openart_pose_t *pose, const openart_map_t *map, main_control_map_pos_t *car_pos)
-{
-    int32 col;
-    int32 row;
-
-    if((0 == pose) || (0 == map) || (0 == car_pos) || (!pose->valid) || (!map->valid) ||
-       (0 == map->cols) || (0 == map->rows) || (0 == map->width10) || (0 == map->height10) ||
-       (pose->x10 < 0) || (pose->y10 < 0) ||
-       ((int32)pose->x10 >= (int32)map->width10) || ((int32)pose->y10 >= (int32)map->height10))
+    if((push_x < 0) || (push_y < 0) || (push_x > 255) || (push_y > 255))
     {
         return 0;
     }
 
-    col = ((int32)pose->x10 * map->cols) / map->width10;
-    row = ((int32)pose->y10 * map->rows) / map->height10;
-
-    car_pos->x = (uint8)col;
-    car_pos->y = (uint8)row;
+    push_pos->x = (uint8)push_x;
+    push_pos->y = (uint8)push_y;
 
     return 1;
 }
 
-// 普通 A*，用于小车自身寻路。输出路径按起点到终点顺序写入。
-uint32 main_control_astar_find_car_path(const openart_map_t *map,
-                                        main_control_map_pos_t start,
-                                        main_control_map_pos_t target,
-                                        main_control_map_pos_t *path)
+// 找到箱子当前直线推动段的终点，也就是第一个拐点前的位置。
+static uint16 main_control_find_push_segment_end(const main_control_map_pos_t *box_path,
+                                                 uint16 box_path_count)
 {
-    static uint32 g_cost[OPENART_MAP_CELL_MAX];
-    static int16 parent[OPENART_MAP_CELL_MAX];
-    static uint8 open[OPENART_MAP_CELL_MAX];
-    static uint8 closed[OPENART_MAP_CELL_MAX];
-    static main_control_map_pos_t reverse_path[OPENART_MAP_CELL_MAX];
-    static const int16 dx[4] = {0, 1, 0, -1};
-    static const int16 dy[4] = {-1, 0, 1, 0};
-
-    uint16 cell_count;
+    int16 first_dx;
+    int16 first_dy;
+    int16 dx;
+    int16 dy;
     uint16 i;
-    uint16 current;
-    uint16 next_index;
-    uint16 start_index;
-    uint16 target_index;
-    uint16 best_target_index;
-    uint16 path_index;
-    uint8 dir;
-    int16 next_x;
-    int16 next_y;
-    uint32 best_f;
-    uint32 next_g;
-    uint32 target_cost;
-    main_control_map_pos_t current_pos;
 
-    if((0 == map) || (0 == path) || (!map->valid) ||
-       (0 == map->cols) || (0 == map->rows))
+    if((0 == box_path) || (box_path_count < 2))
     {
-        return MAIN_CONTROL_PATH_COST_INVALID;
+        return 0;
     }
 
-    cell_count = (uint16)map->cols * map->rows;
-    if((start.x >= map->cols) || (start.y >= map->rows) ||
-       (target.x >= map->cols) || (target.y >= map->rows))
+    first_dx = (int16)box_path[1].x - (int16)box_path[0].x;
+    first_dy = (int16)box_path[1].y - (int16)box_path[0].y;
+
+    for(i = 2; i < box_path_count; i++)
     {
-        return MAIN_CONTROL_PATH_COST_INVALID;
-    }
-
-    start_index = main_control_map_index(map, start.x, start.y);
-    target_index = main_control_map_index(map, target.x, target.y);
-    if((!main_control_is_walkable_cell(map->cells[start_index])) ||
-       (!main_control_is_walkable_cell(map->cells[target_index])))
-    {
-        return MAIN_CONTROL_PATH_COST_INVALID;
-    }
-
-    for(i = 0; i < cell_count; i++)
-    {
-        g_cost[i] = MAIN_CONTROL_PATH_COST_INVALID;
-        parent[i] = -1;
-        open[i] = 0;
-        closed[i] = 0;
-    }
-
-    current = start_index;
-    g_cost[current] = 0;
-    open[current] = 1;
-    best_target_index = OPENART_MAP_CELL_MAX;
-    target_cost = MAIN_CONTROL_PATH_COST_INVALID;
-
-    while(1)
-    {
-        current = OPENART_MAP_CELL_MAX;
-        best_f = MAIN_CONTROL_PATH_COST_INVALID;
-
-        for(i = 0; i < cell_count; i++)
+        dx = (int16)box_path[i].x - (int16)box_path[i - 1].x;
+        dy = (int16)box_path[i].y - (int16)box_path[i - 1].y;
+        if((dx != first_dx) || (dy != first_dy))
         {
-            if(open[i])
-            {
-                current_pos.x = (uint8)(i % map->cols);
-                current_pos.y = (uint8)(i / map->cols);
-                next_g = g_cost[i] + main_control_astar_heuristic(current_pos, target);
-                if(next_g < best_f)
-                {
-                    best_f = next_g;
-                    current = i;
-                }
-            }
-        }
-
-        if(OPENART_MAP_CELL_MAX == current)
-        {
-            return MAIN_CONTROL_PATH_COST_INVALID;
-        }
-
-        open[current] = 0;
-        closed[current] = 1;
-
-        if(current == target_index)
-        {
-            best_target_index = current;
-            target_cost = g_cost[current];
-            break;
-        }
-
-        current_pos.x = (uint8)(current % map->cols);
-        current_pos.y = (uint8)(current / map->cols);
-
-        for(dir = MAIN_CONTROL_ASTAR_DIR_UP; dir <= MAIN_CONTROL_ASTAR_DIR_LEFT; dir++)
-        {
-            next_x = (int16)current_pos.x + dx[dir];
-            next_y = (int16)current_pos.y + dy[dir];
-
-            if((next_x < 0) || (next_y < 0) ||
-               (next_x >= map->cols) || (next_y >= map->rows))
-            {
-                continue;
-            }
-
-            next_index = main_control_map_index(map, (uint8)next_x, (uint8)next_y);
-            if((!main_control_is_walkable_cell(map->cells[next_index])) ||
-               closed[next_index])
-            {
-                continue;
-            }
-
-            next_g = g_cost[current] + MAIN_CONTROL_ASTAR_MOVE_COST;
-            if(next_g < g_cost[next_index])
-            {
-                g_cost[next_index] = next_g;
-                parent[next_index] = (int16)current;
-                open[next_index] = 1;
-            }
+            return (uint16)(i - 1);
         }
     }
 
-    current = best_target_index;
-    path_index = 0;
-
-    while(OPENART_MAP_CELL_MAX != current)
-    {
-        if(path_index >= OPENART_MAP_CELL_MAX)
-        {
-            return MAIN_CONTROL_PATH_COST_INVALID;
-        }
-
-        reverse_path[path_index].x = (uint8)(current % map->cols);
-        reverse_path[path_index].y = (uint8)(current / map->cols);
-        if((reverse_path[path_index].x == start.x) && (reverse_path[path_index].y == start.y))
-        {
-            for(i = 0; i <= path_index; i++)
-            {
-                path[i] = reverse_path[path_index - i];
-            }
-            return target_cost;
-        }
-
-        if(parent[current] < 0)
-        {
-            return MAIN_CONTROL_PATH_COST_INVALID;
-        }
-
-        current = (uint16)parent[current];
-        path_index++;
-    }
-
-    return MAIN_CONTROL_PATH_COST_INVALID;
+    return (uint16)(box_path_count - 1);
 }
 
-// 推箱子游戏的 A * 算法。该算法计入转向代价，并校验角色所在格子状态。
-uint32 main_control_astar_find_path(const openart_map_t *map,
-                                    main_control_map_pos_t start,
-                                    main_control_map_pos_t target,
-                                    main_control_map_pos_t *path,
-                                    uint16 turn_cost)
+// 把箱子的第一段推动路径转换成小车推动时需要跟随的路径。
+static uint8 main_control_fill_push_car_path(const main_control_map_pos_t *box_path,
+                                             uint16 box_path_count,
+                                             main_control_map_pos_t *push_car_path,
+                                             uint16 *push_car_path_count,
+                                             main_control_map_pos_t *box_end)
 {
-    static uint32 g_cost[MAIN_CONTROL_ASTAR_STATE_MAX];
-    static int16 parent[MAIN_CONTROL_ASTAR_STATE_MAX];
-    static uint8 open[MAIN_CONTROL_ASTAR_STATE_MAX];
-    static uint8 closed[MAIN_CONTROL_ASTAR_STATE_MAX];
-    static main_control_map_pos_t reverse_path[OPENART_MAP_CELL_MAX];
-    static const int16 dx[4] = {0, 1, 0, -1};
-    static const int16 dy[4] = {-1, 0, 1, 0};
-
-    uint16 cell_count;
-    uint16 state_count;
     uint16 i;
-    uint16 current;
-    uint16 current_index;
-    uint16 next_index;
-    uint16 next_state;
-    uint16 push_index;
-    uint16 start_index;
-    uint16 target_index;
-    uint16 best_target_state;
-    uint16 path_index;
-    uint8 dir;
-    uint8 current_dir;
-    int16 next_x;
-    int16 next_y;
-    int16 push_x;
-    int16 push_y;
-    uint32 best_f;
-    uint32 next_g;
-    uint32 target_cost;
-    main_control_map_pos_t current_pos;
+    uint16 segment_end;
 
-    if((0 == map) || (0 == path) || (!map->valid) ||
-       (0 == map->cols) || (0 == map->rows))
+    if((0 == box_path) || (0 == push_car_path) || (0 == push_car_path_count) ||
+       (0 == box_end) || (box_path_count < 2))
     {
-        return MAIN_CONTROL_PATH_COST_INVALID;
+        return 0;
     }
 
-    cell_count = (uint16)map->cols * map->rows;
-    if((start.x >= map->cols) || (start.y >= map->rows) ||
-       (target.x >= map->cols) || (target.y >= map->rows))
+    segment_end = main_control_find_push_segment_end(box_path, box_path_count);
+    if(0 == segment_end)
     {
-        return MAIN_CONTROL_PATH_COST_INVALID;
+        return 0;
     }
 
-    start_index = main_control_map_index(map, start.x, start.y);
-    target_index = main_control_map_index(map, target.x, target.y);
-
-    state_count = cell_count * MAIN_CONTROL_ASTAR_DIR_COUNT;
-    for(i = 0; i < state_count; i++)
+    for(i = 0; i < segment_end; i++)
     {
-        g_cost[i] = MAIN_CONTROL_PATH_COST_INVALID;
-        parent[i] = -1;
-        open[i] = 0;
-        closed[i] = 0;
+        push_car_path[i] = box_path[i];
     }
 
-    current = start_index * MAIN_CONTROL_ASTAR_DIR_COUNT + MAIN_CONTROL_ASTAR_DIR_NONE;
-    g_cost[current] = 0;
-    open[current] = 1;
-    best_target_state = MAIN_CONTROL_ASTAR_STATE_MAX;
-    target_cost = MAIN_CONTROL_PATH_COST_INVALID;
+    *push_car_path_count = segment_end;
+    *box_end = box_path[segment_end];
 
-    while(1)
+    return 1;
+}
+
+// 为单个箱子生成候选方案，包括箱子路径、小车推点路径和总代价。
+static uint8 main_control_build_box_plan(main_control_plan_t *plan,
+                                         const openart_map_t *map,
+                                         main_control_map_pos_t car_pos,
+                                         main_control_map_pos_t box_pos,
+                                         const main_control_map_pos_t *goals,
+                                         uint16 goal_count)
+{
+    main_control_map_pos_t candidate_path[OPENART_MAP_CELL_MAX];
+    main_control_map_pos_t best_goal;
+    uint32 best_box_cost;
+    uint32 car_cost;
+    uint32 cost;
+    uint16 best_box_path_count;
+    uint16 car_path_count;
+    uint16 i;
+
+    if((0 == plan) || (0 == map) || (0 == goals) || (0 == goal_count))
     {
-        current = MAIN_CONTROL_ASTAR_STATE_MAX;
-        best_f = MAIN_CONTROL_PATH_COST_INVALID;
+        return 0;
+    }
 
-        for(i = 0; i < state_count; i++)
+    plan->valid = 0;
+    plan->box_pos = box_pos;
+    best_box_cost = MAIN_CONTROL_PATH_COST_INVALID;
+    best_box_path_count = 0;
+
+    for(i = 0; i < goal_count; i++)
+    {
+        cost = main_control_astar_find_path(map, box_pos, goals[i], candidate_path, MAIN_CONTROL_BOX_PATH_TURN_COST);
+        if(cost < best_box_cost)
         {
-            if(open[i])
+            best_box_path_count = main_control_count_path_to_target(candidate_path, goals[i]);
+            if(best_box_path_count >= 2)
             {
-                current_pos = main_control_astar_state_pos(map, i);
-                next_g = g_cost[i] + main_control_astar_heuristic(current_pos, target);
-                if(next_g < best_f)
-                {
-                    best_f = next_g;
-                    current = i;
-                }
+                best_box_cost = cost;
+                best_goal = goals[i];
+                main_control_copy_path(plan->box_path, candidate_path, best_box_path_count);
             }
         }
+    }
 
-        if(MAIN_CONTROL_ASTAR_STATE_MAX == current)
+    if((MAIN_CONTROL_PATH_COST_INVALID == best_box_cost) || (best_box_path_count < 2))
+    {
+        return 0;
+    }
+
+    plan->goal_pos = best_goal;
+    plan->box_path_count = best_box_path_count;
+    plan->box_path_cost = best_box_cost;
+
+    if(!main_control_calc_push_pos(plan->box_path, &plan->push_pos))
+    {
+        return 0;
+    }
+
+    car_cost = main_control_astar_find_car_path(map, car_pos, plan->push_pos, plan->car_path);
+    if(MAIN_CONTROL_PATH_COST_INVALID == car_cost)
+    {
+        return 0;
+    }
+
+    car_path_count = main_control_count_path_to_target(plan->car_path, plan->push_pos);
+    if(0 == car_path_count)
+    {
+        return 0;
+    }
+
+    plan->car_path_count = car_path_count;
+    plan->car_path_cost = car_cost;
+    plan->total_cost = car_cost + best_box_cost;
+    plan->valid = 1;
+
+    return 1;
+}
+
+// 遍历所有箱子并选择当前总代价最低的执行方案。
+static uint8 main_control_build_best_plan(main_control_context_t *ctx,
+                                          const openart_pose_t *pose,
+                                          const openart_map_t *map)
+{
+    main_control_map_pos_t car_pos;
+    uint32 best_cost;
+    uint16 i;
+    uint16 plan_count;
+
+    if((0 == ctx) || (0 == pose) || (0 == map))
+    {
+        return 0;
+    }
+
+    ctx->has_active_plan = 0;
+    ctx->box_count = main_control_find_boxes(map, ctx->boxes, OPENART_MAP_CELL_MAX);
+    ctx->goal_count = main_control_find_goals(map, ctx->goals, OPENART_MAP_CELL_MAX);
+    ctx->plan_count = 0;
+    ctx->best_plan_index = 0;
+
+    if((0 == ctx->box_count) || (0 == ctx->goal_count))
+    {
+        ctx->state = MAIN_CONTROL_STATE_FINISHED;
+        return 0;
+    }
+
+    if(!main_control_get_car_map_pos(pose, map, &car_pos))
+    {
+        ctx->state = MAIN_CONTROL_STATE_ERROR;
+        return 0;
+    }
+
+    plan_count = ctx->box_count;
+    if(plan_count > MAIN_CONTROL_PLAN_MAX)
+    {
+        plan_count = MAIN_CONTROL_PLAN_MAX;
+    }
+
+    best_cost = MAIN_CONTROL_PATH_COST_INVALID;
+    for(i = 0; i < plan_count; i++)
+    {
+        ctx->plans[i].valid = 0;
+        if(main_control_build_box_plan(&ctx->plans[i], map, car_pos, ctx->boxes[i], ctx->goals, ctx->goal_count))
         {
-            return MAIN_CONTROL_PATH_COST_INVALID;
+            ctx->plan_count++;
+            if(ctx->plans[i].total_cost < best_cost)
+            {
+                best_cost = ctx->plans[i].total_cost;
+                ctx->best_plan_index = i;
+            }
         }
+    }
 
-        open[current] = 0;
-        closed[current] = 1;
-        current_index = current / MAIN_CONTROL_ASTAR_DIR_COUNT;
+    if(MAIN_CONTROL_PATH_COST_INVALID == best_cost)
+    {
+        ctx->state = MAIN_CONTROL_STATE_ERROR;
+        return 0;
+    }
 
-        if(current_index == target_index)
-        {
-            best_target_state = current;
-            target_cost = g_cost[current];
+    main_control_copy_path(ctx->active_car_path,
+                           ctx->plans[ctx->best_plan_index].car_path,
+                           ctx->plans[ctx->best_plan_index].car_path_count);
+    ctx->active_car_path_count = ctx->plans[ctx->best_plan_index].car_path_count;
+
+    if(!main_control_fill_push_car_path(ctx->plans[ctx->best_plan_index].box_path,
+                                        ctx->plans[ctx->best_plan_index].box_path_count,
+                                        ctx->active_push_car_path,
+                                        &ctx->active_push_car_path_count,
+                                        &ctx->active_box_end))
+    {
+        ctx->state = MAIN_CONTROL_STATE_ERROR;
+        return 0;
+    }
+
+    ctx->active_box_start = ctx->plans[ctx->best_plan_index].box_pos;
+    ctx->active_goal = ctx->plans[ctx->best_plan_index].goal_pos;
+    ctx->has_active_plan = 1;
+    ctx->replan_count++;
+
+    return 1;
+}
+
+// 初始化主控上下文，相当于创建一个新的主控对象。
+void main_control_init(main_control_context_t *ctx)
+{
+    if(0 == ctx)
+    {
+        return;
+    }
+
+    ctx->state = MAIN_CONTROL_STATE_PLAN;
+    ctx->box_count = 0;
+    ctx->goal_count = 0;
+    ctx->plan_count = 0;
+    ctx->best_plan_index = 0;
+    ctx->active_car_path_count = 0;
+    ctx->active_push_car_path_count = 0;
+    ctx->replan_count = 0;
+    ctx->has_active_plan = 0;
+}
+
+// 通知主控小车已经到达推点，下一步进入推箱子状态。
+void main_control_finish_move_to_push_pos(main_control_context_t *ctx)
+{
+    if((0 != ctx) && (MAIN_CONTROL_STATE_MOVE_TO_PUSH_POS == ctx->state))
+    {
+        ctx->state = MAIN_CONTROL_STATE_PUSH_BOX;
+    }
+}
+
+// 通知主控当前推动段已经完成，下一步重新规划。
+void main_control_finish_push_box(main_control_context_t *ctx)
+{
+    if((0 != ctx) && (MAIN_CONTROL_STATE_PUSH_BOX == ctx->state))
+    {
+        ctx->state = MAIN_CONTROL_STATE_PLAN;
+        ctx->has_active_plan = 0;
+    }
+}
+
+// 主控状态机入口；每调用一次就推进一次规划或运动控制。
+main_control_output_t main_control_update(main_control_context_t *ctx,
+                                          openart_pose_t *pose,
+                                          openart_map_t *map)
+{
+    main_control_output_t output;
+
+    main_control_clear_output(&output);
+    if((0 == ctx) || (0 == pose) || (0 == map))
+    {
+        output.state = MAIN_CONTROL_STATE_ERROR;
+        return output;
+    }
+
+    output.valid = 1;
+
+    switch(ctx->state)
+    {
+        case MAIN_CONTROL_STATE_IDLE:
+            ctx->state = MAIN_CONTROL_STATE_PLAN;
             break;
-        }
 
-        current_pos = main_control_astar_state_pos(map, current);
-        current_dir = (uint8)(current % MAIN_CONTROL_ASTAR_DIR_COUNT);
-
-        for(dir = MAIN_CONTROL_ASTAR_DIR_UP; dir <= MAIN_CONTROL_ASTAR_DIR_LEFT; dir++)
-        {
-            next_x = (int16)current_pos.x + dx[dir];
-            next_y = (int16)current_pos.y + dy[dir];
-
-            if((next_x < 0) || (next_y < 0) ||
-               (next_x >= map->cols) || (next_y >= map->rows))
+        case MAIN_CONTROL_STATE_PLAN:
+            if(main_control_build_best_plan(ctx, pose, map))
             {
-                continue;
+                ctx->state = MAIN_CONTROL_STATE_MOVE_TO_PUSH_POS;
+                output.plan_ready = 1;
             }
+            break;
 
-            next_index = main_control_map_index(map, (uint8)next_x, (uint8)next_y);
-            if((start_index != next_index) &&
-               (!main_control_is_walkable_cell(map->cells[next_index])))
-            {
-                continue;
-            }
+        case MAIN_CONTROL_STATE_MOVE_TO_PUSH_POS:
+        case MAIN_CONTROL_STATE_PUSH_BOX:
+            break;
 
-            push_x = (int16)current_pos.x - dx[dir];
-            push_y = (int16)current_pos.y - dy[dir];
-
-            if((push_x < 0) || (push_y < 0) ||
-               (push_x >= map->cols) || (push_y >= map->rows))
-            {
-                continue;
-            }
-
-            push_index = main_control_map_index(map, (uint8)push_x, (uint8)push_y);
-            if((start_index != push_index) &&
-               (!main_control_is_walkable_cell(map->cells[push_index])))
-            {
-                continue;
-            }
-
-            next_state = next_index * MAIN_CONTROL_ASTAR_DIR_COUNT + dir;
-            if(closed[next_state])
-            {
-                continue;
-            }
-
-            next_g = g_cost[current] + MAIN_CONTROL_ASTAR_MOVE_COST;
-            if((MAIN_CONTROL_ASTAR_DIR_NONE != current_dir) && (current_dir != dir))
-            {
-                next_g += turn_cost;
-            }
-
-            if(next_g < g_cost[next_state])
-            {
-                g_cost[next_state] = next_g;
-                parent[next_state] = (int16)current;
-                open[next_state] = 1;
-            }
-        }
+        case MAIN_CONTROL_STATE_FINISHED:
+        case MAIN_CONTROL_STATE_ERROR:
+        default:
+            break;
     }
 
-    current = best_target_state;
-    path_index = 0;
+    output.state = ctx->state;
 
-    while(MAIN_CONTROL_ASTAR_STATE_MAX != current)
-    {
-        if(path_index >= OPENART_MAP_CELL_MAX)
-        {
-            return MAIN_CONTROL_PATH_COST_INVALID;
-        }
-
-        reverse_path[path_index] = main_control_astar_state_pos(map, current);
-        if((reverse_path[path_index].x == start.x) && (reverse_path[path_index].y == start.y))
-        {
-            for(i = 0; i <= path_index; i++)
-            {
-                path[i] = reverse_path[path_index - i];
-            }
-            return target_cost;
-        }
-
-        if(parent[current] < 0)
-        {
-            return MAIN_CONTROL_PATH_COST_INVALID;
-        }
-
-        current = (uint16)parent[current];
-        path_index++;
-    }
-
-    return MAIN_CONTROL_PATH_COST_INVALID;
+    return output;
 }

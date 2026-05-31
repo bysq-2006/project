@@ -1,6 +1,6 @@
-./objects/main_control.o: ..\user\src\main_control\main_control.c \
-  ..\user\src\main_control\main_control.h \
-  ..\user\src\main_control\map_planner.h \
+./objects/path_follow_control.o: \
+  ..\user\src\car_control\path_follow_control.c \
+  ..\user\src\car_control\path_follow_control.h \
   ..\..\libraries\zf_common\zf_common_headfile.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdio.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdint.h \
@@ -110,4 +110,5 @@
   ..\..\libraries\components\sdmmc\common\fsl_sdmmc_spec.h \
   ..\..\libraries\components\sdmmc\sdmmc_config.h \
   ..\..\libraries\sdk\board\clock_config.h \
-  ..\user\src\main_control\..\openart_uart\openart_uart.h
+  ..\user\src\car_control\..\main_control\map_planner.h \
+  ..\user\src\car_control\..\main_control\..\openart_uart\openart_uart.h

@@ -6,7 +6,7 @@
 #define _path_follow_control_h_
 
 #include "zf_common_headfile.h"
-#include "../main_control/main_control.h"
+#include "../main_control/map_planner.h"
 
 typedef struct
 {

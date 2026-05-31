@@ -1789,6 +1789,15 @@
             <name>$PROJ_DIR$\..\..\user\src\car_control\path_follow_control.c</name>
         </file>
         <file>
+            <name>$PROJ_DIR$\..\..\user\src\car_control\path_follow_control_local.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\user\src\main_control\map_planner.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\user\src\main_control\main_control.c</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\..\..\user\src\openart_uart\openart_uart.c</name>
         </file>
         <file>
@@ -1805,6 +1814,18 @@
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\user\src\screen_print\openart_display.h</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\user\src\car_control\path_follow_control.h</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\user\src\car_control\path_follow_control_local.h</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\user\src\main_control\map_planner.h</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\user\src\main_control\main_control.h</name>
         </file>
     </group>
     <group>

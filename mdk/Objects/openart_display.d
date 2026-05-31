@@ -110,6 +110,6 @@
   ..\..\libraries\components\sdmmc\sdmmc_config.h \
   ..\..\libraries\sdk\board\clock_config.h \
   ..\user\src\screen_print\..\openart_uart\openart_uart.h \
-  ..\user\src\screen_print\..\main_control\main_control.h \
+  ..\user\src\screen_print\..\main_control\map_planner.h \
   ..\user\src\screen_print\..\main_control\..\openart_uart\openart_uart.h \
   C:\Keil_v5\ARM\ARMCLANG\include\math.h

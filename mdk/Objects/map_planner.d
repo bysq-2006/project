@@ -1,5 +1,4 @@
-./objects/main_control.o: ..\user\src\main_control\main_control.c \
-  ..\user\src\main_control\main_control.h \
+./objects/map_planner.o: ..\user\src\main_control\map_planner.c \
   ..\user\src\main_control\map_planner.h \
   ..\..\libraries\zf_common\zf_common_headfile.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdio.h \

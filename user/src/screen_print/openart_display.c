@@ -1,6 +1,6 @@
 #include "openart_display.h"
 #include "../openart_uart/openart_uart.h"
-#include "../main_control/main_control.h"
+#include "../main_control/map_planner.h"
 #include <math.h>
 #include <stdio.h>
 

@@ -108,8 +108,10 @@
   ..\..\libraries\components\sdmmc\common\fsl_sdmmc_spec.h \
   ..\..\libraries\components\sdmmc\sdmmc_config.h \
   ..\..\libraries\sdk\board\clock_config.h \
-  ..\user\src\car_control\car_control.h \
-  ..\user\src\main_control\main_control.h \
-  ..\user\src\main_control\..\openart_uart\openart_uart.h \
+  ..\user\src\car_control\path_follow_control_local.h \
+  ..\user\src\car_control\path_follow_control.h \
+  ..\user\src\car_control\..\main_control\map_planner.h \
+  ..\user\src\car_control\..\main_control\..\openart_uart\openart_uart.h \
+  ..\user\src\car_control\..\main_control\main_control.h \
   ..\user\src\openart_uart\openart_uart.h \
   ..\user\src\screen_print\openart_display.h
