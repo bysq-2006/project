@@ -132,7 +132,171 @@ uint8 main_control_get_car_map_pos(const openart_pose_t *pose, const openart_map
     return 1;
 }
 
-// 带转向惩罚的 A* 路径搜索，路径从目标点倒着回写到起点。
+// Plain A* for car movement. The output path is written from start to target.
+uint32 main_control_astar_find_car_path(const openart_map_t *map,
+                                        main_control_map_pos_t start,
+                                        main_control_map_pos_t target,
+                                        main_control_map_pos_t *path)
+{
+    static uint32 g_cost[OPENART_MAP_CELL_MAX];
+    static int16 parent[OPENART_MAP_CELL_MAX];
+    static uint8 open[OPENART_MAP_CELL_MAX];
+    static uint8 closed[OPENART_MAP_CELL_MAX];
+    static main_control_map_pos_t reverse_path[OPENART_MAP_CELL_MAX];
+    static const int16 dx[4] = {0, 1, 0, -1};
+    static const int16 dy[4] = {-1, 0, 1, 0};
+
+    uint16 cell_count;
+    uint16 i;
+    uint16 current;
+    uint16 next_index;
+    uint16 start_index;
+    uint16 target_index;
+    uint16 best_target_index;
+    uint16 path_index;
+    uint8 dir;
+    int16 next_x;
+    int16 next_y;
+    uint32 best_f;
+    uint32 next_g;
+    uint32 target_cost;
+    main_control_map_pos_t current_pos;
+
+    if((0 == map) || (0 == path) || (!map->valid) ||
+       (0 == map->cols) || (0 == map->rows))
+    {
+        return MAIN_CONTROL_PATH_COST_INVALID;
+    }
+
+    cell_count = (uint16)map->cols * map->rows;
+    if((start.x >= map->cols) || (start.y >= map->rows) ||
+       (target.x >= map->cols) || (target.y >= map->rows))
+    {
+        return MAIN_CONTROL_PATH_COST_INVALID;
+    }
+
+    start_index = main_control_map_index(map, start.x, start.y);
+    target_index = main_control_map_index(map, target.x, target.y);
+    if((!main_control_is_walkable_cell(map->cells[start_index])) ||
+       (!main_control_is_walkable_cell(map->cells[target_index])))
+    {
+        return MAIN_CONTROL_PATH_COST_INVALID;
+    }
+
+    for(i = 0; i < cell_count; i++)
+    {
+        g_cost[i] = MAIN_CONTROL_PATH_COST_INVALID;
+        parent[i] = -1;
+        open[i] = 0;
+        closed[i] = 0;
+    }
+
+    current = start_index;
+    g_cost[current] = 0;
+    open[current] = 1;
+    best_target_index = OPENART_MAP_CELL_MAX;
+    target_cost = MAIN_CONTROL_PATH_COST_INVALID;
+
+    while(1)
+    {
+        current = OPENART_MAP_CELL_MAX;
+        best_f = MAIN_CONTROL_PATH_COST_INVALID;
+
+        for(i = 0; i < cell_count; i++)
+        {
+            if(open[i])
+            {
+                current_pos.x = (uint8)(i % map->cols);
+                current_pos.y = (uint8)(i / map->cols);
+                next_g = g_cost[i] + main_control_astar_heuristic(current_pos, target);
+                if(next_g < best_f)
+                {
+                    best_f = next_g;
+                    current = i;
+                }
+            }
+        }
+
+        if(OPENART_MAP_CELL_MAX == current)
+        {
+            return MAIN_CONTROL_PATH_COST_INVALID;
+        }
+
+        open[current] = 0;
+        closed[current] = 1;
+
+        if(current == target_index)
+        {
+            best_target_index = current;
+            target_cost = g_cost[current];
+            break;
+        }
+
+        current_pos.x = (uint8)(current % map->cols);
+        current_pos.y = (uint8)(current / map->cols);
+
+        for(dir = MAIN_CONTROL_ASTAR_DIR_UP; dir <= MAIN_CONTROL_ASTAR_DIR_LEFT; dir++)
+        {
+            next_x = (int16)current_pos.x + dx[dir];
+            next_y = (int16)current_pos.y + dy[dir];
+
+            if((next_x < 0) || (next_y < 0) ||
+               (next_x >= map->cols) || (next_y >= map->rows))
+            {
+                continue;
+            }
+
+            next_index = main_control_map_index(map, (uint8)next_x, (uint8)next_y);
+            if((!main_control_is_walkable_cell(map->cells[next_index])) ||
+               closed[next_index])
+            {
+                continue;
+            }
+
+            next_g = g_cost[current] + MAIN_CONTROL_ASTAR_MOVE_COST;
+            if(next_g < g_cost[next_index])
+            {
+                g_cost[next_index] = next_g;
+                parent[next_index] = (int16)current;
+                open[next_index] = 1;
+            }
+        }
+    }
+
+    current = best_target_index;
+    path_index = 0;
+
+    while(OPENART_MAP_CELL_MAX != current)
+    {
+        if(path_index >= OPENART_MAP_CELL_MAX)
+        {
+            return MAIN_CONTROL_PATH_COST_INVALID;
+        }
+
+        reverse_path[path_index].x = (uint8)(current % map->cols);
+        reverse_path[path_index].y = (uint8)(current / map->cols);
+        if((reverse_path[path_index].x == start.x) && (reverse_path[path_index].y == start.y))
+        {
+            for(i = 0; i <= path_index; i++)
+            {
+                path[i] = reverse_path[path_index - i];
+            }
+            return target_cost;
+        }
+
+        if(parent[current] < 0)
+        {
+            return MAIN_CONTROL_PATH_COST_INVALID;
+        }
+
+        current = (uint16)parent[current];
+        path_index++;
+    }
+
+    return MAIN_CONTROL_PATH_COST_INVALID;
+}
+
+// 推箱子游戏的 A * 算法。该算法计入转向代价，并校验角色所在格子状态。
 uint32 main_control_astar_find_path(const openart_map_t *map,
                                     main_control_map_pos_t start,
                                     main_control_map_pos_t target,
@@ -143,6 +307,7 @@ uint32 main_control_astar_find_path(const openart_map_t *map,
     static int16 parent[MAIN_CONTROL_ASTAR_STATE_MAX];
     static uint8 open[MAIN_CONTROL_ASTAR_STATE_MAX];
     static uint8 closed[MAIN_CONTROL_ASTAR_STATE_MAX];
+    static main_control_map_pos_t reverse_path[OPENART_MAP_CELL_MAX];
     static const int16 dx[4] = {0, 1, 0, -1};
     static const int16 dy[4] = {-1, 0, 1, 0};
 
@@ -303,9 +468,13 @@ uint32 main_control_astar_find_path(const openart_map_t *map,
             return MAIN_CONTROL_PATH_COST_INVALID;
         }
 
-        path[path_index] = main_control_astar_state_pos(map, current);
-        if((path[path_index].x == start.x) && (path[path_index].y == start.y))
+        reverse_path[path_index] = main_control_astar_state_pos(map, current);
+        if((reverse_path[path_index].x == start.x) && (reverse_path[path_index].y == start.y))
         {
+            for(i = 0; i <= path_index; i++)
+            {
+                path[i] = reverse_path[path_index - i];
+            }
             return target_cost;
         }
 

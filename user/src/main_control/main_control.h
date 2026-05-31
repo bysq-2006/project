@@ -28,5 +28,9 @@ uint32 main_control_astar_find_path(const openart_map_t *map,
                                     main_control_map_pos_t target,
                                     main_control_map_pos_t *path,
                                     uint16 turn_cost);
+uint32 main_control_astar_find_car_path(const openart_map_t *map,
+                                        main_control_map_pos_t start,
+                                        main_control_map_pos_t target,
+                                        main_control_map_pos_t *path);
 
 #endif
