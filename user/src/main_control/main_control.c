@@ -304,6 +304,7 @@ static uint8 main_control_build_best_plan(main_control_context_t *ctx,
     }
 
     ctx->active_box_start = ctx->plans[ctx->best_plan_index].box_pos;
+    ctx->active_box_current = ctx->active_box_start;
     ctx->active_goal = ctx->plans[ctx->best_plan_index].goal_pos;
     ctx->has_active_plan = 1;
     ctx->replan_count++;
@@ -326,6 +327,14 @@ void main_control_init(main_control_context_t *ctx)
     ctx->best_plan_index = 0;
     ctx->active_car_path_count = 0;
     ctx->active_push_car_path_count = 0;
+    ctx->active_box_start.x = 0;
+    ctx->active_box_start.y = 0;
+    ctx->active_box_current.x = 0;
+    ctx->active_box_current.y = 0;
+    ctx->active_box_end.x = 0;
+    ctx->active_box_end.y = 0;
+    ctx->active_goal.x = 0;
+    ctx->active_goal.y = 0;
     ctx->replan_count = 0;
     ctx->has_active_plan = 0;
 }

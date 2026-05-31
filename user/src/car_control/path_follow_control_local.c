@@ -121,27 +121,90 @@ static void main_control_local_clear_output(main_control_local_output_t *output)
 }
 
 // 本地测试时直接修改地图，把箱子从起点移动到本段终点。
-static void main_control_local_apply_box_push(openart_map_t *map,
-                                              main_control_map_pos_t start,
-                                              main_control_map_pos_t end)
+static uint8 main_control_local_same_pos(main_control_map_pos_t a, main_control_map_pos_t b)
 {
-    uint16 start_index;
-    uint16 end_index;
+    return ((a.x == b.x) && (a.y == b.y));
+}
 
-    if((0 == map) || (!map->valid) || (0 == map->cols) || (0 == map->rows) ||
-       (start.x >= map->cols) || (start.y >= map->rows) ||
-       (end.x >= map->cols) || (end.y >= map->rows))
+static uint16 main_control_local_map_index(const openart_map_t *map, main_control_map_pos_t pos)
+{
+    return (uint16)pos.y * map->cols + pos.x;
+}
+
+static uint8 main_control_local_map_pos_valid(const openart_map_t *map, main_control_map_pos_t pos)
+{
+    return ((0 != map) && map->valid && (0 != map->cols) && (0 != map->rows) &&
+            (pos.x < map->cols) && (pos.y < map->rows));
+}
+
+static void main_control_local_set_box_pos(openart_map_t *map,
+                                           main_control_map_pos_t old_pos,
+                                           main_control_map_pos_t new_pos,
+                                           main_control_map_pos_t goal_pos)
+{
+    if((!main_control_local_map_pos_valid(map, old_pos)) ||
+       (!main_control_local_map_pos_valid(map, new_pos)) ||
+       (!main_control_local_map_pos_valid(map, goal_pos)))
     {
         return;
     }
 
-    start_index = (uint16)start.y * map->cols + start.x;
-    end_index = (uint16)end.y * map->cols + end.x;
+    map->cells[main_control_local_map_index(map, old_pos)] = OPENART_CELL_BACKGROUND;
 
-    map->cells[start_index] = OPENART_CELL_BACKGROUND;
-    map->cells[end_index] = OPENART_CELL_BACKGROUND;
+    if(main_control_local_same_pos(new_pos, goal_pos))
+    {
+        map->cells[main_control_local_map_index(map, new_pos)] = OPENART_CELL_BACKGROUND;
+    }
+    else
+    {
+        map->cells[main_control_local_map_index(map, new_pos)] = OPENART_CELL_YELLOW_BOX;
+    }
+
     map->updated = 1;
     map->seq++;
+}
+
+static void main_control_local_sync_box_push(openart_map_t *map,
+                                             main_control_context_t *ctx,
+                                             const openart_pose_t *pose)
+{
+    main_control_map_pos_t next_box_pos;
+    main_control_map_pos_t car_pos;
+
+    if((0 == ctx) || (!ctx->has_active_plan) || (MAIN_CONTROL_STATE_PUSH_BOX != ctx->state))
+    {
+        return;
+    }
+
+    if(0 == ctx->active_push_car_path_count)
+    {
+        next_box_pos = ctx->active_box_end;
+    }
+    else
+    {
+        next_box_pos = ctx->active_push_car_path[0];
+        if(main_control_get_car_map_pos(pose, map, &car_pos) &&
+           main_control_local_same_pos(car_pos, ctx->active_push_car_path[0]))
+        {
+            if(ctx->active_push_car_path_count > 1)
+            {
+                next_box_pos = ctx->active_push_car_path[1];
+            }
+            else
+            {
+                next_box_pos = ctx->active_box_end;
+            }
+        }
+    }
+
+    if(!main_control_local_same_pos(ctx->active_box_current, next_box_pos))
+    {
+        main_control_local_set_box_pos(map,
+                                       ctx->active_box_current,
+                                       next_box_pos,
+                                       ctx->active_goal);
+        ctx->active_box_current = next_box_pos;
+    }
 }
 
 // 本地主控入口；调用纯主控状态机，并用本地路径跟随模拟执行。
@@ -187,9 +250,12 @@ main_control_local_output_t main_control_update_local(main_control_context_t *ct
                                                  MAIN_CONTROL_LOCAL_X_SPEED,
                                                  MAIN_CONTROL_LOCAL_Y_SPEED,
                                                  MAIN_CONTROL_LOCAL_ARRIVE_PERCENT);
+        if(output.follow.valid)
+        {
+            main_control_local_sync_box_push(map, ctx, pose);
+        }
         if(output.follow.valid && output.follow.finished)
         {
-            main_control_local_apply_box_push(map, ctx->active_box_start, ctx->active_box_end);
             main_control_finish_push_box(ctx);
             output.motion_finished = 1;
         }
