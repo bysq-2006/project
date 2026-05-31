@@ -4,105 +4,105 @@
 #include "zf_common_headfile.h"
 
 
-// UART used by the mainboard to receive OpenART packets.
+// 主控板接收 OpenART 数据包使用的 UART。
 #define OPENART_UART_INDEX          (UART_1)
-// UART baud rate. This must match the OpenART side.
+// UART 波特率，必须和 OpenART 端一致。
 #define OPENART_UART_BAUD           (115200)
-// Mainboard UART TX pin. It is optional while the mainboard only receives data.
+// 主控板 UART 发送引脚。当前只接收数据时，这个引脚可不接。
 #define OPENART_UART_TX_PIN         (UART1_TX_B12)
-// Mainboard UART RX pin. Connect this pin to OpenART TX.
+// 主控板 UART 接收引脚，连接到 OpenART 的 TX。
 #define OPENART_UART_RX_PIN         (UART1_RX_B13)
 
-// Maximum map column count. It should match OpenART GRID_CONFIG["cols"].
+// 地图最大列数，应与 OpenART 的 GRID_CONFIG["cols"] 保持一致。
 #define OPENART_MAP_COLS_MAX        (12)
-// Maximum map row count. It should match OpenART GRID_CONFIG["rows"].
+// 地图最大行数，应与 OpenART 的 GRID_CONFIG["rows"] 保持一致。
 #define OPENART_MAP_ROWS_MAX        (16)
-// Maximum number of map cells stored in the receive buffer.
+// 接收缓存中可保存的最大地图格子数量。
 #define OPENART_MAP_CELL_MAX        (OPENART_MAP_COLS_MAX * OPENART_MAP_ROWS_MAX)
 
-// Map cell value: background or empty area.
+// 地图格子值：背景或空白区域。
 #define OPENART_CELL_BACKGROUND     (0)
-// Map cell value: wall.
+// 地图格子值：墙。
 #define OPENART_CELL_WALL           (1)
-// Map cell value: goal.
+// 地图格子值：目标点。
 #define OPENART_CELL_GOAL           (2)
-// Map cell value: yellow box.
+// 地图格子值：黄色箱子。
 #define OPENART_CELL_YELLOW_BOX     (3)
-// Map cell value: unknown or unmatched result.
+// 地图格子值：未知或不匹配结果。
 #define OPENART_CELL_UNKNOWN        (255)
 
 
 typedef struct
 {
-    // 1 means the latest car pose is valid. 0 means OpenART did not find a complete car pose.
+    // 1 表示最新车位姿有效，0 表示 OpenART 没有找到完整车位姿。
     uint8 valid;
-    // 1 means a new car pose packet was received. User code can clear it after reading.
+    // 1 表示收到了一包新的车位姿数据，用户读取后可清零。
     uint8 updated;
-    // Packet sequence number from OpenART, 0-255 wraparound.
+    // OpenART 的数据包序号，0-255 循环。
     uint8 seq;
-    // Car x coordinate in map coordinates, multiplied by 10.
+    // 车的 x 坐标，单位是地图坐标乘以 10。
     int16 x10;
-    // Car y coordinate in map coordinates, multiplied by 10.
+    // 车的 y 坐标，单位是地图坐标乘以 10。
     int16 y10;
-    // Car angle in degrees, multiplied by 10.
+    // 车的角度，单位是角度乘以 10。
     uint16 angle10;
 } openart_pose_t;
 
 
 typedef struct
 {
-    // 1 means the latest map data is valid. 0 means no valid map is available.
+    // 1 表示最新地图有效，0 表示当前没有可用地图。
     uint8 valid;
-    // 1 means a new map packet was received. User code can clear it after reading.
+    // 1 表示收到了一包新的地图数据，用户读取后可清零。
     uint8 updated;
-    // Packet sequence number from OpenART, 0-255 wraparound.
+    // OpenART 的数据包序号，0-255 循环。
     uint8 seq;
-    // Number of map columns.
+    // 地图列数。
     uint8 cols;
-    // Number of map rows.
+    // 地图行数。
     uint8 rows;
-    // Map ROI width in pixels, multiplied by 10.
+    // 地图 ROI 宽度，单位是像素乘以 10。
     uint16 width10;
-    // Map ROI height in pixels, multiplied by 10.
+    // 地图 ROI 高度，单位是像素乘以 10。
     uint16 height10;
-    // Row-major map cells: cells[row * cols + col].
+    // 按行优先存储的地图格子：cells[row * cols + col]。
     uint8 cells[OPENART_MAP_CELL_MAX];
 } openart_map_t;
 
 
 typedef struct
 {
-    // Total UART bytes received from OpenART.
+    // 从 OpenART 接收到的 UART 总字节数。
     uint32 rx_bytes;
-    // Packets with a valid header and checksum.
+    // 头部和校验都正确的数据包数量。
     uint16 packet_count;
-    // Successfully parsed car pose packets.
+    // 成功解析的车位姿数据包数量。
     uint16 pose_packets;
-    // Successfully parsed map packets.
+    // 成功解析的地图数据包数量。
     uint16 map_packets;
-    // Packets rejected because checksum did not match.
+    // 因校验失败而丢弃的数据包数量。
     uint16 checksum_errors;
-    // Packets rejected because type, length, or map size was invalid.
+    // 因类型、长度或地图尺寸非法而丢弃的数据包数量。
     uint16 format_errors;
-    // Bytes dropped because the receive buffer was full.
+    // 因接收缓冲区满而丢弃的字节数。
     uint16 rx_overflows;
 } openart_uart_status_t;
 
 
-// Latest parsed car pose data.
+// 最新解析到的车位姿数据。
 extern openart_pose_t openart_pose;
-// Latest parsed map data.
+// 最新解析到的地图数据。
 extern openart_map_t openart_map;
-// UART receive and parse diagnostic counters.
+// UART 接收和解析的统计信息。
 extern openart_uart_status_t openart_uart_status;
 
-// Initialize OpenART UART and clear receive results.
+// 初始化 OpenART UART 并清空接收结果。
 void openart_uart_init(void);
-// Non-blocking UART parser. Call this repeatedly in the main loop.
+// 非阻塞 UART 解析函数，建议在主循环中反复调用。
 void openart_uart_update(void);
-// Pull pending UART bytes into the software receive buffer.
+// 将待处理的 UART 数据搬运到软件接收缓冲区。
 void openart_uart_interrupt_handler(void);
-// Clear both updated flags without clearing the received data itself.
+// 只清除 updated 标志，不清除已经接收到的数据。
 void openart_uart_clear_updated(void);
 
 #endif
