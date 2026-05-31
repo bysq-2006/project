@@ -1,6 +1,8 @@
 #include "openart_display.h"
 #include "../openart_uart/openart_uart.h"
+#include "../main_control/main_control.h"
 #include <math.h>
+#include <stdio.h>
 
 
 #define RGB565(r, g, b) ((uint16)((((r) & 0xF8) << 8) | (((g) & 0xFC) << 3) | (((b) >> 3) & 0x1F)))
@@ -45,10 +47,14 @@
 #define SPEED_BAR_HIGH_COLOR        RGB565(255, 80, 0)
 #define STATUS_VALID_COLOR          RGB565(0, 180, 255)
 #define STATUS_INVALID_COLOR        RGB565(255, 64, 64)
+#define STATUS_DEBUG_LINE_COUNT     (2)
+#define STATUS_DEBUG_LINE_HEIGHT    (25)
+#define STATUS_DEBUG_BUFFER_SIZE    (64)
 
 
 static uint16 map_image_id;
 static uint16 status_image_id;
+static uint16 status_debug_label_id[STATUS_DEBUG_LINE_COUNT];
 static uint16 map_canvas[MAP_CANVAS_W * MAP_CANVAS_H];
 static uint16 status_canvas[STATUS_CANVAS_W * STATUS_CANVAS_H];
 static uint32 speed_last_ms;
@@ -507,6 +513,52 @@ static void render_status_canvas(void)
 }
 
 
+static void format_map_pos_line(char *buffer, const char *name,
+                                const main_control_map_pos_t *pos, uint16 count)
+{
+    if(0U == count)
+    {
+        sprintf(buffer, "%s:0", name);
+    }
+    else if(1U == count)
+    {
+        sprintf(buffer, "%s:1 (%u,%u)", name, pos[0].x, pos[0].y);
+    }
+    else if(2U == count)
+    {
+        sprintf(buffer, "%s:2 (%u,%u)(%u,%u)", name,
+                pos[0].x, pos[0].y,
+                pos[1].x, pos[1].y);
+    }
+    else
+    {
+        sprintf(buffer, "%s:%u (%u,%u)(%u,%u)(%u,%u)", name, count,
+                pos[0].x, pos[0].y,
+                pos[1].x, pos[1].y,
+                pos[2].x, pos[2].y);
+    }
+}
+
+
+static void render_status_debug_text(void)
+{
+    static main_control_map_pos_t boxes[OPENART_MAP_CELL_MAX];
+    static main_control_map_pos_t goals[OPENART_MAP_CELL_MAX];
+    char line[STATUS_DEBUG_BUFFER_SIZE];
+    uint16 box_count;
+    uint16 goal_count;
+
+    box_count = main_control_find_boxes(&openart_map, boxes, OPENART_MAP_CELL_MAX);
+    goal_count = main_control_find_goals(&openart_map, goals, OPENART_MAP_CELL_MAX);
+
+    format_map_pos_line(line, "Box", boxes, box_count);
+    ips200pro_label_show_string(status_debug_label_id[0], line);
+
+    format_map_pos_line(line, "Goal", goals, goal_count);
+    ips200pro_label_show_string(status_debug_label_id[1], line);
+}
+
+
 void openart_display_init(void)
 {
     speed_last_ms = 0;
@@ -516,6 +568,7 @@ void openart_display_init(void)
     speed_px_s = 0;
 
     ips200pro_page_switch(ips200pro_init("", IPS200PRO_TITLE_BOTTOM, 30), PAGE_ANIM_OFF);
+    ips200pro_set_default_font(FONT_SIZE_16);
     ips200pro_set_direction(IPS200PRO_PORTRAIT);
     ips200pro_set_format(IPS200PRO_FORMAT_GBK);
     ips200pro_set_backlight(255);
@@ -534,20 +587,27 @@ void openart_display_init(void)
     {
         ips200pro_image_display(status_image_id, status_canvas, STATUS_CANVAS_W, STATUS_CANVAS_H, IMAGE_RGB565, 0);
     }
+
+    status_debug_label_id[0] = ips200pro_label_create(0, MAP_CANVAS_H,
+                                                      STATUS_CANVAS_W, STATUS_DEBUG_LINE_HEIGHT);
+    status_debug_label_id[1] = ips200pro_label_create(0, MAP_CANVAS_H + STATUS_DEBUG_LINE_HEIGHT,
+                                                      STATUS_CANVAS_W, STATUS_DEBUG_LINE_HEIGHT);
+
+    ips200pro_set_color(status_debug_label_id[0], COLOR_FOREGROUND, RGB565_WHITE);
+    ips200pro_set_color(status_debug_label_id[0], COLOR_BACKGROUND, RGB565_BLACK);
+    ips200pro_set_color(status_debug_label_id[1], COLOR_FOREGROUND, RGB565_WHITE);
+    ips200pro_set_color(status_debug_label_id[1], COLOR_BACKGROUND, RGB565_BLACK);
 }
 
 
 void openart_display_update(void)
 {
     render_map_canvas();
-    render_status_canvas();
 
     if(map_image_id != 0U)
     {
         ips200pro_image_display(map_image_id, map_canvas, MAP_CANVAS_W, MAP_CANVAS_H, IMAGE_RGB565, 0);
     }
-    if(status_image_id != 0U)
-    {
-        ips200pro_image_display(status_image_id, status_canvas, STATUS_CANVAS_W, STATUS_CANVAS_H, IMAGE_RGB565, 0);
-    }
+
+    render_status_debug_text();
 }
