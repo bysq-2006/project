@@ -153,6 +153,7 @@ uint32 main_control_astar_find_path(const openart_map_t *map,
     uint16 current_index;
     uint16 next_index;
     uint16 next_state;
+    uint16 push_index;
     uint16 start_index;
     uint16 target_index;
     uint16 best_target_state;
@@ -161,6 +162,8 @@ uint32 main_control_astar_find_path(const openart_map_t *map,
     uint8 current_dir;
     int16 next_x;
     int16 next_y;
+    int16 push_x;
+    int16 push_y;
     uint32 best_f;
     uint32 next_g;
     uint32 target_cost;
@@ -173,8 +176,7 @@ uint32 main_control_astar_find_path(const openart_map_t *map,
     }
 
     cell_count = (uint16)map->cols * map->rows;
-    if((OPENART_MAP_CELL_MAX < cell_count) ||
-       (start.x >= map->cols) || (start.y >= map->rows) ||
+    if((start.x >= map->cols) || (start.y >= map->rows) ||
        (target.x >= map->cols) || (target.y >= map->rows))
     {
         return MAIN_CONTROL_PATH_COST_INVALID;
@@ -182,11 +184,6 @@ uint32 main_control_astar_find_path(const openart_map_t *map,
 
     start_index = main_control_map_index(map, start.x, start.y);
     target_index = main_control_map_index(map, target.x, target.y);
-    if((!main_control_is_walkable_cell(map->cells[start_index])) ||
-       (!main_control_is_walkable_cell(map->cells[target_index])))
-    {
-        return MAIN_CONTROL_PATH_COST_INVALID;
-    }
 
     state_count = cell_count * MAIN_CONTROL_ASTAR_DIR_COUNT;
     for(i = 0; i < state_count; i++)
@@ -253,7 +250,24 @@ uint32 main_control_astar_find_path(const openart_map_t *map,
             }
 
             next_index = main_control_map_index(map, (uint8)next_x, (uint8)next_y);
-            if(!main_control_is_walkable_cell(map->cells[next_index]))
+            if((start_index != next_index) &&
+               (!main_control_is_walkable_cell(map->cells[next_index])))
+            {
+                continue;
+            }
+
+            push_x = (int16)current_pos.x - dx[dir];
+            push_y = (int16)current_pos.y - dy[dir];
+
+            if((push_x < 0) || (push_y < 0) ||
+               (push_x >= map->cols) || (push_y >= map->rows))
+            {
+                continue;
+            }
+
+            push_index = main_control_map_index(map, (uint8)push_x, (uint8)push_y);
+            if((start_index != push_index) &&
+               (!main_control_is_walkable_cell(map->cells[push_index])))
             {
                 continue;
             }

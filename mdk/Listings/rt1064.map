@@ -324,6 +324,21 @@ Section Cross References
     main_control.o(.ARM.exidx.text.main_control_find_boxes) refers to main_control.o(.text.main_control_find_boxes) for [Anonymous Symbol]
     main_control.o(.ARM.exidx.text.main_control_find_goals) refers to main_control.o(.text.main_control_find_goals) for [Anonymous Symbol]
     main_control.o(.ARM.exidx.text.main_control_get_car_map_pos) refers to main_control.o(.text.main_control_get_car_map_pos) for [Anonymous Symbol]
+    main_control.o(.text.main_control_astar_find_path) refers to main_control.o(.text.main_control_map_index) for main_control_map_index
+    main_control.o(.text.main_control_astar_find_path) refers to main_control.o(.text.main_control_is_walkable_cell) for main_control_is_walkable_cell
+    main_control.o(.text.main_control_astar_find_path) refers to main_control.o(.bss.main_control_astar_find_path.g_cost) for main_control_astar_find_path.g_cost
+    main_control.o(.text.main_control_astar_find_path) refers to main_control.o(.bss.main_control_astar_find_path.parent) for main_control_astar_find_path.parent
+    main_control.o(.text.main_control_astar_find_path) refers to main_control.o(.bss.main_control_astar_find_path.open) for main_control_astar_find_path.open
+    main_control.o(.text.main_control_astar_find_path) refers to main_control.o(.bss.main_control_astar_find_path.closed) for main_control_astar_find_path.closed
+    main_control.o(.text.main_control_astar_find_path) refers to main_control.o(.text.main_control_astar_state_pos) for main_control_astar_state_pos
+    main_control.o(.text.main_control_astar_find_path) refers to main_control.o(.text.main_control_astar_heuristic) for main_control_astar_heuristic
+    main_control.o(.text.main_control_astar_find_path) refers to main_control.o(.rodata.main_control_astar_find_path.dx) for main_control_astar_find_path.dx
+    main_control.o(.text.main_control_astar_find_path) refers to main_control.o(.rodata.main_control_astar_find_path.dy) for main_control_astar_find_path.dy
+    main_control.o(.ARM.exidx.text.main_control_astar_find_path) refers to main_control.o(.text.main_control_astar_find_path) for [Anonymous Symbol]
+    main_control.o(.ARM.exidx.text.main_control_map_index) refers to main_control.o(.text.main_control_map_index) for [Anonymous Symbol]
+    main_control.o(.ARM.exidx.text.main_control_is_walkable_cell) refers to main_control.o(.text.main_control_is_walkable_cell) for [Anonymous Symbol]
+    main_control.o(.ARM.exidx.text.main_control_astar_state_pos) refers to main_control.o(.text.main_control_astar_state_pos) for [Anonymous Symbol]
+    main_control.o(.ARM.exidx.text.main_control_astar_heuristic) refers to main_control.o(.text.main_control_astar_heuristic) for [Anonymous Symbol]
     zf_common_clock.o(.text.clock_init) refers to zf_common_clock.o(.data.system_clock) for system_clock
     zf_common_clock.o(.text.clock_init) refers to board.o(.text.BOARD_ConfigMPU) for BOARD_ConfigMPU
     zf_common_clock.o(.text.clock_init) refers to clock_config.o(.text.BOARD_InitBootClocks) for BOARD_InitBootClocks
@@ -11030,6 +11045,22 @@ Removing Unused input sections from the image.
     Removing main_control.o(.ARM.exidx.text.main_control_find_boxes), (8 bytes).
     Removing main_control.o(.ARM.exidx.text.main_control_find_goals), (8 bytes).
     Removing main_control.o(.ARM.exidx.text.main_control_get_car_map_pos), (8 bytes).
+    Removing main_control.o(.text.main_control_astar_find_path), (1318 bytes).
+    Removing main_control.o(.ARM.exidx.text.main_control_astar_find_path), (8 bytes).
+    Removing main_control.o(.text.main_control_map_index), (34 bytes).
+    Removing main_control.o(.ARM.exidx.text.main_control_map_index), (8 bytes).
+    Removing main_control.o(.text.main_control_is_walkable_cell), (44 bytes).
+    Removing main_control.o(.ARM.exidx.text.main_control_is_walkable_cell), (8 bytes).
+    Removing main_control.o(.text.main_control_astar_state_pos), (72 bytes).
+    Removing main_control.o(.ARM.exidx.text.main_control_astar_state_pos), (8 bytes).
+    Removing main_control.o(.text.main_control_astar_heuristic), (124 bytes).
+    Removing main_control.o(.ARM.exidx.text.main_control_astar_heuristic), (8 bytes).
+    Removing main_control.o(.bss.main_control_astar_find_path.g_cost), (3840 bytes).
+    Removing main_control.o(.bss.main_control_astar_find_path.parent), (1920 bytes).
+    Removing main_control.o(.bss.main_control_astar_find_path.open), (960 bytes).
+    Removing main_control.o(.bss.main_control_astar_find_path.closed), (960 bytes).
+    Removing main_control.o(.rodata.main_control_astar_find_path.dx), (8 bytes).
+    Removing main_control.o(.rodata.main_control_astar_find_path.dy), (8 bytes).
     Removing zf_common_clock.o(.text), (0 bytes).
     Removing zf_common_clock.o(.ARM.exidx.text.clock_init), (8 bytes).
     Removing zf_common_debug.o(.text), (0 bytes).
@@ -16930,7 +16961,7 @@ Removing Unused input sections from the image.
     Removing d2f.o(.text), (56 bytes).
     Removing fepilogue.o(.text), (110 bytes).
 
-6046 unused section(s) (total 657395 bytes) removed from the image.
+6062 unused section(s) (total 666723 bytes) removed from the image.
 
 ==============================================================================
 
@@ -18670,58 +18701,58 @@ Memory Map of the image
 
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
-    0x20000000   0x700128dc   0x00000004   Data   RW         7763    .data               mc_w.l(errno.o)
-    0x20000004   0x700128e0   0x0000002c   Data   RW          701    .data.PORTPTR       zf_driver_gpio.o
-    0x20000030   0x7001290c   0x00000014   Data   RW          815    .data.PWMPTR        zf_driver_pwm.o
-    0x20000044   0x70012920   0x00000004   Data   RW         6529    .data.SystemCoreClock  system_mimxrt1064.o
-    0x20000048   0x70012924   0x00000004   Data   RW         2095    .data.camera_uart_handler  zf_device_type.o
-    0x2000004c   0x70012928   0x00000004   Data   RW         2098    .data.flexio_camera_uart_handler  zf_device_type.o
-    0x20000050   0x7001292c   0x00000004   Data   RW         2097    .data.flexio_camera_vsync_handler  zf_device_type.o
-    0x20000054   0x70012930   0x00000004   Data   RW         3071    .data.s_csiIsr      fsl_csi.o
-    0x20000058   0x70012934   0x00000004   Data   RW         3826    .data.s_flexcanIsr  fsl_flexcan.o
-    0x2000005c   0x70012938   0x00000004   Data   RW         5233    .data.s_lpuartIsr   fsl_lpuart.o
-    0x20000060   0x7001293c   0x00000004   Data   RW         6339    .data.s_usdhcIsr    fsl_usdhc.o
-    0x20000064   0x70012940   0x00000014   Data   RW         1158    .data.spi_index     zf_driver_spi.o
-    0x20000078   0x70012954   0x00000004   Data   RW          273    .data.system_clock  zf_common_clock.o
-    0x2000007c   0x70012958   0x00000004   Data   RW         2103    .data.tof_module_exti_handler  zf_device_type.o
-    0x20000080   0x7001295c   0x00000024   Data   RW         1217    .data.uart_index    zf_driver_uart.o
-    0x200000a4   0x70012980   0x00000004   Data   RW         2101    .data.wireless_module_spi_handler  zf_device_type.o
-    0x200000a8   0x70012984   0x00000004   Data   RW         2100    .data.wireless_module_uart_handler  zf_device_type.o
-    0x200000ac   0x70012988   0x00000001   Data   RW          316    .data.zf_debug_assert_enable  zf_common_debug.o
+    0x20000000   0x700128dc   0x00000004   Data   RW         7779    .data               mc_w.l(errno.o)
+    0x20000004   0x700128e0   0x0000002c   Data   RW          717    .data.PORTPTR       zf_driver_gpio.o
+    0x20000030   0x7001290c   0x00000014   Data   RW          831    .data.PWMPTR        zf_driver_pwm.o
+    0x20000044   0x70012920   0x00000004   Data   RW         6545    .data.SystemCoreClock  system_mimxrt1064.o
+    0x20000048   0x70012924   0x00000004   Data   RW         2111    .data.camera_uart_handler  zf_device_type.o
+    0x2000004c   0x70012928   0x00000004   Data   RW         2114    .data.flexio_camera_uart_handler  zf_device_type.o
+    0x20000050   0x7001292c   0x00000004   Data   RW         2113    .data.flexio_camera_vsync_handler  zf_device_type.o
+    0x20000054   0x70012930   0x00000004   Data   RW         3087    .data.s_csiIsr      fsl_csi.o
+    0x20000058   0x70012934   0x00000004   Data   RW         3842    .data.s_flexcanIsr  fsl_flexcan.o
+    0x2000005c   0x70012938   0x00000004   Data   RW         5249    .data.s_lpuartIsr   fsl_lpuart.o
+    0x20000060   0x7001293c   0x00000004   Data   RW         6355    .data.s_usdhcIsr    fsl_usdhc.o
+    0x20000064   0x70012940   0x00000014   Data   RW         1174    .data.spi_index     zf_driver_spi.o
+    0x20000078   0x70012954   0x00000004   Data   RW          289    .data.system_clock  zf_common_clock.o
+    0x2000007c   0x70012958   0x00000004   Data   RW         2119    .data.tof_module_exti_handler  zf_device_type.o
+    0x20000080   0x7001295c   0x00000024   Data   RW         1233    .data.uart_index    zf_driver_uart.o
+    0x200000a4   0x70012980   0x00000004   Data   RW         2117    .data.wireless_module_spi_handler  zf_device_type.o
+    0x200000a8   0x70012984   0x00000004   Data   RW         2116    .data.wireless_module_uart_handler  zf_device_type.o
+    0x200000ac   0x70012988   0x00000001   Data   RW          332    .data.zf_debug_assert_enable  zf_common_debug.o
     0x200000ad   0x70012989   0x00000003   PAD
-    0x200000b0        -       0x00000001   Zero   RW          317    .bss.debug_assert_handler.assert_nest_index  zf_common_debug.o
+    0x200000b0        -       0x00000001   Zero   RW          333    .bss.debug_assert_handler.assert_nest_index  zf_common_debug.o
     0x200000b1   0x70012989   0x00000003   PAD
-    0x200000b4        -       0x00000014   Zero   RW          315    .bss.debug_output_info  zf_common_debug.o
-    0x200000c8        -       0x00000005   Zero   RW         5066    .bss.g_lpspiDummyData  fsl_lpspi.o
+    0x200000b4        -       0x00000014   Zero   RW          331    .bss.debug_output_info  zf_common_debug.o
+    0x200000c8        -       0x00000005   Zero   RW         5082    .bss.g_lpspiDummyData  fsl_lpspi.o
     0x200000cd   0x70012989   0x00000003   PAD
-    0x200000d0        -       0x00000004   Zero   RW         2929    .bss.g_rtcXtalFreq  fsl_clock.o
-    0x200000d4        -       0x00000004   Zero   RW         2928    .bss.g_xtalFreq     fsl_clock.o
-    0x200000d8        -       0x00000001   Zero   RW         2404    .bss.gnss_flag      zf_device_gnss.o
-    0x200000d9        -       0x00000001   Zero   RW         2409    .bss.gnss_gga_state  zf_device_gnss.o
-    0x200000da        -       0x00000016   Zero   RW         2414    .bss.gnss_receiver_fifo  zf_device_gnss.o
-    0x200000f0        -       0x00000001   Zero   RW         2406    .bss.gnss_rmc_state  zf_device_gnss.o
-    0x200000f1        -       0x00000001   Zero   RW         2413    .bss.gnss_state     zf_device_gnss.o
-    0x200000f2        -       0x00000001   Zero   RW         2411    .bss.gnss_ths_state  zf_device_gnss.o
-    0x200000f3        -       0x00000080   Zero   RW         2410    .bss.gps_gga_buffer  zf_device_gnss.o
-    0x20000173        -       0x00000080   Zero   RW         2407    .bss.gps_rmc_buffer  zf_device_gnss.o
-    0x200001f3        -       0x00000080   Zero   RW         2412    .bss.gps_ths_buffer  zf_device_gnss.o
+    0x200000d0        -       0x00000004   Zero   RW         2945    .bss.g_rtcXtalFreq  fsl_clock.o
+    0x200000d4        -       0x00000004   Zero   RW         2944    .bss.g_xtalFreq     fsl_clock.o
+    0x200000d8        -       0x00000001   Zero   RW         2420    .bss.gnss_flag      zf_device_gnss.o
+    0x200000d9        -       0x00000001   Zero   RW         2425    .bss.gnss_gga_state  zf_device_gnss.o
+    0x200000da        -       0x00000016   Zero   RW         2430    .bss.gnss_receiver_fifo  zf_device_gnss.o
+    0x200000f0        -       0x00000001   Zero   RW         2422    .bss.gnss_rmc_state  zf_device_gnss.o
+    0x200000f1        -       0x00000001   Zero   RW         2429    .bss.gnss_state     zf_device_gnss.o
+    0x200000f2        -       0x00000001   Zero   RW         2427    .bss.gnss_ths_state  zf_device_gnss.o
+    0x200000f3        -       0x00000080   Zero   RW         2426    .bss.gps_gga_buffer  zf_device_gnss.o
+    0x20000173        -       0x00000080   Zero   RW         2423    .bss.gps_rmc_buffer  zf_device_gnss.o
+    0x200001f3        -       0x00000080   Zero   RW         2428    .bss.gps_ths_buffer  zf_device_gnss.o
     0x20000273   0x70012989   0x00000001   PAD
-    0x20000274        -       0x00000002   Zero   RW         1552    .bss.imu660rc_acc_x  zf_device_imu660rc.o
-    0x20000276        -       0x00000002   Zero   RW         1553    .bss.imu660rc_acc_y  zf_device_imu660rc.o
-    0x20000278        -       0x00000002   Zero   RW         1554    .bss.imu660rc_acc_z  zf_device_imu660rc.o
-    0x2000027a        -       0x00000002   Zero   RW         1549    .bss.imu660rc_gyro_x  zf_device_imu660rc.o
-    0x2000027c        -       0x00000002   Zero   RW         1550    .bss.imu660rc_gyro_y  zf_device_imu660rc.o
-    0x2000027e        -       0x00000002   Zero   RW         1551    .bss.imu660rc_gyro_z  zf_device_imu660rc.o
-    0x20000280        -       0x00000004   Zero   RW         1556    .bss.imu660rc_pitch  zf_device_imu660rc.o
-    0x20000284        -       0x00000010   Zero   RW         1559    .bss.imu660rc_quarternion  zf_device_imu660rc.o
-    0x20000294        -       0x00000001   Zero   RW         1558    .bss.imu660rc_quarternion_rate  zf_device_imu660rc.o
+    0x20000274        -       0x00000002   Zero   RW         1568    .bss.imu660rc_acc_x  zf_device_imu660rc.o
+    0x20000276        -       0x00000002   Zero   RW         1569    .bss.imu660rc_acc_y  zf_device_imu660rc.o
+    0x20000278        -       0x00000002   Zero   RW         1570    .bss.imu660rc_acc_z  zf_device_imu660rc.o
+    0x2000027a        -       0x00000002   Zero   RW         1565    .bss.imu660rc_gyro_x  zf_device_imu660rc.o
+    0x2000027c        -       0x00000002   Zero   RW         1566    .bss.imu660rc_gyro_y  zf_device_imu660rc.o
+    0x2000027e        -       0x00000002   Zero   RW         1567    .bss.imu660rc_gyro_z  zf_device_imu660rc.o
+    0x20000280        -       0x00000004   Zero   RW         1572    .bss.imu660rc_pitch  zf_device_imu660rc.o
+    0x20000284        -       0x00000010   Zero   RW         1575    .bss.imu660rc_quarternion  zf_device_imu660rc.o
+    0x20000294        -       0x00000001   Zero   RW         1574    .bss.imu660rc_quarternion_rate  zf_device_imu660rc.o
     0x20000295   0x70012989   0x00000003   PAD
-    0x20000298        -       0x00000004   Zero   RW         1555    .bss.imu660rc_roll  zf_device_imu660rc.o
-    0x2000029c        -       0x00000004   Zero   RW         1557    .bss.imu660rc_yaw   zf_device_imu660rc.o
-    0x200002a0        -       0x00000004   Zero   RW          434    .bss.interrupt_nest_count  zf_common_interrupt.o
-    0x200002a4        -       0x00000001   Zero   RW         2589    .bss.ips200pro_image_create.image_num  zf_device_ips200pro.o
-    0x200002a5        -       0x00000001   Zero   RW         2582    .bss.ips200pro_label_create.lebel_num  zf_device_ips200pro.o
-    0x200002a6        -       0x00000001   Zero   RW         2581    .bss.ips200pro_page_num  zf_device_ips200pro.o
+    0x20000298        -       0x00000004   Zero   RW         1571    .bss.imu660rc_roll  zf_device_imu660rc.o
+    0x2000029c        -       0x00000004   Zero   RW         1573    .bss.imu660rc_yaw   zf_device_imu660rc.o
+    0x200002a0        -       0x00000004   Zero   RW          450    .bss.interrupt_nest_count  zf_common_interrupt.o
+    0x200002a4        -       0x00000001   Zero   RW         2605    .bss.ips200pro_image_create.image_num  zf_device_ips200pro.o
+    0x200002a5        -       0x00000001   Zero   RW         2598    .bss.ips200pro_label_create.lebel_num  zf_device_ips200pro.o
+    0x200002a6        -       0x00000001   Zero   RW         2597    .bss.ips200pro_page_num  zf_device_ips200pro.o
     0x200002a7   0x70012989   0x00000001   PAD
     0x200002a8        -       0x0001c200   Zero   RW          167    .bss.map_canvas     openart_display.o
     0x2001c4a8        -       0x00000002   Zero   RW          165    .bss.map_image_id   openart_display.o
@@ -18734,46 +18765,46 @@ Memory Map of the image
     0x2001c890        -       0x00000200   Zero   RW          241    .bss.rx_buffer      openart_uart.o
     0x2001ca90        -       0x00000002   Zero   RW          239    .bss.rx_head        openart_uart.o
     0x2001ca92        -       0x00000002   Zero   RW          240    .bss.rx_tail        openart_uart.o
-    0x2001ca94        -       0x00000080   Zero   RW         3379    .bss.s_EDMAHandle   fsl_edma.o
-    0x2001cb14        -       0x00000008   Zero   RW         3621    .bss.s_ENETHandle   fsl_enet.o
-    0x2001cb1c        -       0x00000010   Zero   RW         1255    .bss.s_cdcVcom      zf_driver_usb_cdc.o
-    0x2001cb2c        -       0x00000004   Zero   RW         3070    .bss.s_csiHandle    fsl_csi.o
-    0x2001cb30        -       0x00000014   Zero   RW         6722    .bss.s_debugConsole  fsl_debug_console.o
-    0x2001cb44        -       0x00000008   Zero   RW         3629    .bss.s_enet1588TimerIsr  fsl_enet.o
-    0x2001cb4c        -       0x00000008   Zero   RW         3626    .bss.s_enetErrIsr   fsl_enet.o
-    0x2001cb54        -       0x00000008   Zero   RW         3622    .bss.s_enetRxIsr    fsl_enet.o
-    0x2001cb5c        -       0x00000008   Zero   RW         3628    .bss.s_enetTsIsr    fsl_enet.o
-    0x2001cb64        -       0x00000008   Zero   RW         3624    .bss.s_enetTxIsr    fsl_enet.o
-    0x2001cb6c        -       0x00000010   Zero   RW         3825    .bss.s_flexcanHandle  fsl_flexcan.o
-    0x2001cb7c        -       0x00000008   Zero   RW         3910    .bss.s_flexioHandle  fsl_flexio.o
-    0x2001cb84        -       0x00000008   Zero   RW         3912    .bss.s_flexioIsr    fsl_flexio.o
-    0x2001cb8c        -       0x00000008   Zero   RW         3911    .bss.s_flexioType   fsl_flexio.o
-    0x2001cb94        -       0x00000014   Zero   RW         4900    .bss.s_lpi2cMasterHandle  fsl_lpi2c.o
-    0x2001cba8        -       0x00000004   Zero   RW         4901    .bss.s_lpi2cMasterIsr  fsl_lpi2c.o
-    0x2001cbac        -       0x00000014   Zero   RW         4902    .bss.s_lpi2cSlaveHandle  fsl_lpi2c.o
-    0x2001cbc0        -       0x00000004   Zero   RW         4903    .bss.s_lpi2cSlaveIsr  fsl_lpi2c.o
-    0x2001cbc4        -       0x00000014   Zero   RW         5071    .bss.s_lpspiHandle  fsl_lpspi.o
-    0x2001cbd8        -       0x00000004   Zero   RW         5072    .bss.s_lpspiMasterIsr  fsl_lpspi.o
-    0x2001cbdc        -       0x00000004   Zero   RW         5074    .bss.s_lpspiSlaveIsr  fsl_lpspi.o
-    0x2001cbe0        -       0x00000024   Zero   RW         5237    .bss.s_lpuartHandle  fsl_lpuart.o
-    0x2001cc04        -       0x00000020   Zero   RW         5741    .bss.s_saiHandle    fsl_sai.o
-    0x2001cc24        -       0x00000004   Zero   RW         5744    .bss.s_saiRxIsr     fsl_sai.o
-    0x2001cc28        -       0x00000004   Zero   RW         5742    .bss.s_saiTxIsr     fsl_sai.o
-    0x2001cc2c        -       0x00000008   Zero   RW         6047    .bss.s_spdifHandle  fsl_spdif.o
-    0x2001cc34        -       0x00000004   Zero   RW         6052    .bss.s_spdifRxIsr   fsl_spdif.o
-    0x2001cc38        -       0x00000004   Zero   RW         6049    .bss.s_spdifTxIsr   fsl_spdif.o
-    0x2001cc3c        -       0x0000000c   Zero   RW         6338    .bss.s_usdhcHandle  fsl_usdhc.o
+    0x2001ca94        -       0x00000080   Zero   RW         3395    .bss.s_EDMAHandle   fsl_edma.o
+    0x2001cb14        -       0x00000008   Zero   RW         3637    .bss.s_ENETHandle   fsl_enet.o
+    0x2001cb1c        -       0x00000010   Zero   RW         1271    .bss.s_cdcVcom      zf_driver_usb_cdc.o
+    0x2001cb2c        -       0x00000004   Zero   RW         3086    .bss.s_csiHandle    fsl_csi.o
+    0x2001cb30        -       0x00000014   Zero   RW         6738    .bss.s_debugConsole  fsl_debug_console.o
+    0x2001cb44        -       0x00000008   Zero   RW         3645    .bss.s_enet1588TimerIsr  fsl_enet.o
+    0x2001cb4c        -       0x00000008   Zero   RW         3642    .bss.s_enetErrIsr   fsl_enet.o
+    0x2001cb54        -       0x00000008   Zero   RW         3638    .bss.s_enetRxIsr    fsl_enet.o
+    0x2001cb5c        -       0x00000008   Zero   RW         3644    .bss.s_enetTsIsr    fsl_enet.o
+    0x2001cb64        -       0x00000008   Zero   RW         3640    .bss.s_enetTxIsr    fsl_enet.o
+    0x2001cb6c        -       0x00000010   Zero   RW         3841    .bss.s_flexcanHandle  fsl_flexcan.o
+    0x2001cb7c        -       0x00000008   Zero   RW         3926    .bss.s_flexioHandle  fsl_flexio.o
+    0x2001cb84        -       0x00000008   Zero   RW         3928    .bss.s_flexioIsr    fsl_flexio.o
+    0x2001cb8c        -       0x00000008   Zero   RW         3927    .bss.s_flexioType   fsl_flexio.o
+    0x2001cb94        -       0x00000014   Zero   RW         4916    .bss.s_lpi2cMasterHandle  fsl_lpi2c.o
+    0x2001cba8        -       0x00000004   Zero   RW         4917    .bss.s_lpi2cMasterIsr  fsl_lpi2c.o
+    0x2001cbac        -       0x00000014   Zero   RW         4918    .bss.s_lpi2cSlaveHandle  fsl_lpi2c.o
+    0x2001cbc0        -       0x00000004   Zero   RW         4919    .bss.s_lpi2cSlaveIsr  fsl_lpi2c.o
+    0x2001cbc4        -       0x00000014   Zero   RW         5087    .bss.s_lpspiHandle  fsl_lpspi.o
+    0x2001cbd8        -       0x00000004   Zero   RW         5088    .bss.s_lpspiMasterIsr  fsl_lpspi.o
+    0x2001cbdc        -       0x00000004   Zero   RW         5090    .bss.s_lpspiSlaveIsr  fsl_lpspi.o
+    0x2001cbe0        -       0x00000024   Zero   RW         5253    .bss.s_lpuartHandle  fsl_lpuart.o
+    0x2001cc04        -       0x00000020   Zero   RW         5757    .bss.s_saiHandle    fsl_sai.o
+    0x2001cc24        -       0x00000004   Zero   RW         5760    .bss.s_saiRxIsr     fsl_sai.o
+    0x2001cc28        -       0x00000004   Zero   RW         5758    .bss.s_saiTxIsr     fsl_sai.o
+    0x2001cc2c        -       0x00000008   Zero   RW         6063    .bss.s_spdifHandle  fsl_spdif.o
+    0x2001cc34        -       0x00000004   Zero   RW         6068    .bss.s_spdifRxIsr   fsl_spdif.o
+    0x2001cc38        -       0x00000004   Zero   RW         6065    .bss.s_spdifTxIsr   fsl_spdif.o
+    0x2001cc3c        -       0x0000000c   Zero   RW         6354    .bss.s_usdhcHandle  fsl_usdhc.o
     0x2001cc48        -       0x00000004   Zero   RW          159    .bss.speed_last_ms  openart_display.o
     0x2001cc4c        -       0x00000001   Zero   RW          162    .bss.speed_last_valid  openart_display.o
     0x2001cc4d   0x70012989   0x00000003   PAD
     0x2001cc50        -       0x00000004   Zero   RW          160    .bss.speed_last_x   openart_display.o
     0x2001cc54        -       0x00000004   Zero   RW          161    .bss.speed_last_y   openart_display.o
     0x2001cc58        -       0x00000002   Zero   RW          163    .bss.speed_px_s     openart_display.o
-    0x2001cc5a        -       0x0000000a   Zero   RW         1159    .bss.spi_cs_index   zf_driver_spi.o
+    0x2001cc5a        -       0x0000000a   Zero   RW         1175    .bss.spi_cs_index   zf_driver_spi.o
     0x2001cc64        -       0x00005dc0   Zero   RW          168    .bss.status_canvas  openart_display.o
     0x20022a24        -       0x00000004   Zero   RW          169    .bss.status_debug_label_id  openart_display.o
     0x20022a28        -       0x00000002   Zero   RW          166    .bss.status_image_id  openart_display.o
-    0x20022a2a        -       0x00000001   Zero   RW          314    .bss.zf_debug_init_flag  zf_common_debug.o
+    0x20022a2a        -       0x00000001   Zero   RW          330    .bss.zf_debug_init_flag  zf_common_debug.o
 
 
     Execution Region ARM_LIB_HEAP (Exec base: 0x20022a2c, Load base: 0x7001298c, Size: 0x00000400, Max: 0x00000400, ABSOLUTE)
@@ -18799,47 +18830,47 @@ Memory Map of the image
 
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
-    0x70000000   0x70000000   0x00000200   Data   RO         6517    .boot_hdr.conf      evkmimxrt1064_flexspi_nor_config.o
+    0x70000000   0x70000000   0x00000200   Data   RO         6533    .boot_hdr.conf      evkmimxrt1064_flexspi_nor_config.o
 
 
     Execution Region RW_m_ivt_text (Exec base: 0x70001000, Load base: 0x70001000, Size: 0x00000440, Max: 0x00001000, ABSOLUTE, FIXED)
 
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
-    0x70001000   0x70001000   0x00000020   Data   RO         6505    .boot_hdr.ivt       fsl_flexspi_nor_boot.o
-    0x70001020   0x70001020   0x00000010   Data   RO         6504    .boot_hdr.boot_data  fsl_flexspi_nor_boot.o
-    0x70001030   0x70001030   0x00000410   Data   RO         6511    .boot_hdr.dcd_data  evkmimxrt1064_sdram_ini_dcd.o
+    0x70001000   0x70001000   0x00000020   Data   RO         6521    .boot_hdr.ivt       fsl_flexspi_nor_boot.o
+    0x70001020   0x70001020   0x00000010   Data   RO         6520    .boot_hdr.boot_data  fsl_flexspi_nor_boot.o
+    0x70001030   0x70001030   0x00000410   Data   RO         6527    .boot_hdr.dcd_data  evkmimxrt1064_sdram_ini_dcd.o
 
 
     Execution Region VECTOR_ROM (Exec base: 0x70002000, Load base: 0x70002000, Size: 0x00000400, Max: 0x00000400, ABSOLUTE, FIXED)
 
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
-    0x70002000   0x70002000   0x00000400   Data   RO         6537    .isr_vector         startup_mimxrt1064.o
+    0x70002000   0x70002000   0x00000400   Data   RO         6553    .isr_vector         startup_mimxrt1064.o
 
 
     Execution Region ER_m_text (Exec base: 0x70002400, Load base: 0x70002400, Size: 0x00000470, Max: 0x003fdc00, ABSOLUTE, FIXED)
 
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
-    0x70002400   0x70002400   0x00000000   Code   RO         7575  * .ARM.Collect$$$$00000000  mc_w.l(entry.o)
-    0x70002400   0x70002400   0x00000004   Code   RO         7728    .ARM.Collect$$$$00000003  mc_w.l(entry4.o)
-    0x70002404   0x70002404   0x00000004   Code   RO         7731    .ARM.Collect$$$$00000004  mc_w.l(entry5.o)
-    0x70002408   0x70002408   0x00000000   Code   RO         7733    .ARM.Collect$$$$00000008  mc_w.l(entry7b.o)
-    0x70002408   0x70002408   0x00000000   Code   RO         7735    .ARM.Collect$$$$0000000A  mc_w.l(entry8b.o)
-    0x70002408   0x70002408   0x00000008   Code   RO         7736    .ARM.Collect$$$$0000000B  mc_w.l(entry9a.o)
-    0x70002410   0x70002410   0x00000000   Code   RO         7738    .ARM.Collect$$$$0000000D  mc_w.l(entry10a.o)
-    0x70002410   0x70002410   0x00000000   Code   RO         7740    .ARM.Collect$$$$0000000F  mc_w.l(entry11a.o)
-    0x70002410   0x70002410   0x00000004   Code   RO         7729    .ARM.Collect$$$$00002714  mc_w.l(entry4.o)
-    0x70002414   0x70002414   0x00000234   Code   RO         6536  * .text               startup_mimxrt1064.o
-    0x70002648   0x70002648   0x00000030   Code   RO         7797    .text               mc_w.l(init.o)
-    0x70002678   0x70002678   0x000001a4   Code   RO         6523    .text.SystemInit    system_mimxrt1064.o
+    0x70002400   0x70002400   0x00000000   Code   RO         7591  * .ARM.Collect$$$$00000000  mc_w.l(entry.o)
+    0x70002400   0x70002400   0x00000004   Code   RO         7744    .ARM.Collect$$$$00000003  mc_w.l(entry4.o)
+    0x70002404   0x70002404   0x00000004   Code   RO         7747    .ARM.Collect$$$$00000004  mc_w.l(entry5.o)
+    0x70002408   0x70002408   0x00000000   Code   RO         7749    .ARM.Collect$$$$00000008  mc_w.l(entry7b.o)
+    0x70002408   0x70002408   0x00000000   Code   RO         7751    .ARM.Collect$$$$0000000A  mc_w.l(entry8b.o)
+    0x70002408   0x70002408   0x00000008   Code   RO         7752    .ARM.Collect$$$$0000000B  mc_w.l(entry9a.o)
+    0x70002410   0x70002410   0x00000000   Code   RO         7754    .ARM.Collect$$$$0000000D  mc_w.l(entry10a.o)
+    0x70002410   0x70002410   0x00000000   Code   RO         7756    .ARM.Collect$$$$0000000F  mc_w.l(entry11a.o)
+    0x70002410   0x70002410   0x00000004   Code   RO         7745    .ARM.Collect$$$$00002714  mc_w.l(entry4.o)
+    0x70002414   0x70002414   0x00000234   Code   RO         6552  * .text               startup_mimxrt1064.o
+    0x70002648   0x70002648   0x00000030   Code   RO         7813    .text               mc_w.l(init.o)
+    0x70002678   0x70002678   0x000001a4   Code   RO         6539    .text.SystemInit    system_mimxrt1064.o
     0x7000281c   0x7000281c   0x00000004   PAD
-    0x70002820   0x70002820   0x00000002   Code   RO         6525    .text.SystemInitHook  system_mimxrt1064.o
-    0x70002822   0x70002822   0x0000000e   Code   RO         7820    i.__scatterload_copy  mc_w.l(handlers.o)
-    0x70002830   0x70002830   0x00000002   Code   RO         7821    i.__scatterload_null  mc_w.l(handlers.o)
-    0x70002832   0x70002832   0x0000000e   Code   RO         7822    i.__scatterload_zeroinit  mc_w.l(handlers.o)
-    0x70002840   0x70002840   0x00000030   Data   RO         7819    Region$$Table       anon$$obj.o
+    0x70002820   0x70002820   0x00000002   Code   RO         6541    .text.SystemInitHook  system_mimxrt1064.o
+    0x70002822   0x70002822   0x0000000e   Code   RO         7836    i.__scatterload_copy  mc_w.l(handlers.o)
+    0x70002830   0x70002830   0x00000002   Code   RO         7837    i.__scatterload_null  mc_w.l(handlers.o)
+    0x70002832   0x70002832   0x0000000e   Code   RO         7838    i.__scatterload_zeroinit  mc_w.l(handlers.o)
+    0x70002840   0x70002840   0x00000030   Data   RO         7835    Region$$Table       anon$$obj.o
 
 
     Execution Region VECTOR_RAM (Exec base: 0x80000000, Load base: 0x70002870, Size: 0x00000400, Max: 0x00000400, ABSOLUTE)
@@ -18853,200 +18884,200 @@ Memory Map of the image
 
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
-    0x80000400   0x70002870   0x00000062   Code   RO         7578    .text               mc_w.l(uldiv.o)
-    0x80000462   0x700028d2   0x00000062   Code   RO         7580    .text               mc_w.l(ldiv.o)
-    0x800004c4   0x70002934   0x00000028   Code   RO         7582    .text               mc_w.l(memcpy.o)
-    0x800004ec   0x7000295c   0x00000024   Code   RO         7588    .text               mc_w.l(memseta.o)
-    0x80000510   0x70002980   0x0000000e   Code   RO         7596    .text               mc_w.l(strlen.o)
-    0x8000051e   0x7000298e   0x0000001e   Code   RO         7600    .text               mc_w.l(strncmp.o)
-    0x8000053c   0x700029ac   0x0000002c   Code   RO         7752    .text               mc_w.l(uidiv.o)
-    0x80000568   0x700029d8   0x0000001e   Code   RO         7754    .text               mc_w.l(llshl.o)
-    0x80000586   0x700029f6   0x00000020   Code   RO         7756    .text               mc_w.l(llushr.o)
-    0x800005a6   0x70002a16   0x00000000   Code   RO         7784    .text               mc_w.l(iusefp.o)
-    0x800005a6   0x70002a16   0x0000014e   Code   RO         7785    .text               mf_w.l(dadd.o)
-    0x800006f4   0x70002b64   0x000000e4   Code   RO         7787    .text               mf_w.l(dmul.o)
-    0x800007d8   0x70002c48   0x000000de   Code   RO         7789    .text               mf_w.l(ddiv.o)
-    0x800008b6   0x70002d26   0x0000002e   Code   RO         7791    .text               mf_w.l(dscalb.o)
-    0x800008e4   0x70002d54   0x00000030   Code   RO         7793    .text               mf_w.l(dfixul.o)
-    0x80000914   0x70002d84   0x00000030   Code   RO         7795    .text               mf_w.l(cdrcmple.o)
-    0x80000944   0x70002db4   0x00000024   Code   RO         7799    .text               mc_w.l(llsshr.o)
-    0x80000968   0x70002dd8   0x000000ba   Code   RO         7807    .text               mf_w.l(depilogue.o)
+    0x80000400   0x70002870   0x00000062   Code   RO         7594    .text               mc_w.l(uldiv.o)
+    0x80000462   0x700028d2   0x00000062   Code   RO         7596    .text               mc_w.l(ldiv.o)
+    0x800004c4   0x70002934   0x00000028   Code   RO         7598    .text               mc_w.l(memcpy.o)
+    0x800004ec   0x7000295c   0x00000024   Code   RO         7604    .text               mc_w.l(memseta.o)
+    0x80000510   0x70002980   0x0000000e   Code   RO         7612    .text               mc_w.l(strlen.o)
+    0x8000051e   0x7000298e   0x0000001e   Code   RO         7616    .text               mc_w.l(strncmp.o)
+    0x8000053c   0x700029ac   0x0000002c   Code   RO         7768    .text               mc_w.l(uidiv.o)
+    0x80000568   0x700029d8   0x0000001e   Code   RO         7770    .text               mc_w.l(llshl.o)
+    0x80000586   0x700029f6   0x00000020   Code   RO         7772    .text               mc_w.l(llushr.o)
+    0x800005a6   0x70002a16   0x00000000   Code   RO         7800    .text               mc_w.l(iusefp.o)
+    0x800005a6   0x70002a16   0x0000014e   Code   RO         7801    .text               mf_w.l(dadd.o)
+    0x800006f4   0x70002b64   0x000000e4   Code   RO         7803    .text               mf_w.l(dmul.o)
+    0x800007d8   0x70002c48   0x000000de   Code   RO         7805    .text               mf_w.l(ddiv.o)
+    0x800008b6   0x70002d26   0x0000002e   Code   RO         7807    .text               mf_w.l(dscalb.o)
+    0x800008e4   0x70002d54   0x00000030   Code   RO         7809    .text               mf_w.l(dfixul.o)
+    0x80000914   0x70002d84   0x00000030   Code   RO         7811    .text               mf_w.l(cdrcmple.o)
+    0x80000944   0x70002db4   0x00000024   Code   RO         7815    .text               mc_w.l(llsshr.o)
+    0x80000968   0x70002dd8   0x000000ba   Code   RO         7823    .text               mf_w.l(depilogue.o)
     0x80000a22   0x70002e92   0x00000006   PAD
-    0x80000a28   0x70002e98   0x00000026   Code   RO         6460    .text.ARM_MPU_Disable  board.o
+    0x80000a28   0x70002e98   0x00000026   Code   RO         6476    .text.ARM_MPU_Disable  board.o
     0x80000a4e   0x70002ebe   0x00000002   PAD
-    0x80000a50   0x70002ec0   0x00000030   Code   RO         6462    .text.ARM_MPU_Enable  board.o
-    0x80000a80   0x70002ef0   0x000005d6   Code   RO         6475    .text.BOARD_BootClockRUN  clock_config.o
+    0x80000a50   0x70002ec0   0x00000030   Code   RO         6478    .text.ARM_MPU_Enable  board.o
+    0x80000a80   0x70002ef0   0x000005d6   Code   RO         6491    .text.BOARD_BootClockRUN  clock_config.o
     0x80001056   0x700034c6   0x00000002   PAD
-    0x80001058   0x700034c8   0x00000256   Code   RO         6458    .text.BOARD_ConfigMPU  board.o
+    0x80001058   0x700034c8   0x00000256   Code   RO         6474    .text.BOARD_ConfigMPU  board.o
     0x800012ae   0x7000371e   0x00000002   PAD
-    0x800012b0   0x70003720   0x0000006e   Code   RO         6448    .text.BOARD_DebugConsoleSrcFreq  board.o
+    0x800012b0   0x70003720   0x0000006e   Code   RO         6464    .text.BOARD_DebugConsoleSrcFreq  board.o
     0x8000131e   0x7000378e   0x00000002   PAD
-    0x80001320   0x70003790   0x00000008   Code   RO         6473    .text.BOARD_InitBootClocks  clock_config.o
-    0x80001328   0x70003798   0x00000004   Code   RO          448    .text.BusFault_Handler  zf_common_vector.o
+    0x80001320   0x70003790   0x00000008   Code   RO         6489    .text.BOARD_InitBootClocks  clock_config.o
+    0x80001328   0x70003798   0x00000004   Code   RO          464    .text.BusFault_Handler  zf_common_vector.o
     0x8000132c   0x7000379c   0x00000004   PAD
-    0x80001330   0x700037a0   0x0000004c   Code   RO         3801    .text.CAN1_DriverIRQHandler  fsl_flexcan.o
+    0x80001330   0x700037a0   0x0000004c   Code   RO         3817    .text.CAN1_DriverIRQHandler  fsl_flexcan.o
     0x8000137c   0x700037ec   0x00000004   PAD
-    0x80001380   0x700037f0   0x0000004e   Code   RO         3803    .text.CAN2_DriverIRQHandler  fsl_flexcan.o
+    0x80001380   0x700037f0   0x0000004e   Code   RO         3819    .text.CAN2_DriverIRQHandler  fsl_flexcan.o
     0x800013ce   0x7000383e   0x00000002   PAD
-    0x800013d0   0x70003840   0x0000004e   Code   RO         3805    .text.CAN3_DriverIRQHandler  fsl_flexcan.o
+    0x800013d0   0x70003840   0x0000004e   Code   RO         3821    .text.CAN3_DriverIRQHandler  fsl_flexcan.o
     0x8000141e   0x7000388e   0x00000002   PAD
-    0x80001420   0x70003890   0x00000066   Code   RO         4701    .text.CLOCK_ControlGate  fsl_gpio.o
+    0x80001420   0x70003890   0x00000066   Code   RO         4717    .text.CLOCK_ControlGate  fsl_gpio.o
     0x80001486   0x700038f6   0x00000002   PAD
-    0x80001488   0x700038f8   0x00000066   Code   RO         4733    .text.CLOCK_ControlGate  fsl_gpt.o
+    0x80001488   0x700038f8   0x00000066   Code   RO         4749    .text.CLOCK_ControlGate  fsl_gpt.o
     0x800014ee   0x7000395e   0x00000002   PAD
-    0x800014f0   0x70003960   0x00000066   Code   RO         5060    .text.CLOCK_ControlGate  fsl_lpspi.o
+    0x800014f0   0x70003960   0x00000066   Code   RO         5076    .text.CLOCK_ControlGate  fsl_lpspi.o
     0x80001556   0x700039c6   0x00000002   PAD
-    0x80001558   0x700039c8   0x00000066   Code   RO         5226    .text.CLOCK_ControlGate  fsl_lpuart.o
+    0x80001558   0x700039c8   0x00000066   Code   RO         5242    .text.CLOCK_ControlGate  fsl_lpuart.o
     0x800015be   0x70003a2e   0x00000002   PAD
-    0x800015c0   0x70003a30   0x00000066   Code   RO         5401    .text.CLOCK_ControlGate  fsl_pwm.o
+    0x800015c0   0x70003a30   0x00000066   Code   RO         5417    .text.CLOCK_ControlGate  fsl_pwm.o
     0x80001626   0x70003a96   0x00000002   PAD
-    0x80001628   0x70003a98   0x00000066   Code   RO         6489    .text.CLOCK_ControlGate  clock_config.o
+    0x80001628   0x70003a98   0x00000066   Code   RO         6505    .text.CLOCK_ControlGate  clock_config.o
     0x8000168e   0x70003afe   0x00000002   PAD
-    0x80001690   0x70003b00   0x00000010   Code   RO         2881    .text.CLOCK_DeinitAudioPll  fsl_clock.o
-    0x800016a0   0x70003b10   0x00000010   Code   RO         2889    .text.CLOCK_DeinitEnetPll  fsl_clock.o
-    0x800016b0   0x70003b20   0x0000000e   Code   RO         2877    .text.CLOCK_DeinitUsb2Pll  fsl_clock.o
+    0x80001690   0x70003b00   0x00000010   Code   RO         2897    .text.CLOCK_DeinitAudioPll  fsl_clock.o
+    0x800016a0   0x70003b10   0x00000010   Code   RO         2905    .text.CLOCK_DeinitEnetPll  fsl_clock.o
+    0x800016b0   0x70003b20   0x0000000e   Code   RO         2893    .text.CLOCK_DeinitUsb2Pll  fsl_clock.o
     0x800016be   0x70003b2e   0x00000002   PAD
-    0x800016c0   0x70003b30   0x00000010   Code   RO         2885    .text.CLOCK_DeinitVideoPll  fsl_clock.o
-    0x800016d0   0x70003b40   0x00000016   Code   RO         4729    .text.CLOCK_DisableClock  fsl_gpt.o
+    0x800016c0   0x70003b30   0x00000010   Code   RO         2901    .text.CLOCK_DeinitVideoPll  fsl_clock.o
+    0x800016d0   0x70003b40   0x00000016   Code   RO         4745    .text.CLOCK_DisableClock  fsl_gpt.o
     0x800016e6   0x70003b56   0x00000002   PAD
-    0x800016e8   0x70003b58   0x00000016   Code   RO         5152    .text.CLOCK_DisableClock  fsl_lpuart.o
+    0x800016e8   0x70003b58   0x00000016   Code   RO         5168    .text.CLOCK_DisableClock  fsl_lpuart.o
     0x800016fe   0x70003b6e   0x00000002   PAD
-    0x80001700   0x70003b70   0x00000016   Code   RO         5367    .text.CLOCK_DisableClock  fsl_pwm.o
+    0x80001700   0x70003b70   0x00000016   Code   RO         5383    .text.CLOCK_DisableClock  fsl_pwm.o
     0x80001716   0x70003b86   0x00000002   PAD
-    0x80001718   0x70003b88   0x00000016   Code   RO         6487    .text.CLOCK_DisableClock  clock_config.o
+    0x80001718   0x70003b88   0x00000016   Code   RO         6503    .text.CLOCK_DisableClock  clock_config.o
     0x8000172e   0x70003b9e   0x00000002   PAD
-    0x80001730   0x70003ba0   0x00000016   Code   RO         4693    .text.CLOCK_EnableClock  fsl_gpio.o
+    0x80001730   0x70003ba0   0x00000016   Code   RO         4709    .text.CLOCK_EnableClock  fsl_gpio.o
     0x80001746   0x70003bb6   0x00000002   PAD
-    0x80001748   0x70003bb8   0x00000016   Code   RO         4717    .text.CLOCK_EnableClock  fsl_gpt.o
+    0x80001748   0x70003bb8   0x00000016   Code   RO         4733    .text.CLOCK_EnableClock  fsl_gpt.o
     0x8000175e   0x70003bce   0x00000002   PAD
-    0x80001760   0x70003bd0   0x00000016   Code   RO         4960    .text.CLOCK_EnableClock  fsl_lpspi.o
+    0x80001760   0x70003bd0   0x00000016   Code   RO         4976    .text.CLOCK_EnableClock  fsl_lpspi.o
     0x80001776   0x70003be6   0x00000002   PAD
-    0x80001778   0x70003be8   0x00000016   Code   RO         5146    .text.CLOCK_EnableClock  fsl_lpuart.o
+    0x80001778   0x70003be8   0x00000016   Code   RO         5162    .text.CLOCK_EnableClock  fsl_lpuart.o
     0x8000178e   0x70003bfe   0x00000002   PAD
-    0x80001790   0x70003c00   0x00000016   Code   RO         5361    .text.CLOCK_EnableClock  fsl_pwm.o
+    0x80001790   0x70003c00   0x00000016   Code   RO         5377    .text.CLOCK_EnableClock  fsl_pwm.o
     0x800017a6   0x70003c16   0x00000002   PAD
-    0x800017a8   0x70003c18   0x00000020   Code   RO         2829    .text.CLOCK_GetAhbFreq  fsl_clock.o
-    0x800017c8   0x70003c38   0x00000028   Code   RO         6452    .text.CLOCK_GetDiv  board.o
-    0x800017f0   0x70003c60   0x00000170   Code   RO         2845    .text.CLOCK_GetFreq  fsl_clock.o
-    0x80001960   0x70003dd0   0x00000020   Code   RO         2839    .text.CLOCK_GetIpgFreq  fsl_clock.o
-    0x80001980   0x70003df0   0x00000028   Code   RO         6450    .text.CLOCK_GetMux  board.o
-    0x800019a8   0x70003e18   0x00000034   Code   RO         2843    .text.CLOCK_GetOscFreq  fsl_clock.o
+    0x800017a8   0x70003c18   0x00000020   Code   RO         2845    .text.CLOCK_GetAhbFreq  fsl_clock.o
+    0x800017c8   0x70003c38   0x00000028   Code   RO         6468    .text.CLOCK_GetDiv  board.o
+    0x800017f0   0x70003c60   0x00000170   Code   RO         2861    .text.CLOCK_GetFreq  fsl_clock.o
+    0x80001960   0x70003dd0   0x00000020   Code   RO         2855    .text.CLOCK_GetIpgFreq  fsl_clock.o
+    0x80001980   0x70003df0   0x00000028   Code   RO         6466    .text.CLOCK_GetMux  board.o
+    0x800019a8   0x70003e18   0x00000034   Code   RO         2859    .text.CLOCK_GetOscFreq  fsl_clock.o
     0x800019dc   0x70003e4c   0x00000004   PAD
-    0x800019e0   0x70003e50   0x00000034   Code   RO         6454    .text.CLOCK_GetOscFreq  board.o
+    0x800019e0   0x70003e50   0x00000034   Code   RO         6470    .text.CLOCK_GetOscFreq  board.o
     0x80001a14   0x70003e84   0x00000004   PAD
-    0x80001a18   0x70003e88   0x00000044   Code   RO         2841    .text.CLOCK_GetPerClkFreq  fsl_clock.o
+    0x80001a18   0x70003e88   0x00000044   Code   RO         2857    .text.CLOCK_GetPerClkFreq  fsl_clock.o
     0x80001a5c   0x70003ecc   0x00000004   PAD
-    0x80001a60   0x70003ed0   0x00000116   Code   RO         2831    .text.CLOCK_GetPeriphClkFreq  fsl_clock.o
+    0x80001a60   0x70003ed0   0x00000116   Code   RO         2847    .text.CLOCK_GetPeriphClkFreq  fsl_clock.o
     0x80001b76   0x70003fe6   0x00000002   PAD
-    0x80001b78   0x70003fe8   0x00000034   Code   RO         2893    .text.CLOCK_GetPllBypassRefClk  fsl_clock.o
+    0x80001b78   0x70003fe8   0x00000034   Code   RO         2909    .text.CLOCK_GetPllBypassRefClk  fsl_clock.o
     0x80001bac   0x7000401c   0x00000004   PAD
-    0x80001bb0   0x70004020   0x00000418   Code   RO         2849    .text.CLOCK_GetPllFreq  fsl_clock.o
-    0x80001fc8   0x70004438   0x00000048   Code   RO         2851    .text.CLOCK_GetPllUsb1SWFreq  fsl_clock.o
-    0x80002010   0x70004480   0x00000006   Code   RO         2847    .text.CLOCK_GetRtcFreq  fsl_clock.o
+    0x80001bb0   0x70004020   0x00000418   Code   RO         2865    .text.CLOCK_GetPllFreq  fsl_clock.o
+    0x80001fc8   0x70004438   0x00000048   Code   RO         2867    .text.CLOCK_GetPllUsb1SWFreq  fsl_clock.o
+    0x80002010   0x70004480   0x00000006   Code   RO         2863    .text.CLOCK_GetRtcFreq  fsl_clock.o
     0x80002016   0x70004486   0x00000002   PAD
-    0x80002018   0x70004488   0x00000068   Code   RO         2833    .text.CLOCK_GetSemcFreq  fsl_clock.o
-    0x80002080   0x700044f0   0x000000a0   Code   RO         2837    .text.CLOCK_GetSysPfdFreq  fsl_clock.o
-    0x80002120   0x70004590   0x000000a0   Code   RO         2835    .text.CLOCK_GetUsb1PfdFreq  fsl_clock.o
-    0x800021c0   0x70004630   0x00000062   Code   RO         2865    .text.CLOCK_InitArmPll  fsl_clock.o
+    0x80002018   0x70004488   0x00000068   Code   RO         2849    .text.CLOCK_GetSemcFreq  fsl_clock.o
+    0x80002080   0x700044f0   0x000000a0   Code   RO         2853    .text.CLOCK_GetSysPfdFreq  fsl_clock.o
+    0x80002120   0x70004590   0x000000a0   Code   RO         2851    .text.CLOCK_GetUsb1PfdFreq  fsl_clock.o
+    0x800021c0   0x70004630   0x00000062   Code   RO         2881    .text.CLOCK_InitArmPll  fsl_clock.o
     0x80002222   0x70004692   0x00000006   PAD
-    0x80002228   0x70004698   0x00000082   Code   RO         2819    .text.CLOCK_InitExternalClk  fsl_clock.o
+    0x80002228   0x70004698   0x00000082   Code   RO         2835    .text.CLOCK_InitExternalClk  fsl_clock.o
     0x800022aa   0x7000471a   0x00000006   PAD
-    0x800022b0   0x70004720   0x00000012   Code   RO         2825    .text.CLOCK_InitRcOsc24M  fsl_clock.o
+    0x800022b0   0x70004720   0x00000012   Code   RO         2841    .text.CLOCK_InitRcOsc24M  fsl_clock.o
     0x800022c2   0x70004732   0x00000006   PAD
-    0x800022c8   0x70004738   0x0000001a   Code   RO         2895    .text.CLOCK_IsPllBypassed  fsl_clock.o
+    0x800022c8   0x70004738   0x0000001a   Code   RO         2911    .text.CLOCK_IsPllBypassed  fsl_clock.o
     0x800022e2   0x70004752   0x00000006   PAD
-    0x800022e8   0x70004758   0x00000022   Code   RO         2891    .text.CLOCK_IsPllEnabled  fsl_clock.o
+    0x800022e8   0x70004758   0x00000022   Code   RO         2907    .text.CLOCK_IsPllEnabled  fsl_clock.o
     0x8000230a   0x7000477a   0x00000006   PAD
-    0x80002310   0x70004780   0x0000008a   Code   RO         1147    .text.CLOCK_SetDiv  zf_driver_spi.o
+    0x80002310   0x70004780   0x0000008a   Code   RO         1163    .text.CLOCK_SetDiv  zf_driver_spi.o
     0x8000239a   0x7000480a   0x00000006   PAD
-    0x800023a0   0x70004810   0x0000008a   Code   RO         6485    .text.CLOCK_SetDiv  clock_config.o
+    0x800023a0   0x70004810   0x0000008a   Code   RO         6501    .text.CLOCK_SetDiv  clock_config.o
     0x8000242a   0x7000489a   0x00000006   PAD
-    0x80002430   0x700048a0   0x0000008a   Code   RO         1145    .text.CLOCK_SetMux  zf_driver_spi.o
+    0x80002430   0x700048a0   0x0000008a   Code   RO         1161    .text.CLOCK_SetMux  zf_driver_spi.o
     0x800024ba   0x7000492a   0x00000006   PAD
-    0x800024c0   0x70004930   0x0000008a   Code   RO         6481    .text.CLOCK_SetMux  clock_config.o
+    0x800024c0   0x70004930   0x0000008a   Code   RO         6497    .text.CLOCK_SetMux  clock_config.o
     0x8000254a   0x700049ba   0x00000006   PAD
-    0x80002550   0x700049c0   0x00000040   Code   RO         6483    .text.CLOCK_SetPllBypass  clock_config.o
-    0x80002590   0x70004a00   0x00000014   Code   RO         6477    .text.CLOCK_SetRtcXtalFreq  clock_config.o
+    0x80002550   0x700049c0   0x00000040   Code   RO         6499    .text.CLOCK_SetPllBypass  clock_config.o
+    0x80002590   0x70004a00   0x00000014   Code   RO         6493    .text.CLOCK_SetRtcXtalFreq  clock_config.o
     0x800025a4   0x70004a14   0x00000004   PAD
-    0x800025a8   0x70004a18   0x00000014   Code   RO         6479    .text.CLOCK_SetXtalFreq  clock_config.o
+    0x800025a8   0x70004a18   0x00000014   Code   RO         6495    .text.CLOCK_SetXtalFreq  clock_config.o
     0x800025bc   0x70004a2c   0x00000004   PAD
-    0x800025c0   0x70004a30   0x0000002e   Code   RO         2823    .text.CLOCK_SwitchOsc  fsl_clock.o
+    0x800025c0   0x70004a30   0x0000002e   Code   RO         2839    .text.CLOCK_SwitchOsc  fsl_clock.o
     0x800025ee   0x70004a5e   0x00000002   PAD
-    0x800025f0   0x70004a60   0x00000026   Code   RO         3060    .text.CSI_DriverIRQHandler  fsl_csi.o
+    0x800025f0   0x70004a60   0x00000026   Code   RO         3076    .text.CSI_DriverIRQHandler  fsl_csi.o
     0x80002616   0x70004a86   0x00000002   PAD
     0x80002618   0x70004a88   0x0000000c   Code   RO            5    .text.CSI_IRQHandler  isr.o
     0x80002624   0x70004a94   0x00000004   PAD
-    0x80002628   0x70004a98   0x00000054   Code   RO         3339    .text.DMA0_DMA16_DriverIRQHandler  fsl_edma.o
+    0x80002628   0x70004a98   0x00000054   Code   RO         3355    .text.DMA0_DMA16_DriverIRQHandler  fsl_edma.o
     0x8000267c   0x70004aec   0x00000004   PAD
-    0x80002680   0x70004af0   0x00000054   Code   RO         3359    .text.DMA10_DMA26_DriverIRQHandler  fsl_edma.o
+    0x80002680   0x70004af0   0x00000054   Code   RO         3375    .text.DMA10_DMA26_DriverIRQHandler  fsl_edma.o
     0x800026d4   0x70004b44   0x00000004   PAD
-    0x800026d8   0x70004b48   0x00000054   Code   RO         3361    .text.DMA11_DMA27_DriverIRQHandler  fsl_edma.o
+    0x800026d8   0x70004b48   0x00000054   Code   RO         3377    .text.DMA11_DMA27_DriverIRQHandler  fsl_edma.o
     0x8000272c   0x70004b9c   0x00000004   PAD
-    0x80002730   0x70004ba0   0x00000054   Code   RO         3363    .text.DMA12_DMA28_DriverIRQHandler  fsl_edma.o
+    0x80002730   0x70004ba0   0x00000054   Code   RO         3379    .text.DMA12_DMA28_DriverIRQHandler  fsl_edma.o
     0x80002784   0x70004bf4   0x00000004   PAD
-    0x80002788   0x70004bf8   0x00000054   Code   RO         3365    .text.DMA13_DMA29_DriverIRQHandler  fsl_edma.o
+    0x80002788   0x70004bf8   0x00000054   Code   RO         3381    .text.DMA13_DMA29_DriverIRQHandler  fsl_edma.o
     0x800027dc   0x70004c4c   0x00000004   PAD
-    0x800027e0   0x70004c50   0x00000054   Code   RO         3367    .text.DMA14_DMA30_DriverIRQHandler  fsl_edma.o
+    0x800027e0   0x70004c50   0x00000054   Code   RO         3383    .text.DMA14_DMA30_DriverIRQHandler  fsl_edma.o
     0x80002834   0x70004ca4   0x00000004   PAD
-    0x80002838   0x70004ca8   0x00000054   Code   RO         3369    .text.DMA15_DMA31_DriverIRQHandler  fsl_edma.o
+    0x80002838   0x70004ca8   0x00000054   Code   RO         3385    .text.DMA15_DMA31_DriverIRQHandler  fsl_edma.o
     0x8000288c   0x70004cfc   0x00000004   PAD
-    0x80002890   0x70004d00   0x00000054   Code   RO         3341    .text.DMA1_DMA17_DriverIRQHandler  fsl_edma.o
+    0x80002890   0x70004d00   0x00000054   Code   RO         3357    .text.DMA1_DMA17_DriverIRQHandler  fsl_edma.o
     0x800028e4   0x70004d54   0x00000004   PAD
-    0x800028e8   0x70004d58   0x00000054   Code   RO         3343    .text.DMA2_DMA18_DriverIRQHandler  fsl_edma.o
+    0x800028e8   0x70004d58   0x00000054   Code   RO         3359    .text.DMA2_DMA18_DriverIRQHandler  fsl_edma.o
     0x8000293c   0x70004dac   0x00000004   PAD
-    0x80002940   0x70004db0   0x00000054   Code   RO         3345    .text.DMA3_DMA19_DriverIRQHandler  fsl_edma.o
+    0x80002940   0x70004db0   0x00000054   Code   RO         3361    .text.DMA3_DMA19_DriverIRQHandler  fsl_edma.o
     0x80002994   0x70004e04   0x00000004   PAD
-    0x80002998   0x70004e08   0x00000054   Code   RO         3347    .text.DMA4_DMA20_DriverIRQHandler  fsl_edma.o
+    0x80002998   0x70004e08   0x00000054   Code   RO         3363    .text.DMA4_DMA20_DriverIRQHandler  fsl_edma.o
     0x800029ec   0x70004e5c   0x00000004   PAD
-    0x800029f0   0x70004e60   0x00000054   Code   RO         3349    .text.DMA5_DMA21_DriverIRQHandler  fsl_edma.o
+    0x800029f0   0x70004e60   0x00000054   Code   RO         3365    .text.DMA5_DMA21_DriverIRQHandler  fsl_edma.o
     0x80002a44   0x70004eb4   0x00000004   PAD
-    0x80002a48   0x70004eb8   0x00000054   Code   RO         3351    .text.DMA6_DMA22_DriverIRQHandler  fsl_edma.o
+    0x80002a48   0x70004eb8   0x00000054   Code   RO         3367    .text.DMA6_DMA22_DriverIRQHandler  fsl_edma.o
     0x80002a9c   0x70004f0c   0x00000004   PAD
-    0x80002aa0   0x70004f10   0x00000054   Code   RO         3353    .text.DMA7_DMA23_DriverIRQHandler  fsl_edma.o
+    0x80002aa0   0x70004f10   0x00000054   Code   RO         3369    .text.DMA7_DMA23_DriverIRQHandler  fsl_edma.o
     0x80002af4   0x70004f64   0x00000004   PAD
-    0x80002af8   0x70004f68   0x00000054   Code   RO         3355    .text.DMA8_DMA24_DriverIRQHandler  fsl_edma.o
+    0x80002af8   0x70004f68   0x00000054   Code   RO         3371    .text.DMA8_DMA24_DriverIRQHandler  fsl_edma.o
     0x80002b4c   0x70004fbc   0x00000004   PAD
-    0x80002b50   0x70004fc0   0x00000054   Code   RO         3357    .text.DMA9_DMA25_DriverIRQHandler  fsl_edma.o
+    0x80002b50   0x70004fc0   0x00000054   Code   RO         3373    .text.DMA9_DMA25_DriverIRQHandler  fsl_edma.o
     0x80002ba4   0x70005014   0x00000004   PAD
-    0x80002ba8   0x70005018   0x00000254   Code   RO         6718    .text.DbgConsole_ConvertFloatRadixNumToString  fsl_debug_console.o
+    0x80002ba8   0x70005018   0x00000254   Code   RO         6734    .text.DbgConsole_ConvertFloatRadixNumToString  fsl_debug_console.o
     0x80002dfc   0x7000526c   0x00000004   PAD
-    0x80002e00   0x70005270   0x000001ec   Code   RO         6714    .text.DbgConsole_ConvertRadixNumToString  fsl_debug_console.o
+    0x80002e00   0x70005270   0x000001ec   Code   RO         6730    .text.DbgConsole_ConvertRadixNumToString  fsl_debug_console.o
     0x80002fec   0x7000545c   0x00000004   PAD
-    0x80002ff0   0x70005460   0x0000002c   Code   RO         6700    .text.DbgConsole_Printf  fsl_debug_console.o
+    0x80002ff0   0x70005460   0x0000002c   Code   RO         6716    .text.DbgConsole_Printf  fsl_debug_console.o
     0x8000301c   0x7000548c   0x00000004   PAD
-    0x80003020   0x70005490   0x00000a38   Code   RO         6704    .text.DbgConsole_PrintfFormattedData  fsl_debug_console.o
-    0x80003a58   0x70005ec8   0x00000040   Code   RO         6716    .text.DbgConsole_PrintfPaddingCharacter  fsl_debug_console.o
-    0x80003a98   0x70005f08   0x0000003a   Code   RO         6706    .text.DbgConsole_Putchar  fsl_debug_console.o
+    0x80003020   0x70005490   0x00000a38   Code   RO         6720    .text.DbgConsole_PrintfFormattedData  fsl_debug_console.o
+    0x80003a58   0x70005ec8   0x00000040   Code   RO         6732    .text.DbgConsole_PrintfPaddingCharacter  fsl_debug_console.o
+    0x80003a98   0x70005f08   0x0000003a   Code   RO         6722    .text.DbgConsole_Putchar  fsl_debug_console.o
     0x80003ad2   0x70005f42   0x00000006   PAD
-    0x80003ad8   0x70005f48   0x00000040   Code   RO         6702    .text.DbgConsole_Vprintf  fsl_debug_console.o
-    0x80003b18   0x70005f88   0x00000004   Code   RO          454    .text.DebugMon_Handler  zf_common_vector.o
+    0x80003ad8   0x70005f48   0x00000040   Code   RO         6718    .text.DbgConsole_Vprintf  fsl_debug_console.o
+    0x80003b18   0x70005f88   0x00000004   Code   RO          470    .text.DebugMon_Handler  zf_common_vector.o
     0x80003b1c   0x70005f8c   0x00000004   PAD
-    0x80003b20   0x70005f90   0x0000001a   Code   RO          412    .text.DisableGlobalIRQ  zf_common_interrupt.o
+    0x80003b20   0x70005f90   0x0000001a   Code   RO          428    .text.DisableGlobalIRQ  zf_common_interrupt.o
     0x80003b3a   0x70005faa   0x00000006   PAD
-    0x80003b40   0x70005fb0   0x00000072   Code   RO         3305    .text.EDMA_GetChannelStatusFlags  fsl_edma.o
+    0x80003b40   0x70005fb0   0x00000072   Code   RO         3321    .text.EDMA_GetChannelStatusFlags  fsl_edma.o
     0x80003bb2   0x70006022   0x00000006   PAD
-    0x80003bb8   0x70006028   0x000001c4   Code   RO         3337    .text.EDMA_HandleIRQ  fsl_edma.o
+    0x80003bb8   0x70006028   0x000001c4   Code   RO         3353    .text.EDMA_HandleIRQ  fsl_edma.o
     0x80003d7c   0x700061ec   0x00000004   PAD
-    0x80003d80   0x700061f0   0x00000014   Code   RO         3606    .text.ENET2_1588_Timer_DriverIRQHandler  fsl_enet.o
+    0x80003d80   0x700061f0   0x00000014   Code   RO         3622    .text.ENET2_1588_Timer_DriverIRQHandler  fsl_enet.o
     0x80003d94   0x70006204   0x00000004   PAD
-    0x80003d98   0x70006208   0x00000014   Code   RO         3604    .text.ENET2_DriverIRQHandler  fsl_enet.o
+    0x80003d98   0x70006208   0x00000014   Code   RO         3620    .text.ENET2_DriverIRQHandler  fsl_enet.o
     0x80003dac   0x7000621c   0x00000004   PAD
-    0x80003db0   0x70006220   0x00000014   Code   RO         3602    .text.ENET_1588_Timer_DriverIRQHandler  fsl_enet.o
+    0x80003db0   0x70006220   0x00000014   Code   RO         3618    .text.ENET_1588_Timer_DriverIRQHandler  fsl_enet.o
     0x80003dc4   0x70006234   0x00000004   PAD
-    0x80003dc8   0x70006238   0x0000011c   Code   RO         3584    .text.ENET_CommonFrame0IRQHandler  fsl_enet.o
+    0x80003dc8   0x70006238   0x0000011c   Code   RO         3600    .text.ENET_CommonFrame0IRQHandler  fsl_enet.o
     0x80003ee4   0x70006354   0x00000004   PAD
-    0x80003ee8   0x70006358   0x00000014   Code   RO         3600    .text.ENET_DriverIRQHandler  fsl_enet.o
+    0x80003ee8   0x70006358   0x00000014   Code   RO         3616    .text.ENET_DriverIRQHandler  fsl_enet.o
     0x80003efc   0x7000636c   0x00000004   PAD
-    0x80003f00   0x70006370   0x0000005a   Code   RO         3474    .text.ENET_GetInstance  fsl_enet.o
+    0x80003f00   0x70006370   0x0000005a   Code   RO         3490    .text.ENET_GetInstance  fsl_enet.o
     0x80003f5a   0x700063ca   0x00000006   PAD
-    0x80003f60   0x700063d0   0x00000044   Code   RO         3586    .text.ENET_Ptp1588IRQHandler  fsl_enet.o
+    0x80003f60   0x700063d0   0x00000044   Code   RO         3602    .text.ENET_Ptp1588IRQHandler  fsl_enet.o
     0x80003fa4   0x70006414   0x00000004   PAD
-    0x80003fa8   0x70006418   0x0000002c   Code   RO          416    .text.EnableIRQ     zf_common_interrupt.o
+    0x80003fa8   0x70006418   0x0000002c   Code   RO          432    .text.EnableIRQ     zf_common_interrupt.o
     0x80003fd4   0x70006444   0x00000004   PAD
-    0x80003fd8   0x70006448   0x00000008   Code   RO         3895    .text.FLEXIO1_DriverIRQHandler  fsl_flexio.o
-    0x80003fe0   0x70006450   0x00000008   Code   RO         3899    .text.FLEXIO2_DriverIRQHandler  fsl_flexio.o
-    0x80003fe8   0x70006458   0x00000008   Code   RO         3901    .text.FLEXIO3_DriverIRQHandler  fsl_flexio.o
-    0x80003ff0   0x70006460   0x0000006c   Code   RO         3891    .text.FLEXIO_CommonIRQHandler  fsl_flexio.o
+    0x80003fd8   0x70006448   0x00000008   Code   RO         3911    .text.FLEXIO1_DriverIRQHandler  fsl_flexio.o
+    0x80003fe0   0x70006450   0x00000008   Code   RO         3915    .text.FLEXIO2_DriverIRQHandler  fsl_flexio.o
+    0x80003fe8   0x70006458   0x00000008   Code   RO         3917    .text.FLEXIO3_DriverIRQHandler  fsl_flexio.o
+    0x80003ff0   0x70006460   0x0000006c   Code   RO         3907    .text.FLEXIO_CommonIRQHandler  fsl_flexio.o
     0x8000405c   0x700064cc   0x00000004   PAD
     0x80004060   0x700064d0   0x0000002a   Code   RO           27    .text.GPIO1_Combined_0_15_IRQHandler  isr.o
     0x8000408a   0x700064fa   0x00000006   PAD
@@ -19059,278 +19090,278 @@ Memory Map of the image
     0x80004148   0x700065b8   0x00000058   Code   RO           39    .text.GPIO3_Combined_0_15_IRQHandler  isr.o
     0x800041a0   0x70006610   0x00000014   Code   RO           31    .text.GPIO_ClearPinsInterruptFlags  isr.o
     0x800041b4   0x70006624   0x00000004   PAD
-    0x800041b8   0x70006628   0x00000014   Code   RO          665    .text.GPIO_ClearPinsOutput  zf_driver_gpio.o
+    0x800041b8   0x70006628   0x00000014   Code   RO          681    .text.GPIO_ClearPinsOutput  zf_driver_gpio.o
     0x800041cc   0x7000663c   0x00000004   PAD
-    0x800041d0   0x70006640   0x00000014   Code   RO         1539    .text.GPIO_ClearPinsOutput  zf_device_imu660rc.o
+    0x800041d0   0x70006640   0x00000014   Code   RO         1555    .text.GPIO_ClearPinsOutput  zf_device_imu660rc.o
     0x800041e4   0x70006654   0x00000004   PAD
-    0x800041e8   0x70006658   0x00000014   Code   RO         2465    .text.GPIO_ClearPinsOutput  zf_device_ips200pro.o
+    0x800041e8   0x70006658   0x00000014   Code   RO         2481    .text.GPIO_ClearPinsOutput  zf_device_ips200pro.o
     0x800041fc   0x7000666c   0x00000004   PAD
-    0x80004200   0x70006670   0x0000005a   Code   RO         4691    .text.GPIO_GetInstance  fsl_gpio.o
+    0x80004200   0x70006670   0x0000005a   Code   RO         4707    .text.GPIO_GetInstance  fsl_gpio.o
     0x8000425a   0x700066ca   0x00000006   PAD
     0x80004260   0x700066d0   0x00000010   Code   RO           29    .text.GPIO_GetPinsInterruptFlags  isr.o
-    0x80004270   0x700066e0   0x0000009a   Code   RO         4689    .text.GPIO_PinInit  fsl_gpio.o
+    0x80004270   0x700066e0   0x0000009a   Code   RO         4705    .text.GPIO_PinInit  fsl_gpio.o
     0x8000430a   0x7000677a   0x00000006   PAD
-    0x80004310   0x70006780   0x00000036   Code   RO          697    .text.GPIO_PinReadPadStatus  zf_driver_gpio.o
+    0x80004310   0x70006780   0x00000036   Code   RO          713    .text.GPIO_PinReadPadStatus  zf_driver_gpio.o
     0x80004346   0x700067b6   0x00000002   PAD
-    0x80004348   0x700067b8   0x000000ca   Code   RO         4699    .text.GPIO_PinSetInterruptConfig  fsl_gpio.o
+    0x80004348   0x700067b8   0x000000ca   Code   RO         4715    .text.GPIO_PinSetInterruptConfig  fsl_gpio.o
     0x80004412   0x70006882   0x00000006   PAD
-    0x80004418   0x70006888   0x00000052   Code   RO         4695    .text.GPIO_PinWrite  fsl_gpio.o
+    0x80004418   0x70006888   0x00000052   Code   RO         4711    .text.GPIO_PinWrite  fsl_gpio.o
     0x8000446a   0x700068da   0x00000006   PAD
-    0x80004470   0x700068e0   0x00000012   Code   RO          695    .text.GPIO_PortClear  zf_driver_gpio.o
+    0x80004470   0x700068e0   0x00000012   Code   RO          711    .text.GPIO_PortClear  zf_driver_gpio.o
     0x80004482   0x700068f2   0x00000006   PAD
-    0x80004488   0x700068f8   0x00000012   Code   RO         1543    .text.GPIO_PortClear  zf_device_imu660rc.o
+    0x80004488   0x700068f8   0x00000012   Code   RO         1559    .text.GPIO_PortClear  zf_device_imu660rc.o
     0x8000449a   0x7000690a   0x00000006   PAD
-    0x800044a0   0x70006910   0x00000012   Code   RO         2577    .text.GPIO_PortClear  zf_device_ips200pro.o
+    0x800044a0   0x70006910   0x00000012   Code   RO         2593    .text.GPIO_PortClear  zf_device_ips200pro.o
     0x800044b2   0x70006922   0x00000006   PAD
     0x800044b8   0x70006928   0x00000010   Code   RO           43    .text.GPIO_PortClearInterruptFlags  isr.o
     0x800044c8   0x70006938   0x0000000c   Code   RO           41    .text.GPIO_PortGetInterruptFlags  isr.o
     0x800044d4   0x70006944   0x00000004   PAD
-    0x800044d8   0x70006948   0x00000012   Code   RO          693    .text.GPIO_PortSet  zf_driver_gpio.o
+    0x800044d8   0x70006948   0x00000012   Code   RO          709    .text.GPIO_PortSet  zf_driver_gpio.o
     0x800044ea   0x7000695a   0x00000006   PAD
-    0x800044f0   0x70006960   0x00000012   Code   RO         1545    .text.GPIO_PortSet  zf_device_imu660rc.o
+    0x800044f0   0x70006960   0x00000012   Code   RO         1561    .text.GPIO_PortSet  zf_device_imu660rc.o
     0x80004502   0x70006972   0x00000006   PAD
-    0x80004508   0x70006978   0x00000012   Code   RO         2579    .text.GPIO_PortSet  zf_device_ips200pro.o
+    0x80004508   0x70006978   0x00000012   Code   RO         2595    .text.GPIO_PortSet  zf_device_ips200pro.o
     0x8000451a   0x7000698a   0x00000006   PAD
-    0x80004520   0x70006990   0x00000014   Code   RO          669    .text.GPIO_ReadPadStatus  zf_driver_gpio.o
+    0x80004520   0x70006990   0x00000014   Code   RO          685    .text.GPIO_ReadPadStatus  zf_driver_gpio.o
     0x80004534   0x700069a4   0x00000004   PAD
-    0x80004538   0x700069a8   0x0000001c   Code   RO         4697    .text.GPIO_SetPinInterruptConfig  fsl_gpio.o
+    0x80004538   0x700069a8   0x0000001c   Code   RO         4713    .text.GPIO_SetPinInterruptConfig  fsl_gpio.o
     0x80004554   0x700069c4   0x00000004   PAD
-    0x80004558   0x700069c8   0x00000014   Code   RO          663    .text.GPIO_SetPinsOutput  zf_driver_gpio.o
+    0x80004558   0x700069c8   0x00000014   Code   RO          679    .text.GPIO_SetPinsOutput  zf_driver_gpio.o
     0x8000456c   0x700069dc   0x00000004   PAD
-    0x80004570   0x700069e0   0x00000014   Code   RO         1541    .text.GPIO_SetPinsOutput  zf_device_imu660rc.o
+    0x80004570   0x700069e0   0x00000014   Code   RO         1557    .text.GPIO_SetPinsOutput  zf_device_imu660rc.o
     0x80004584   0x700069f4   0x00000004   PAD
-    0x80004588   0x700069f8   0x00000014   Code   RO         2467    .text.GPIO_SetPinsOutput  zf_device_ips200pro.o
+    0x80004588   0x700069f8   0x00000014   Code   RO         2483    .text.GPIO_SetPinsOutput  zf_device_ips200pro.o
     0x8000459c   0x70006a0c   0x00000004   PAD
-    0x800045a0   0x70006a10   0x00000014   Code   RO          519    .text.GPT_ClearStatusFlags  zf_driver_delay.o
+    0x800045a0   0x70006a10   0x00000014   Code   RO          535    .text.GPT_ClearStatusFlags  zf_driver_delay.o
     0x800045b4   0x70006a24   0x00000004   PAD
-    0x800045b8   0x70006a28   0x00000028   Code   RO         4727    .text.GPT_Deinit    fsl_gpt.o
-    0x800045e0   0x70006a50   0x00000058   Code   RO         4731    .text.GPT_GetDefaultConfig  fsl_gpt.o
-    0x80004638   0x70006aa8   0x0000005a   Code   RO         4719    .text.GPT_GetInstance  fsl_gpt.o
+    0x800045b8   0x70006a28   0x00000028   Code   RO         4743    .text.GPT_Deinit    fsl_gpt.o
+    0x800045e0   0x70006a50   0x00000058   Code   RO         4747    .text.GPT_GetDefaultConfig  fsl_gpt.o
+    0x80004638   0x70006aa8   0x0000005a   Code   RO         4735    .text.GPT_GetInstance  fsl_gpt.o
     0x80004692   0x70006b02   0x00000006   PAD
-    0x80004698   0x70006b08   0x00000016   Code   RO          517    .text.GPT_GetStatusFlags  zf_driver_delay.o
+    0x80004698   0x70006b08   0x00000016   Code   RO          533    .text.GPT_GetStatusFlags  zf_driver_delay.o
     0x800046ae   0x70006b1e   0x00000002   PAD
-    0x800046b0   0x70006b20   0x000000a0   Code   RO         4715    .text.GPT_Init      fsl_gpt.o
-    0x80004750   0x70006bc0   0x00000040   Code   RO         4725    .text.GPT_SetClockDivider  fsl_gpt.o
-    0x80004790   0x70006c00   0x0000004e   Code   RO         4723    .text.GPT_SetClockSource  fsl_gpt.o
+    0x800046b0   0x70006b20   0x000000a0   Code   RO         4731    .text.GPT_Init      fsl_gpt.o
+    0x80004750   0x70006bc0   0x00000040   Code   RO         4741    .text.GPT_SetClockDivider  fsl_gpt.o
+    0x80004790   0x70006c00   0x0000004e   Code   RO         4739    .text.GPT_SetClockSource  fsl_gpt.o
     0x800047de   0x70006c4e   0x00000002   PAD
-    0x800047e0   0x70006c50   0x00000040   Code   RO          513    .text.GPT_SetOutputCompareValue  zf_driver_delay.o
-    0x80004820   0x70006c90   0x00000022   Code   RO         4721    .text.GPT_SoftwareReset  fsl_gpt.o
+    0x800047e0   0x70006c50   0x00000040   Code   RO          529    .text.GPT_SetOutputCompareValue  zf_driver_delay.o
+    0x80004820   0x70006c90   0x00000022   Code   RO         4737    .text.GPT_SoftwareReset  fsl_gpt.o
     0x80004842   0x70006cb2   0x00000006   PAD
-    0x80004848   0x70006cb8   0x00000012   Code   RO          515    .text.GPT_StartTimer  zf_driver_delay.o
+    0x80004848   0x70006cb8   0x00000012   Code   RO          531    .text.GPT_StartTimer  zf_driver_delay.o
     0x8000485a   0x70006cca   0x00000006   PAD
-    0x80004860   0x70006cd0   0x00000012   Code   RO          521    .text.GPT_StopTimer  zf_driver_delay.o
+    0x80004860   0x70006cd0   0x00000012   Code   RO          537    .text.GPT_StopTimer  zf_driver_delay.o
     0x80004872   0x70006ce2   0x00000006   PAD
-    0x80004878   0x70006ce8   0x00000004   Code   RO          444    .text.HardFault_Handler  zf_common_vector.o
+    0x80004878   0x70006ce8   0x00000004   Code   RO          460    .text.HardFault_Handler  zf_common_vector.o
     0x8000487c   0x70006cec   0x00000004   PAD
-    0x80004880   0x70006cf0   0x00000024   Code   RO          657    .text.IOMUXC_SetPinConfig  zf_driver_gpio.o
+    0x80004880   0x70006cf0   0x00000024   Code   RO          673    .text.IOMUXC_SetPinConfig  zf_driver_gpio.o
     0x800048a4   0x70006d14   0x00000004   PAD
-    0x800048a8   0x70006d18   0x00000038   Code   RO          655    .text.IOMUXC_SetPinMux  zf_driver_gpio.o
-    0x800048e0   0x70006d50   0x00000010   Code   RO         4878    .text.LPI2C1_DriverIRQHandler  fsl_lpi2c.o
-    0x800048f0   0x70006d60   0x00000012   Code   RO         4882    .text.LPI2C2_DriverIRQHandler  fsl_lpi2c.o
+    0x800048a8   0x70006d18   0x00000038   Code   RO          671    .text.IOMUXC_SetPinMux  zf_driver_gpio.o
+    0x800048e0   0x70006d50   0x00000010   Code   RO         4894    .text.LPI2C1_DriverIRQHandler  fsl_lpi2c.o
+    0x800048f0   0x70006d60   0x00000012   Code   RO         4898    .text.LPI2C2_DriverIRQHandler  fsl_lpi2c.o
     0x80004902   0x70006d72   0x00000006   PAD
-    0x80004908   0x70006d78   0x00000012   Code   RO         4884    .text.LPI2C3_DriverIRQHandler  fsl_lpi2c.o
+    0x80004908   0x70006d78   0x00000012   Code   RO         4900    .text.LPI2C3_DriverIRQHandler  fsl_lpi2c.o
     0x8000491a   0x70006d8a   0x00000006   PAD
-    0x80004920   0x70006d90   0x00000012   Code   RO         4886    .text.LPI2C4_DriverIRQHandler  fsl_lpi2c.o
+    0x80004920   0x70006d90   0x00000012   Code   RO         4902    .text.LPI2C4_DriverIRQHandler  fsl_lpi2c.o
     0x80004932   0x70006da2   0x00000006   PAD
-    0x80004938   0x70006da8   0x0000007e   Code   RO         4880    .text.LPI2C_CommonIRQHandler  fsl_lpi2c.o
+    0x80004938   0x70006da8   0x0000007e   Code   RO         4896    .text.LPI2C_CommonIRQHandler  fsl_lpi2c.o
     0x800049b6   0x70006e26   0x00000002   PAD
-    0x800049b8   0x70006e28   0x00000042   Code   RO         5050    .text.LPSPI1_DriverIRQHandler  fsl_lpspi.o
+    0x800049b8   0x70006e28   0x00000042   Code   RO         5066    .text.LPSPI1_DriverIRQHandler  fsl_lpspi.o
     0x800049fa   0x70006e6a   0x00000006   PAD
-    0x80004a00   0x70006e70   0x00000042   Code   RO         5054    .text.LPSPI2_DriverIRQHandler  fsl_lpspi.o
+    0x80004a00   0x70006e70   0x00000042   Code   RO         5070    .text.LPSPI2_DriverIRQHandler  fsl_lpspi.o
     0x80004a42   0x70006eb2   0x00000006   PAD
-    0x80004a48   0x70006eb8   0x00000042   Code   RO         5056    .text.LPSPI3_DriverIRQHandler  fsl_lpspi.o
+    0x80004a48   0x70006eb8   0x00000042   Code   RO         5072    .text.LPSPI3_DriverIRQHandler  fsl_lpspi.o
     0x80004a8a   0x70006efa   0x00000006   PAD
-    0x80004a90   0x70006f00   0x00000040   Code   RO         5058    .text.LPSPI4_DriverIRQHandler  fsl_lpspi.o
-    0x80004ad0   0x70006f40   0x00000142   Code   RO         4994    .text.LPSPI_CheckTransferArgument  fsl_lpspi.o
+    0x80004a90   0x70006f00   0x00000040   Code   RO         5074    .text.LPSPI4_DriverIRQHandler  fsl_lpspi.o
+    0x80004ad0   0x70006f40   0x00000142   Code   RO         5010    .text.LPSPI_CheckTransferArgument  fsl_lpspi.o
     0x80004c12   0x70007082   0x00000006   PAD
-    0x80004c18   0x70007088   0x00000010   Code   RO         1153    .text.LPSPI_ClearStatusFlags  zf_driver_spi.o
-    0x80004c28   0x70007098   0x00000010   Code   RO         5002    .text.LPSPI_ClearStatusFlags  fsl_lpspi.o
-    0x80004c38   0x700070a8   0x000001c6   Code   RO         5010    .text.LPSPI_CombineWriteData  fsl_lpspi.o
+    0x80004c18   0x70007088   0x00000010   Code   RO         1169    .text.LPSPI_ClearStatusFlags  zf_driver_spi.o
+    0x80004c28   0x70007098   0x00000010   Code   RO         5018    .text.LPSPI_ClearStatusFlags  fsl_lpspi.o
+    0x80004c38   0x700070a8   0x000001c6   Code   RO         5026    .text.LPSPI_CombineWriteData  fsl_lpspi.o
     0x80004dfe   0x7000726e   0x00000002   PAD
-    0x80004e00   0x70007270   0x0000003e   Code   RO         5052    .text.LPSPI_CommonIRQHandler  fsl_lpspi.o
+    0x80004e00   0x70007270   0x0000003e   Code   RO         5068    .text.LPSPI_CommonIRQHandler  fsl_lpspi.o
     0x80004e3e   0x700072ae   0x00000002   PAD
-    0x80004e40   0x700072b0   0x00000014   Code   RO         1155    .text.LPSPI_DisableInterrupts  zf_driver_spi.o
+    0x80004e40   0x700072b0   0x00000014   Code   RO         1171    .text.LPSPI_DisableInterrupts  zf_driver_spi.o
     0x80004e54   0x700072c4   0x00000004   PAD
-    0x80004e58   0x700072c8   0x0000002e   Code   RO         1149    .text.LPSPI_Enable  zf_driver_spi.o
+    0x80004e58   0x700072c8   0x0000002e   Code   RO         1165    .text.LPSPI_Enable  zf_driver_spi.o
     0x80004e86   0x700072f6   0x00000002   PAD
-    0x80004e88   0x700072f8   0x0000002e   Code   RO         4970    .text.LPSPI_Enable  fsl_lpspi.o
+    0x80004e88   0x700072f8   0x0000002e   Code   RO         4986    .text.LPSPI_Enable  fsl_lpspi.o
     0x80004eb6   0x70007326   0x00000002   PAD
-    0x80004eb8   0x70007328   0x0000002e   Code   RO         1151    .text.LPSPI_FlushFifo  zf_driver_spi.o
+    0x80004eb8   0x70007328   0x0000002e   Code   RO         1167    .text.LPSPI_FlushFifo  zf_driver_spi.o
     0x80004ee6   0x70007356   0x00000002   PAD
-    0x80004ee8   0x70007358   0x0000002e   Code   RO         5000    .text.LPSPI_FlushFifo  fsl_lpspi.o
+    0x80004ee8   0x70007358   0x0000002e   Code   RO         5016    .text.LPSPI_FlushFifo  fsl_lpspi.o
     0x80004f16   0x70007386   0x00000002   PAD
-    0x80004f18   0x70007388   0x0000006c   Code   RO         4954    .text.LPSPI_GetInstance  fsl_lpspi.o
+    0x80004f18   0x70007388   0x0000006c   Code   RO         4970    .text.LPSPI_GetInstance  fsl_lpspi.o
     0x80004f84   0x700073f4   0x00000004   PAD
-    0x80004f88   0x700073f8   0x00000010   Code   RO         5014    .text.LPSPI_GetRxFifoCount  fsl_lpspi.o
-    0x80004f98   0x70007408   0x00000016   Code   RO         5004    .text.LPSPI_GetRxFifoSize  fsl_lpspi.o
+    0x80004f88   0x700073f8   0x00000010   Code   RO         5030    .text.LPSPI_GetRxFifoCount  fsl_lpspi.o
+    0x80004f98   0x70007408   0x00000016   Code   RO         5020    .text.LPSPI_GetRxFifoSize  fsl_lpspi.o
     0x80004fae   0x7000741e   0x00000002   PAD
-    0x80004fb0   0x70007420   0x0000000c   Code   RO         4998    .text.LPSPI_GetStatusFlags  fsl_lpspi.o
+    0x80004fb0   0x70007420   0x0000000c   Code   RO         5014    .text.LPSPI_GetStatusFlags  fsl_lpspi.o
     0x80004fbc   0x7000742c   0x00000004   PAD
-    0x80004fc0   0x70007430   0x00000010   Code   RO         5008    .text.LPSPI_GetTxFifoCount  fsl_lpspi.o
-    0x80004fd0   0x70007440   0x00000010   Code   RO         4986    .text.LPSPI_IsMaster  fsl_lpspi.o
-    0x80004fe0   0x70007450   0x00000092   Code   RO         4974    .text.LPSPI_MasterGetDefaultConfig  fsl_lpspi.o
+    0x80004fc0   0x70007430   0x00000010   Code   RO         5024    .text.LPSPI_GetTxFifoCount  fsl_lpspi.o
+    0x80004fd0   0x70007440   0x00000010   Code   RO         5002    .text.LPSPI_IsMaster  fsl_lpspi.o
+    0x80004fe0   0x70007450   0x00000092   Code   RO         4990    .text.LPSPI_MasterGetDefaultConfig  fsl_lpspi.o
     0x80005072   0x700074e2   0x00000006   PAD
-    0x80005078   0x700074e8   0x0000011c   Code   RO         4958    .text.LPSPI_MasterInit  fsl_lpspi.o
+    0x80005078   0x700074e8   0x0000011c   Code   RO         4974    .text.LPSPI_MasterInit  fsl_lpspi.o
     0x80005194   0x70007604   0x00000004   PAD
-    0x80005198   0x70007608   0x00000104   Code   RO         4966    .text.LPSPI_MasterSetBaudRate  fsl_lpspi.o
+    0x80005198   0x70007608   0x00000104   Code   RO         4982    .text.LPSPI_MasterSetBaudRate  fsl_lpspi.o
     0x8000529c   0x7000770c   0x00000004   PAD
-    0x800052a0   0x70007710   0x0000007a   Code   RO         4988    .text.LPSPI_MasterSetDelayScaler  fsl_lpspi.o
+    0x800052a0   0x70007710   0x0000007a   Code   RO         5004    .text.LPSPI_MasterSetDelayScaler  fsl_lpspi.o
     0x8000531a   0x7000778a   0x00000006   PAD
-    0x80005320   0x70007790   0x000001de   Code   RO         4972    .text.LPSPI_MasterSetDelayTimes  fsl_lpspi.o
+    0x80005320   0x70007790   0x000001de   Code   RO         4988    .text.LPSPI_MasterSetDelayTimes  fsl_lpspi.o
     0x800054fe   0x7000796e   0x00000002   PAD
-    0x80005500   0x70007970   0x000003fe   Code   RO         4996    .text.LPSPI_MasterTransferBlocking  fsl_lpspi.o
+    0x80005500   0x70007970   0x000003fe   Code   RO         5012    .text.LPSPI_MasterTransferBlocking  fsl_lpspi.o
     0x800058fe   0x70007d6e   0x00000002   PAD
-    0x80005900   0x70007d70   0x0000000c   Code   RO         5016    .text.LPSPI_ReadData  fsl_lpspi.o
+    0x80005900   0x70007d70   0x0000000c   Code   RO         5032    .text.LPSPI_ReadData  fsl_lpspi.o
     0x8000590c   0x70007d7c   0x00000004   PAD
-    0x80005910   0x70007d80   0x00000022   Code   RO         4980    .text.LPSPI_Reset   fsl_lpspi.o
+    0x80005910   0x70007d80   0x00000022   Code   RO         4996    .text.LPSPI_Reset   fsl_lpspi.o
     0x80005932   0x70007da2   0x00000006   PAD
-    0x80005938   0x70007da8   0x00000192   Code   RO         5018    .text.LPSPI_SeparateReadData  fsl_lpspi.o
+    0x80005938   0x70007da8   0x00000192   Code   RO         5034    .text.LPSPI_SeparateReadData  fsl_lpspi.o
     0x80005aca   0x70007f3a   0x00000006   PAD
-    0x80005ad0   0x70007f40   0x00000026   Code   RO         4956    .text.LPSPI_SetDummyData  fsl_lpspi.o
+    0x80005ad0   0x70007f40   0x00000026   Code   RO         4972    .text.LPSPI_SetDummyData  fsl_lpspi.o
     0x80005af6   0x70007f66   0x00000002   PAD
-    0x80005af8   0x70007f68   0x00000020   Code   RO         4968    .text.LPSPI_SetFifoWatermarks  fsl_lpspi.o
-    0x80005b18   0x70007f88   0x0000001c   Code   RO         4962    .text.LPSPI_SetMasterSlaveMode  fsl_lpspi.o
+    0x80005af8   0x70007f68   0x00000020   Code   RO         4984    .text.LPSPI_SetFifoWatermarks  fsl_lpspi.o
+    0x80005b18   0x70007f88   0x0000001c   Code   RO         4978    .text.LPSPI_SetMasterSlaveMode  fsl_lpspi.o
     0x80005b34   0x70007fa4   0x00000004   PAD
-    0x80005b38   0x70007fa8   0x0000003c   Code   RO         4964    .text.LPSPI_SetOnePcsPolarity  fsl_lpspi.o
+    0x80005b38   0x70007fa8   0x0000003c   Code   RO         4980    .text.LPSPI_SetOnePcsPolarity  fsl_lpspi.o
     0x80005b74   0x70007fe4   0x00000004   PAD
-    0x80005b78   0x70007fe8   0x0000001c   Code   RO         5006    .text.LPSPI_TxFifoReady  fsl_lpspi.o
+    0x80005b78   0x70007fe8   0x0000001c   Code   RO         5022    .text.LPSPI_TxFifoReady  fsl_lpspi.o
     0x80005b94   0x70008004   0x00000004   PAD
-    0x80005b98   0x70008008   0x00000010   Code   RO         5012    .text.LPSPI_WriteData  fsl_lpspi.o
-    0x80005ba8   0x70008018   0x00000026   Code   RO         5210    .text.LPUART1_DriverIRQHandler  fsl_lpuart.o
+    0x80005b98   0x70008008   0x00000010   Code   RO         5028    .text.LPSPI_WriteData  fsl_lpspi.o
+    0x80005ba8   0x70008018   0x00000026   Code   RO         5226    .text.LPUART1_DriverIRQHandler  fsl_lpuart.o
     0x80005bce   0x7000803e   0x00000002   PAD
     0x80005bd0   0x70008040   0x0000002e   Code   RO           13    .text.LPUART1_IRQHandler  isr.o
     0x80005bfe   0x7000806e   0x00000002   PAD
-    0x80005c00   0x70008070   0x00000026   Code   RO         5212    .text.LPUART2_DriverIRQHandler  fsl_lpuart.o
+    0x80005c00   0x70008070   0x00000026   Code   RO         5228    .text.LPUART2_DriverIRQHandler  fsl_lpuart.o
     0x80005c26   0x70008096   0x00000002   PAD
     0x80005c28   0x70008098   0x0000002a   Code   RO           15    .text.LPUART2_IRQHandler  isr.o
     0x80005c52   0x700080c2   0x00000006   PAD
-    0x80005c58   0x700080c8   0x00000026   Code   RO         5214    .text.LPUART3_DriverIRQHandler  fsl_lpuart.o
+    0x80005c58   0x700080c8   0x00000026   Code   RO         5230    .text.LPUART3_DriverIRQHandler  fsl_lpuart.o
     0x80005c7e   0x700080ee   0x00000002   PAD
     0x80005c80   0x700080f0   0x0000002a   Code   RO           17    .text.LPUART3_IRQHandler  isr.o
     0x80005caa   0x7000811a   0x00000006   PAD
-    0x80005cb0   0x70008120   0x00000024   Code   RO         5216    .text.LPUART4_DriverIRQHandler  fsl_lpuart.o
+    0x80005cb0   0x70008120   0x00000024   Code   RO         5232    .text.LPUART4_DriverIRQHandler  fsl_lpuart.o
     0x80005cd4   0x70008144   0x00000004   PAD
     0x80005cd8   0x70008148   0x00000036   Code   RO           19    .text.LPUART4_IRQHandler  isr.o
     0x80005d0e   0x7000817e   0x00000002   PAD
-    0x80005d10   0x70008180   0x00000026   Code   RO         5218    .text.LPUART5_DriverIRQHandler  fsl_lpuart.o
+    0x80005d10   0x70008180   0x00000026   Code   RO         5234    .text.LPUART5_DriverIRQHandler  fsl_lpuart.o
     0x80005d36   0x700081a6   0x00000002   PAD
     0x80005d38   0x700081a8   0x00000036   Code   RO           21    .text.LPUART5_IRQHandler  isr.o
     0x80005d6e   0x700081de   0x00000002   PAD
-    0x80005d70   0x700081e0   0x00000026   Code   RO         5220    .text.LPUART6_DriverIRQHandler  fsl_lpuart.o
+    0x80005d70   0x700081e0   0x00000026   Code   RO         5236    .text.LPUART6_DriverIRQHandler  fsl_lpuart.o
     0x80005d96   0x70008206   0x00000002   PAD
     0x80005d98   0x70008208   0x0000002a   Code   RO           23    .text.LPUART6_IRQHandler  isr.o
     0x80005dc2   0x70008232   0x00000006   PAD
-    0x80005dc8   0x70008238   0x00000026   Code   RO         5222    .text.LPUART7_DriverIRQHandler  fsl_lpuart.o
+    0x80005dc8   0x70008238   0x00000026   Code   RO         5238    .text.LPUART7_DriverIRQHandler  fsl_lpuart.o
     0x80005dee   0x7000825e   0x00000002   PAD
-    0x80005df0   0x70008260   0x00000024   Code   RO         5224    .text.LPUART8_DriverIRQHandler  fsl_lpuart.o
+    0x80005df0   0x70008260   0x00000024   Code   RO         5240    .text.LPUART8_DriverIRQHandler  fsl_lpuart.o
     0x80005e14   0x70008284   0x00000004   PAD
     0x80005e18   0x70008288   0x00000032   Code   RO           25    .text.LPUART8_IRQHandler  isr.o
     0x80005e4a   0x700082ba   0x00000006   PAD
-    0x80005e50   0x700082c0   0x00000080   Code   RO         5170    .text.LPUART_ClearStatusFlags  fsl_lpuart.o
-    0x80005ed0   0x70008340   0x0000006c   Code   RO         5150    .text.LPUART_Deinit  fsl_lpuart.o
+    0x80005e50   0x700082c0   0x00000080   Code   RO         5186    .text.LPUART_ClearStatusFlags  fsl_lpuart.o
+    0x80005ed0   0x70008340   0x0000006c   Code   RO         5166    .text.LPUART_Deinit  fsl_lpuart.o
     0x80005f3c   0x700083ac   0x00000004   PAD
-    0x80005f40   0x700083b0   0x00000082   Code   RO         5164    .text.LPUART_DisableInterrupts  fsl_lpuart.o
+    0x80005f40   0x700083b0   0x00000082   Code   RO         5180    .text.LPUART_DisableInterrupts  fsl_lpuart.o
     0x80005fc2   0x70008432   0x00000006   PAD
-    0x80005fc8   0x70008438   0x00000076   Code   RO         5162    .text.LPUART_EnableInterrupts  fsl_lpuart.o
+    0x80005fc8   0x70008438   0x00000076   Code   RO         5178    .text.LPUART_EnableInterrupts  fsl_lpuart.o
     0x8000603e   0x700084ae   0x00000002   PAD
-    0x80006040   0x700084b0   0x00000078   Code   RO         5154    .text.LPUART_GetDefaultConfig  fsl_lpuart.o
-    0x800060b8   0x70008528   0x0000005a   Code   RO         5140    .text.LPUART_GetInstance  fsl_lpuart.o
+    0x80006040   0x700084b0   0x00000078   Code   RO         5170    .text.LPUART_GetDefaultConfig  fsl_lpuart.o
+    0x800060b8   0x70008528   0x0000005a   Code   RO         5156    .text.LPUART_GetInstance  fsl_lpuart.o
     0x80006112   0x70008582   0x00000006   PAD
-    0x80006118   0x70008588   0x0000002e   Code   RO         5168    .text.LPUART_GetStatusFlags  fsl_lpuart.o
+    0x80006118   0x70008588   0x0000002e   Code   RO         5184    .text.LPUART_GetStatusFlags  fsl_lpuart.o
     0x80006146   0x700085b6   0x00000002   PAD
-    0x80006148   0x700085b8   0x00000368   Code   RO         5144    .text.LPUART_Init   fsl_lpuart.o
-    0x800064b0   0x70008920   0x00000080   Code   RO         1206    .text.LPUART_ReadByte  zf_driver_uart.o
-    0x80006530   0x700089a0   0x0000001c   Code   RO         5148    .text.LPUART_SoftwareReset  fsl_lpuart.o
+    0x80006148   0x700085b8   0x00000368   Code   RO         5160    .text.LPUART_Init   fsl_lpuart.o
+    0x800064b0   0x70008920   0x00000080   Code   RO         1222    .text.LPUART_ReadByte  zf_driver_uart.o
+    0x80006530   0x700089a0   0x0000001c   Code   RO         5164    .text.LPUART_SoftwareReset  fsl_lpuart.o
     0x8000654c   0x700089bc   0x00000004   PAD
-    0x80006550   0x700089c0   0x00000004   Code   RO          446    .text.MemManage_Handler  zf_common_vector.o
+    0x80006550   0x700089c0   0x00000004   Code   RO          462    .text.MemManage_Handler  zf_common_vector.o
     0x80006554   0x700089c4   0x00000004   PAD
-    0x80006558   0x700089c8   0x00000004   Code   RO          442    .text.NMI_Handler   zf_common_vector.o
+    0x80006558   0x700089c8   0x00000004   Code   RO          458    .text.NMI_Handler   zf_common_vector.o
     0x8000655c   0x700089cc   0x00000004   PAD
     0x80006560   0x700089d0   0x0000001e   Code   RO           11    .text.PIT_ClearStatusFlags  isr.o
     0x8000657e   0x700089ee   0x00000002   PAD
     0x80006580   0x700089f0   0x0000001e   Code   RO            9    .text.PIT_GetStatusFlags  isr.o
     0x8000659e   0x70008a0e   0x00000002   PAD
     0x800065a0   0x70008a10   0x00000098   Code   RO            7    .text.PIT_IRQHandler  isr.o
-    0x80006638   0x70008aa8   0x00000048   Code   RO         5365    .text.PWM_Deinit    fsl_pwm.o
-    0x80006680   0x70008af0   0x00000012   Code   RO         5373    .text.PWM_GetComplementU16  fsl_pwm.o
+    0x80006638   0x70008aa8   0x00000048   Code   RO         5381    .text.PWM_Deinit    fsl_pwm.o
+    0x80006680   0x70008af0   0x00000012   Code   RO         5389    .text.PWM_GetComplementU16  fsl_pwm.o
     0x80006692   0x70008b02   0x00000006   PAD
-    0x80006698   0x70008b08   0x0000005e   Code   RO         5369    .text.PWM_GetDefaultConfig  fsl_pwm.o
+    0x80006698   0x70008b08   0x0000005e   Code   RO         5385    .text.PWM_GetDefaultConfig  fsl_pwm.o
     0x800066f6   0x70008b66   0x00000002   PAD
-    0x800066f8   0x70008b68   0x0000005a   Code   RO         5363    .text.PWM_GetInstance  fsl_pwm.o
+    0x800066f8   0x70008b68   0x0000005a   Code   RO         5379    .text.PWM_GetInstance  fsl_pwm.o
     0x80006752   0x70008bc2   0x00000006   PAD
-    0x80006758   0x70008bc8   0x00000278   Code   RO         5359    .text.PWM_Init      fsl_pwm.o
-    0x800069d0   0x70008e40   0x00000046   Code   RO          808    .text.PWM_SetPwmLdok  zf_driver_pwm.o
+    0x80006758   0x70008bc8   0x00000278   Code   RO         5375    .text.PWM_Init      fsl_pwm.o
+    0x800069d0   0x70008e40   0x00000046   Code   RO          824    .text.PWM_SetPwmLdok  zf_driver_pwm.o
     0x80006a16   0x70008e86   0x00000002   PAD
-    0x80006a18   0x70008e88   0x000005f8   Code   RO         5371    .text.PWM_SetupPwm  fsl_pwm.o
-    0x80007010   0x70009480   0x00000022   Code   RO          812    .text.PWM_StartTimer  zf_driver_pwm.o
+    0x80006a18   0x70008e88   0x000005f8   Code   RO         5387    .text.PWM_SetupPwm  fsl_pwm.o
+    0x80007010   0x70009480   0x00000022   Code   RO          828    .text.PWM_StartTimer  zf_driver_pwm.o
     0x80007032   0x700094a2   0x00000006   PAD
-    0x80007038   0x700094a8   0x0000032a   Code   RO         5379    .text.PWM_UpdatePwmDutycycleHighAccuracy  fsl_pwm.o
+    0x80007038   0x700094a8   0x0000032a   Code   RO         5395    .text.PWM_UpdatePwmDutycycleHighAccuracy  fsl_pwm.o
     0x80007362   0x700097d2   0x00000006   PAD
-    0x80007368   0x700097d8   0x00000004   Code   RO          456    .text.PendSV_Handler  zf_common_vector.o
+    0x80007368   0x700097d8   0x00000004   Code   RO          472    .text.PendSV_Handler  zf_common_vector.o
     0x8000736c   0x700097dc   0x00000004   PAD
-    0x80007370   0x700097e0   0x00000094   Code   RO         5719    .text.SAI1_DriverIRQHandler  fsl_sai.o
+    0x80007370   0x700097e0   0x00000094   Code   RO         5735    .text.SAI1_DriverIRQHandler  fsl_sai.o
     0x80007404   0x70009874   0x00000004   PAD
-    0x80007408   0x70009878   0x00000094   Code   RO         5725    .text.SAI2_DriverIRQHandler  fsl_sai.o
+    0x80007408   0x70009878   0x00000094   Code   RO         5741    .text.SAI2_DriverIRQHandler  fsl_sai.o
     0x8000749c   0x7000990c   0x00000004   PAD
-    0x800074a0   0x70009910   0x0000004e   Code   RO         5731    .text.SAI3_RX_DriverIRQHandler  fsl_sai.o
+    0x800074a0   0x70009910   0x0000004e   Code   RO         5747    .text.SAI3_RX_DriverIRQHandler  fsl_sai.o
     0x800074ee   0x7000995e   0x00000002   PAD
-    0x800074f0   0x70009960   0x0000004e   Code   RO         5729    .text.SAI3_TX_DriverIRQHandler  fsl_sai.o
+    0x800074f0   0x70009960   0x0000004e   Code   RO         5745    .text.SAI3_TX_DriverIRQHandler  fsl_sai.o
     0x8000753e   0x700099ae   0x00000002   PAD
-    0x80007540   0x700099b0   0x00000038   Code   RO         5721    .text.SAI_RxGetEnabledInterruptStatus  fsl_sai.o
-    0x80007578   0x700099e8   0x00000036   Code   RO         5723    .text.SAI_TxGetEnabledInterruptStatus  fsl_sai.o
+    0x80007540   0x700099b0   0x00000038   Code   RO         5737    .text.SAI_RxGetEnabledInterruptStatus  fsl_sai.o
+    0x80007578   0x700099e8   0x00000036   Code   RO         5739    .text.SAI_TxGetEnabledInterruptStatus  fsl_sai.o
     0x800075ae   0x70009a1e   0x00000002   PAD
-    0x800075b0   0x70009a20   0x0000007c   Code   RO         6035    .text.SPDIF_DriverIRQHandler  fsl_spdif.o
+    0x800075b0   0x70009a20   0x0000007c   Code   RO         6051    .text.SPDIF_DriverIRQHandler  fsl_spdif.o
     0x8000762c   0x70009a9c   0x00000004   PAD
-    0x80007630   0x70009aa0   0x00000004   Code   RO          452    .text.SVC_Handler   zf_common_vector.o
+    0x80007630   0x70009aa0   0x00000004   Code   RO          468    .text.SVC_Handler   zf_common_vector.o
     0x80007634   0x70009aa4   0x00000004   PAD
-    0x80007638   0x70009aa8   0x00000056   Code   RO         7300    .text.USB_DeviceControl  usb_device_dci.o
+    0x80007638   0x70009aa8   0x00000056   Code   RO         7316    .text.USB_DeviceControl  usb_device_dci.o
     0x8000768e   0x70009afe   0x00000002   PAD
-    0x80007690   0x70009b00   0x0000015c   Code   RO         7249    .text.USB_DeviceEhciCancelControlPipe  usb_device_ehci.o
+    0x80007690   0x70009b00   0x0000015c   Code   RO         7265    .text.USB_DeviceEhciCancelControlPipe  usb_device_ehci.o
     0x800077ec   0x70009c5c   0x00000004   PAD
-    0x800077f0   0x70009c60   0x0000008e   Code   RO         7251    .text.USB_DeviceEhciFillSetupBuffer  usb_device_ehci.o
+    0x800077f0   0x70009c60   0x0000008e   Code   RO         7267    .text.USB_DeviceEhciFillSetupBuffer  usb_device_ehci.o
     0x8000787e   0x70009cee   0x00000002   PAD
-    0x80007880   0x70009cf0   0x0000006e   Code   RO         7245    .text.USB_DeviceEhciInterruptPortChange  usb_device_ehci.o
+    0x80007880   0x70009cf0   0x0000006e   Code   RO         7261    .text.USB_DeviceEhciInterruptPortChange  usb_device_ehci.o
     0x800078ee   0x70009d5e   0x00000002   PAD
-    0x800078f0   0x70009d60   0x0000008c   Code   RO         7241    .text.USB_DeviceEhciInterruptReset  usb_device_ehci.o
+    0x800078f0   0x70009d60   0x0000008c   Code   RO         7257    .text.USB_DeviceEhciInterruptReset  usb_device_ehci.o
     0x8000797c   0x70009dec   0x00000004   PAD
-    0x80007980   0x70009df0   0x00000008   Code   RO         7247    .text.USB_DeviceEhciInterruptSof  usb_device_ehci.o
-    0x80007988   0x70009df8   0x0000041a   Code   RO         7243    .text.USB_DeviceEhciInterruptTokenDone  usb_device_ehci.o
+    0x80007980   0x70009df0   0x00000008   Code   RO         7263    .text.USB_DeviceEhciInterruptSof  usb_device_ehci.o
+    0x80007988   0x70009df8   0x0000041a   Code   RO         7259    .text.USB_DeviceEhciInterruptTokenDone  usb_device_ehci.o
     0x80007da2   0x7000a212   0x00000006   PAD
-    0x80007da8   0x7000a218   0x0000008c   Code   RO         7239    .text.USB_DeviceEhciIsrFunction  usb_device_ehci.o
+    0x80007da8   0x7000a218   0x0000008c   Code   RO         7255    .text.USB_DeviceEhciIsrFunction  usb_device_ehci.o
     0x80007e34   0x7000a2a4   0x00000004   PAD
-    0x80007e38   0x7000a2a8   0x000000ec   Code   RO         7286    .text.USB_DeviceNotification  usb_device_dci.o
+    0x80007e38   0x7000a2a8   0x000000ec   Code   RO         7302    .text.USB_DeviceNotification  usb_device_dci.o
     0x80007f24   0x7000a394   0x00000004   PAD
-    0x80007f28   0x7000a398   0x0000004a   Code   RO         7284    .text.USB_DeviceNotificationTrigger  usb_device_dci.o
+    0x80007f28   0x7000a398   0x0000004a   Code   RO         7300    .text.USB_DeviceNotificationTrigger  usb_device_dci.o
     0x80007f72   0x7000a3e2   0x00000006   PAD
-    0x80007f78   0x7000a3e8   0x00000086   Code   RO         7326    .text.USB_DeviceResetNotification  usb_device_dci.o
+    0x80007f78   0x7000a3e8   0x00000086   Code   RO         7342    .text.USB_DeviceResetNotification  usb_device_dci.o
     0x80007ffe   0x7000a46e   0x00000002   PAD
-    0x80008000   0x7000a470   0x00000012   Code   RO         1225    .text.USB_OTG1_IRQHandler  zf_driver_usb_cdc.o
+    0x80008000   0x7000a470   0x00000012   Code   RO         1241    .text.USB_OTG1_IRQHandler  zf_driver_usb_cdc.o
     0x80008012   0x7000a482   0x00000006   PAD
-    0x80008018   0x7000a488   0x00000012   Code   RO         1227    .text.USB_OTG2_IRQHandler  zf_driver_usb_cdc.o
+    0x80008018   0x7000a488   0x00000012   Code   RO         1243    .text.USB_OTG2_IRQHandler  zf_driver_usb_cdc.o
     0x8000802a   0x7000a49a   0x00000006   PAD
-    0x80008030   0x7000a4a0   0x00000028   Code   RO         6309    .text.USDHC1_DriverIRQHandler  fsl_usdhc.o
-    0x80008058   0x7000a4c8   0x00000028   Code   RO         6311    .text.USDHC2_DriverIRQHandler  fsl_usdhc.o
-    0x80008080   0x7000a4f0   0x00000004   Code   RO          450    .text.UsageFault_Handler  zf_common_vector.o
+    0x80008030   0x7000a4a0   0x00000028   Code   RO         6325    .text.USDHC1_DriverIRQHandler  fsl_usdhc.o
+    0x80008058   0x7000a4c8   0x00000028   Code   RO         6327    .text.USDHC2_DriverIRQHandler  fsl_usdhc.o
+    0x80008080   0x7000a4f0   0x00000004   Code   RO          466    .text.UsageFault_Handler  zf_common_vector.o
     0x80008084   0x7000a4f4   0x00000004   PAD
-    0x80008088   0x7000a4f8   0x00000032   Code   RO         4703    .text._SDK_AtomicLocalClearAndSet4Byte  fsl_gpio.o
+    0x80008088   0x7000a4f8   0x00000032   Code   RO         4719    .text._SDK_AtomicLocalClearAndSet4Byte  fsl_gpio.o
     0x800080ba   0x7000a52a   0x00000006   PAD
-    0x800080c0   0x7000a530   0x00000032   Code   RO         4735    .text._SDK_AtomicLocalClearAndSet4Byte  fsl_gpt.o
+    0x800080c0   0x7000a530   0x00000032   Code   RO         4751    .text._SDK_AtomicLocalClearAndSet4Byte  fsl_gpt.o
     0x800080f2   0x7000a562   0x00000006   PAD
-    0x800080f8   0x7000a568   0x00000032   Code   RO         5062    .text._SDK_AtomicLocalClearAndSet4Byte  fsl_lpspi.o
+    0x800080f8   0x7000a568   0x00000032   Code   RO         5078    .text._SDK_AtomicLocalClearAndSet4Byte  fsl_lpspi.o
     0x8000812a   0x7000a59a   0x00000006   PAD
-    0x80008130   0x7000a5a0   0x00000032   Code   RO         5228    .text._SDK_AtomicLocalClearAndSet4Byte  fsl_lpuart.o
+    0x80008130   0x7000a5a0   0x00000032   Code   RO         5244    .text._SDK_AtomicLocalClearAndSet4Byte  fsl_lpuart.o
     0x80008162   0x7000a5d2   0x00000006   PAD
-    0x80008168   0x7000a5d8   0x00000032   Code   RO         5403    .text._SDK_AtomicLocalClearAndSet4Byte  fsl_pwm.o
+    0x80008168   0x7000a5d8   0x00000032   Code   RO         5419    .text._SDK_AtomicLocalClearAndSet4Byte  fsl_pwm.o
     0x8000819a   0x7000a60a   0x00000006   PAD
-    0x800081a0   0x7000a610   0x00000032   Code   RO         6491    .text._SDK_AtomicLocalClearAndSet4Byte  clock_config.o
+    0x800081a0   0x7000a610   0x00000032   Code   RO         6507    .text._SDK_AtomicLocalClearAndSet4Byte  clock_config.o
     0x800081d2   0x7000a642   0x00000006   PAD
-    0x800081d8   0x7000a648   0x00000030   Code   RO          430    .text.__NVIC_EnableIRQ  zf_common_interrupt.o
-    0x80008208   0x7000a678   0x0000003c   Code   RO          428    .text.__NVIC_SetPriorityGrouping  zf_common_interrupt.o
+    0x800081d8   0x7000a648   0x00000030   Code   RO          446    .text.__NVIC_EnableIRQ  zf_common_interrupt.o
+    0x80008208   0x7000a678   0x0000003c   Code   RO          444    .text.__NVIC_SetPriorityGrouping  zf_common_interrupt.o
     0x80008244   0x7000a6b4   0x00000004   PAD
-    0x80008248   0x7000a6b8   0x00000020   Code   RO         6543    .text.__aeabi_assert  fsl_assert.o
+    0x80008248   0x7000a6b8   0x00000020   Code   RO         6559    .text.__aeabi_assert  fsl_assert.o
     0x80008268   0x7000a6d8   0x0000002e   Code   RO          157    .text.abs16         openart_display.o
     0x80008296   0x7000a706   0x00000002   PAD
-    0x80008298   0x7000a708   0x00000054   Code   RO          653    .text.afio_init     zf_driver_gpio.o
+    0x80008298   0x7000a708   0x00000054   Code   RO          669    .text.afio_init     zf_driver_gpio.o
     0x800082ec   0x7000a75c   0x00000004   PAD
     0x800082f0   0x7000a760   0x00000144   Code   RO          153    .text.canvas_draw_line  openart_display.o
     0x80008434   0x7000a8a4   0x00000004   PAD
@@ -19346,93 +19377,93 @@ Memory Map of the image
     0x800087ee   0x7000ac5e   0x00000002   PAD
     0x800087f0   0x7000ac60   0x00000032   Code   RO           67    .text.car_stop      car_control.o
     0x80008822   0x7000ac92   0x00000006   PAD
-    0x80008828   0x7000ac98   0x00000026   Code   RO          271    .text.clock_init    zf_common_clock.o
+    0x80008828   0x7000ac98   0x00000026   Code   RO          287    .text.clock_init    zf_common_clock.o
     0x8000884e   0x7000acbe   0x00000002   PAD
-    0x80008850   0x7000acc0   0x0000006c   Code   RO          294    .text.debug_assert_handler  zf_common_debug.o
+    0x80008850   0x7000acc0   0x0000006c   Code   RO          310    .text.debug_assert_handler  zf_common_debug.o
     0x800088bc   0x7000ad2c   0x00000004   PAD
-    0x800088c0   0x7000ad30   0x00000040   Code   RO          300    .text.debug_delay   zf_common_debug.o
-    0x80008900   0x7000ad70   0x000003b0   Code   RO          298    .text.debug_output  zf_common_debug.o
-    0x80008cb0   0x7000b120   0x000000aa   Code   RO          296    .text.debug_protective_handler  zf_common_debug.o
+    0x800088c0   0x7000ad30   0x00000040   Code   RO          316    .text.debug_delay   zf_common_debug.o
+    0x80008900   0x7000ad70   0x000003b0   Code   RO          314    .text.debug_output  zf_common_debug.o
+    0x80008cb0   0x7000b120   0x000000aa   Code   RO          312    .text.debug_protective_handler  zf_common_debug.o
     0x80008d5a   0x7000b1ca   0x00000006   PAD
-    0x80008d60   0x7000b1d0   0x000000ac   Code   RO          327    .text.fifo_clear    zf_common_fifo.o
+    0x80008d60   0x7000b1d0   0x000000ac   Code   RO          343    .text.fifo_clear    zf_common_fifo.o
     0x80008e0c   0x7000b27c   0x00000004   PAD
-    0x80008e10   0x7000b280   0x0000003c   Code   RO          339    .text.fifo_end_offset  zf_common_fifo.o
+    0x80008e10   0x7000b280   0x0000003c   Code   RO          355    .text.fifo_end_offset  zf_common_fifo.o
     0x80008e4c   0x7000b2bc   0x00000004   PAD
-    0x80008e50   0x7000b2c0   0x0000003c   Code   RO          333    .text.fifo_head_offset  zf_common_fifo.o
+    0x80008e50   0x7000b2c0   0x0000003c   Code   RO          349    .text.fifo_head_offset  zf_common_fifo.o
     0x80008e8c   0x7000b2fc   0x00000004   PAD
-    0x80008e90   0x7000b300   0x00000244   Code   RO          341    .text.fifo_read_buffer  zf_common_fifo.o
+    0x80008e90   0x7000b300   0x00000244   Code   RO          357    .text.fifo_read_buffer  zf_common_fifo.o
     0x800090d4   0x7000b544   0x00000004   PAD
-    0x800090d8   0x7000b548   0x0000002c   Code   RO          329    .text.fifo_used     zf_common_fifo.o
+    0x800090d8   0x7000b548   0x0000002c   Code   RO          345    .text.fifo_used     zf_common_fifo.o
     0x80009104   0x7000b574   0x00000004   PAD
-    0x80009108   0x7000b578   0x0000022a   Code   RO          335    .text.fifo_write_buffer  zf_common_fifo.o
+    0x80009108   0x7000b578   0x0000022a   Code   RO          351    .text.fifo_write_buffer  zf_common_fifo.o
     0x80009332   0x7000b7a2   0x00000006   PAD
-    0x80009338   0x7000b7a8   0x000000d4   Code   RO         1547    .text.fp16_to_float  zf_device_imu660rc.o
+    0x80009338   0x7000b7a8   0x000000d4   Code   RO         1563    .text.fp16_to_float  zf_device_imu660rc.o
     0x8000940c   0x7000b87c   0x00000004   PAD
-    0x80009410   0x7000b880   0x00000016   Code   RO          369    .text.func_soft_delay  zf_common_function.o
+    0x80009410   0x7000b880   0x00000016   Code   RO          385    .text.func_soft_delay  zf_common_function.o
     0x80009426   0x7000b896   0x00000002   PAD
     0x80009428   0x7000b898   0x000000e6   Code   RO          151    .text.get_car_canvas_position  openart_display.o
     0x8000950e   0x7000b97e   0x00000002   PAD
     0x80009510   0x7000b980   0x00000086   Code   RO          149    .text.get_car_cell_position  openart_display.o
     0x80009596   0x7000ba06   0x00000002   PAD
-    0x80009598   0x7000ba08   0x0000019a   Code   RO         2390    .text.gnss_uart_callback  zf_device_gnss.o
+    0x80009598   0x7000ba08   0x0000019a   Code   RO         2406    .text.gnss_uart_callback  zf_device_gnss.o
     0x80009732   0x7000bba2   0x00000006   PAD
-    0x80009738   0x7000bba8   0x00000028   Code   RO          667    .text.gpio_get_level  zf_driver_gpio.o
-    0x80009760   0x7000bbd0   0x00000082   Code   RO          677    .text.gpio_init     zf_driver_gpio.o
+    0x80009738   0x7000bba8   0x00000028   Code   RO          683    .text.gpio_get_level  zf_driver_gpio.o
+    0x80009760   0x7000bbd0   0x00000082   Code   RO          693    .text.gpio_init     zf_driver_gpio.o
     0x800097e2   0x7000bc52   0x00000006   PAD
-    0x800097e8   0x7000bc58   0x000000f4   Code   RO          659    .text.gpio_iomuxc   zf_driver_gpio.o
+    0x800097e8   0x7000bc58   0x000000f4   Code   RO          675    .text.gpio_iomuxc   zf_driver_gpio.o
     0x800098dc   0x7000bd4c   0x00000004   PAD
-    0x800098e0   0x7000bd50   0x0000005c   Code   RO          661    .text.gpio_set_level  zf_driver_gpio.o
+    0x800098e0   0x7000bd50   0x0000005c   Code   RO          677    .text.gpio_set_level  zf_driver_gpio.o
     0x8000993c   0x7000bdac   0x00000004   PAD
-    0x80009940   0x7000bdb0   0x00000008   Code   RO         1533    .text.imu660rc_callback  zf_device_imu660rc.o
-    0x80009948   0x7000bdb8   0x00000128   Code   RO         1521    .text.imu660rc_get_quarternion  zf_device_imu660rc.o
-    0x80009a70   0x7000bee0   0x00000044   Code   RO         1527    .text.imu660rc_read_register  zf_device_imu660rc.o
+    0x80009940   0x7000bdb0   0x00000008   Code   RO         1549    .text.imu660rc_callback  zf_device_imu660rc.o
+    0x80009948   0x7000bdb8   0x00000128   Code   RO         1537    .text.imu660rc_get_quarternion  zf_device_imu660rc.o
+    0x80009a70   0x7000bee0   0x00000044   Code   RO         1543    .text.imu660rc_read_register  zf_device_imu660rc.o
     0x80009ab4   0x7000bf24   0x00000004   PAD
-    0x80009ab8   0x7000bf28   0x00000042   Code   RO         1517    .text.imu660rc_read_registers  zf_device_imu660rc.o
+    0x80009ab8   0x7000bf28   0x00000042   Code   RO         1533    .text.imu660rc_read_registers  zf_device_imu660rc.o
     0x80009afa   0x7000bf6a   0x00000006   PAD
-    0x80009b00   0x7000bf70   0x00000016   Code   RO         1523    .text.imu660rc_set_mem_bank  zf_device_imu660rc.o
+    0x80009b00   0x7000bf70   0x00000016   Code   RO         1539    .text.imu660rc_set_mem_bank  zf_device_imu660rc.o
     0x80009b16   0x7000bf86   0x00000002   PAD
-    0x80009b18   0x7000bf88   0x0000003e   Code   RO         1525    .text.imu660rc_write_register  zf_device_imu660rc.o
+    0x80009b18   0x7000bf88   0x0000003e   Code   RO         1541    .text.imu660rc_write_register  zf_device_imu660rc.o
     0x80009b56   0x7000bfc6   0x00000002   PAD
-    0x80009b58   0x7000bfc8   0x00000014   Code   RO          414    .text.interrupt_enable  zf_common_interrupt.o
+    0x80009b58   0x7000bfc8   0x00000014   Code   RO          430    .text.interrupt_enable  zf_common_interrupt.o
     0x80009b6c   0x7000bfdc   0x00000004   PAD
-    0x80009b70   0x7000bfe0   0x00000016   Code   RO          410    .text.interrupt_global_disable  zf_common_interrupt.o
+    0x80009b70   0x7000bfe0   0x00000016   Code   RO          426    .text.interrupt_global_disable  zf_common_interrupt.o
     0x80009b86   0x7000bff6   0x00000002   PAD
-    0x80009b88   0x7000bff8   0x0000000a   Code   RO          426    .text.interrupt_init  zf_common_interrupt.o
+    0x80009b88   0x7000bff8   0x0000000a   Code   RO          442    .text.interrupt_init  zf_common_interrupt.o
     0x80009b92   0x7000c002   0x00000006   PAD
-    0x80009b98   0x7000c008   0x00000084   Code   RO         2501    .text.ips200pro_create_widgets  zf_device_ips200pro.o
+    0x80009b98   0x7000c008   0x00000084   Code   RO         2517    .text.ips200pro_create_widgets  zf_device_ips200pro.o
     0x80009c1c   0x7000c08c   0x00000004   PAD
-    0x80009c20   0x7000c090   0x000000a2   Code   RO         2563    .text.ips200pro_image_create  zf_device_ips200pro.o
+    0x80009c20   0x7000c090   0x000000a2   Code   RO         2579    .text.ips200pro_image_create  zf_device_ips200pro.o
     0x80009cc2   0x7000c132   0x00000006   PAD
-    0x80009cc8   0x7000c138   0x00000116   Code   RO         2565    .text.ips200pro_image_display  zf_device_ips200pro.o
+    0x80009cc8   0x7000c138   0x00000116   Code   RO         2581    .text.ips200pro_image_display  zf_device_ips200pro.o
     0x80009dde   0x7000c24e   0x00000002   PAD
-    0x80009de0   0x7000c250   0x000000b2   Code   RO         2575    .text.ips200pro_init  zf_device_ips200pro.o
+    0x80009de0   0x7000c250   0x000000b2   Code   RO         2591    .text.ips200pro_init  zf_device_ips200pro.o
     0x80009e92   0x7000c302   0x00000006   PAD
-    0x80009e98   0x7000c308   0x000000a2   Code   RO         2523    .text.ips200pro_label_create  zf_device_ips200pro.o
+    0x80009e98   0x7000c308   0x000000a2   Code   RO         2539    .text.ips200pro_label_create  zf_device_ips200pro.o
     0x80009f3a   0x7000c3aa   0x00000006   PAD
-    0x80009f40   0x7000c3b0   0x0000003a   Code   RO         2527    .text.ips200pro_label_show_string  zf_device_ips200pro.o
+    0x80009f40   0x7000c3b0   0x0000003a   Code   RO         2543    .text.ips200pro_label_show_string  zf_device_ips200pro.o
     0x80009f7a   0x7000c3ea   0x00000006   PAD
-    0x80009f80   0x7000c3f0   0x000000b4   Code   RO         2513    .text.ips200pro_page_create  zf_device_ips200pro.o
+    0x80009f80   0x7000c3f0   0x000000b4   Code   RO         2529    .text.ips200pro_page_create  zf_device_ips200pro.o
     0x8000a034   0x7000c4a4   0x00000004   PAD
-    0x8000a038   0x7000c4a8   0x0000003e   Code   RO         2515    .text.ips200pro_page_set_title_name  zf_device_ips200pro.o
+    0x8000a038   0x7000c4a8   0x0000003e   Code   RO         2531    .text.ips200pro_page_set_title_name  zf_device_ips200pro.o
     0x8000a076   0x7000c4e6   0x00000002   PAD
-    0x8000a078   0x7000c4e8   0x00000040   Code   RO         2521    .text.ips200pro_page_set_title_position_width  zf_device_ips200pro.o
-    0x8000a0b8   0x7000c528   0x0000003a   Code   RO         2517    .text.ips200pro_page_switch  zf_device_ips200pro.o
+    0x8000a078   0x7000c4e8   0x00000040   Code   RO         2537    .text.ips200pro_page_set_title_position_width  zf_device_ips200pro.o
+    0x8000a0b8   0x7000c528   0x0000003a   Code   RO         2533    .text.ips200pro_page_switch  zf_device_ips200pro.o
     0x8000a0f2   0x7000c562   0x00000006   PAD
-    0x8000a0f8   0x7000c568   0x0000007a   Code   RO         2461    .text.ips200pro_send_buffer  zf_device_ips200pro.o
+    0x8000a0f8   0x7000c568   0x0000007a   Code   RO         2477    .text.ips200pro_send_buffer  zf_device_ips200pro.o
     0x8000a172   0x7000c5e2   0x00000006   PAD
-    0x8000a178   0x7000c5e8   0x00000032   Code   RO         2483    .text.ips200pro_set_backlight  zf_device_ips200pro.o
+    0x8000a178   0x7000c5e8   0x00000032   Code   RO         2499    .text.ips200pro_set_backlight  zf_device_ips200pro.o
     0x8000a1aa   0x7000c61a   0x00000006   PAD
-    0x8000a1b0   0x7000c620   0x00000048   Code   RO         2507    .text.ips200pro_set_color  zf_device_ips200pro.o
-    0x8000a1f8   0x7000c668   0x00000032   Code   RO         2489    .text.ips200pro_set_default_font  zf_device_ips200pro.o
+    0x8000a1b0   0x7000c620   0x00000048   Code   RO         2523    .text.ips200pro_set_color  zf_device_ips200pro.o
+    0x8000a1f8   0x7000c668   0x00000032   Code   RO         2505    .text.ips200pro_set_default_font  zf_device_ips200pro.o
     0x8000a22a   0x7000c69a   0x00000006   PAD
-    0x8000a230   0x7000c6a0   0x00000032   Code   RO         2485    .text.ips200pro_set_direction  zf_device_ips200pro.o
+    0x8000a230   0x7000c6a0   0x00000032   Code   RO         2501    .text.ips200pro_set_direction  zf_device_ips200pro.o
     0x8000a262   0x7000c6d2   0x00000006   PAD
-    0x8000a268   0x7000c6d8   0x00000032   Code   RO         2481    .text.ips200pro_set_format  zf_device_ips200pro.o
+    0x8000a268   0x7000c6d8   0x00000032   Code   RO         2497    .text.ips200pro_set_format  zf_device_ips200pro.o
     0x8000a29a   0x7000c70a   0x00000006   PAD
-    0x8000a2a0   0x7000c710   0x00000032   Code   RO         2491    .text.ips200pro_set_optimize  zf_device_ips200pro.o
+    0x8000a2a0   0x7000c710   0x00000032   Code   RO         2507    .text.ips200pro_set_optimize  zf_device_ips200pro.o
     0x8000a2d2   0x7000c742   0x00000006   PAD
-    0x8000a2d8   0x7000c748   0x00000050   Code   RO         2463    .text.ips200pro_wait_idle  zf_device_ips200pro.o
-    0x8000a328   0x7000c798   0x0000009e   Code   RO         2471    .text.ips200pro_write_packet  zf_device_ips200pro.o
+    0x8000a2d8   0x7000c748   0x00000050   Code   RO         2479    .text.ips200pro_wait_idle  zf_device_ips200pro.o
+    0x8000a328   0x7000c798   0x0000009e   Code   RO         2487    .text.ips200pro_write_packet  zf_device_ips200pro.o
     0x8000a3c6   0x7000c836   0x00000002   PAD
     0x8000a3c8   0x7000c838   0x000000fe   Code   RO           54    .text.load_fixed_openart_data  main.o
     0x8000a4c6   0x7000c936   0x00000002   PAD
@@ -19455,121 +19486,121 @@ Memory Map of the image
     0x8000aad8   0x7000cf48   0x00000066   Code   RO          210    .text.openart_uart_init  openart_uart.o
     0x8000ab3e   0x7000cfae   0x00000002   PAD
     0x8000ab40   0x7000cfb0   0x00000028   Code   RO          216    .text.openart_uart_interrupt_handler  openart_uart.o
-    0x8000ab68   0x7000cfd8   0x000002d2   Code   RO          810    .text.pwm_init      zf_driver_pwm.o
+    0x8000ab68   0x7000cfd8   0x000002d2   Code   RO          826    .text.pwm_init      zf_driver_pwm.o
     0x8000ae3a   0x7000d2aa   0x00000006   PAD
-    0x8000ae40   0x7000d2b0   0x000006d0   Code   RO          804    .text.pwm_iomuxc    zf_driver_pwm.o
-    0x8000b510   0x7000d980   0x00000104   Code   RO          806    .text.pwm_set_duty  zf_driver_pwm.o
+    0x8000ae40   0x7000d2b0   0x000006d0   Code   RO          820    .text.pwm_iomuxc    zf_driver_pwm.o
+    0x8000b510   0x7000d980   0x00000104   Code   RO          822    .text.pwm_set_duty  zf_driver_pwm.o
     0x8000b614   0x7000da84   0x00000004   PAD
-    0x8000b618   0x7000da88   0x000000fc   Code   RO         1529    .text.quarternion_normalize  zf_device_imu660rc.o
+    0x8000b618   0x7000da88   0x000000fc   Code   RO         1545    .text.quarternion_normalize  zf_device_imu660rc.o
     0x8000b714   0x7000db84   0x00000004   PAD
-    0x8000b718   0x7000db88   0x00000174   Code   RO         1531    .text.quarternion_to_euler  zf_device_imu660rc.o
+    0x8000b718   0x7000db88   0x00000174   Code   RO         1547    .text.quarternion_to_euler  zf_device_imu660rc.o
     0x8000b88c   0x7000dcfc   0x00000004   PAD
     0x8000b890   0x7000dd00   0x0000047c   Code   RO          139    .text.render_map_canvas  openart_display.o
     0x8000bd0c   0x7000e17c   0x00000004   PAD
     0x8000bd10   0x7000e180   0x000000b4   Code   RO          141    .text.render_status_debug_text  openart_display.o
     0x8000bdc4   0x7000e234   0x00000004   PAD
-    0x8000bdc8   0x7000e238   0x000002ac   Code   RO         1143    .text.spi_init      zf_driver_spi.o
+    0x8000bdc8   0x7000e238   0x000002ac   Code   RO         1159    .text.spi_init      zf_driver_spi.o
     0x8000c074   0x7000e4e4   0x00000004   PAD
-    0x8000c078   0x7000e4e8   0x000005e4   Code   RO         1103    .text.spi_iomuxc    zf_driver_spi.o
+    0x8000c078   0x7000e4e8   0x000005e4   Code   RO         1119    .text.spi_iomuxc    zf_driver_spi.o
     0x8000c65c   0x7000eacc   0x00000004   PAD
-    0x8000c660   0x7000ead0   0x00000048   Code   RO         1131    .text.spi_read_8bit_register  zf_driver_spi.o
-    0x8000c6a8   0x7000eb18   0x00000062   Code   RO         1133    .text.spi_read_8bit_registers  zf_driver_spi.o
+    0x8000c660   0x7000ead0   0x00000048   Code   RO         1147    .text.spi_read_8bit_register  zf_driver_spi.o
+    0x8000c6a8   0x7000eb18   0x00000062   Code   RO         1149    .text.spi_read_8bit_registers  zf_driver_spi.o
     0x8000c70a   0x7000eb7a   0x00000006   PAD
-    0x8000c710   0x7000eb80   0x0000011a   Code   RO         1105    .text.spi_write     zf_driver_spi.o
+    0x8000c710   0x7000eb80   0x0000011a   Code   RO         1121    .text.spi_write     zf_driver_spi.o
     0x8000c82a   0x7000ec9a   0x00000006   PAD
-    0x8000c830   0x7000eca0   0x0000002c   Code   RO         1107    .text.spi_write_8bit_array  zf_driver_spi.o
+    0x8000c830   0x7000eca0   0x0000002c   Code   RO         1123    .text.spi_write_8bit_array  zf_driver_spi.o
     0x8000c85c   0x7000eccc   0x00000004   PAD
-    0x8000c860   0x7000ecd0   0x00000044   Code   RO         1115    .text.spi_write_8bit_register  zf_driver_spi.o
+    0x8000c860   0x7000ecd0   0x00000044   Code   RO         1131    .text.spi_write_8bit_register  zf_driver_spi.o
     0x8000c8a4   0x7000ed14   0x00000004   PAD
-    0x8000c8a8   0x7000ed18   0x00000036   Code   RO          525    .text.system_delay_init  zf_driver_delay.o
+    0x8000c8a8   0x7000ed18   0x00000036   Code   RO          541    .text.system_delay_init  zf_driver_delay.o
     0x8000c8de   0x7000ed4e   0x00000002   PAD
-    0x8000c8e0   0x7000ed50   0x00000058   Code   RO          511    .text.system_delay_ms  zf_driver_delay.o
-    0x8000c938   0x7000eda8   0x00000002   Code   RO         2084    .text.type_default_callback  zf_device_type.o
+    0x8000c8e0   0x7000ed50   0x00000058   Code   RO          527    .text.system_delay_ms  zf_driver_delay.o
+    0x8000c938   0x7000eda8   0x00000002   Code   RO         2100    .text.type_default_callback  zf_device_type.o
     0x8000c93a   0x7000edaa   0x00000006   PAD
-    0x8000c940   0x7000edb0   0x0000009e   Code   RO         1214    .text.uart_init     zf_driver_uart.o
+    0x8000c940   0x7000edb0   0x0000009e   Code   RO         1230    .text.uart_init     zf_driver_uart.o
     0x8000c9de   0x7000ee4e   0x00000002   PAD
-    0x8000c9e0   0x7000ee50   0x000004d2   Code   RO         1194    .text.uart_iomuxc   zf_driver_uart.o
+    0x8000c9e0   0x7000ee50   0x000004d2   Code   RO         1210    .text.uart_iomuxc   zf_driver_uart.o
     0x8000ceb2   0x7000f322   0x00000006   PAD
-    0x8000ceb8   0x7000f328   0x00000056   Code   RO         1208    .text.uart_query_byte  zf_driver_uart.o
+    0x8000ceb8   0x7000f328   0x00000056   Code   RO         1224    .text.uart_query_byte  zf_driver_uart.o
     0x8000cf0e   0x7000f37e   0x00000002   PAD
-    0x8000cf10   0x7000f380   0x00000052   Code   RO         1212    .text.uart_rx_interrupt  zf_driver_uart.o
+    0x8000cf10   0x7000f380   0x00000052   Code   RO         1228    .text.uart_rx_interrupt  zf_driver_uart.o
     0x8000cf62   0x7000f3d2   0x00000002   PAD
-    0x8000cf64   0x7000f3d4   0x00000028   Code   RO         7611    i.__0sprintf        mc_w.l(printfa.o)
-    0x8000cf8c   0x7000f3fc   0x00000030   Code   RO         7696    i.__ARM_fpclassify  m_wv.l(fpclassify.o)
-    0x8000cfbc   0x7000f42c   0x00000026   Code   RO         7698    i.__ARM_fpclassifyf  m_wv.l(fpclassifyf.o)
+    0x8000cf64   0x7000f3d4   0x00000028   Code   RO         7627    i.__0sprintf        mc_w.l(printfa.o)
+    0x8000cf8c   0x7000f3fc   0x00000030   Code   RO         7712    i.__ARM_fpclassify  m_wv.l(fpclassify.o)
+    0x8000cfbc   0x7000f42c   0x00000026   Code   RO         7714    i.__ARM_fpclassifyf  m_wv.l(fpclassifyf.o)
     0x8000cfe2   0x7000f452   0x00000002   PAD
-    0x8000cfe4   0x7000f454   0x0000012c   Code   RO         7502    i.__hardfp_asinf    m_wv.l(asinf.o)
-    0x8000d110   0x7000f580   0x000002ac   Code   RO         7514    i.__hardfp_atan2f   m_wv.l(atan2f.o)
-    0x8000d3bc   0x7000f82c   0x00000150   Code   RO         7526    i.__hardfp_cosf     m_wv.l(cosf.o)
-    0x8000d50c   0x7000f97c   0x000000c0   Code   RO         7532    i.__hardfp_modf     m_wv.l(modf.o)
+    0x8000cfe4   0x7000f454   0x0000012c   Code   RO         7518    i.__hardfp_asinf    m_wv.l(asinf.o)
+    0x8000d110   0x7000f580   0x000002ac   Code   RO         7530    i.__hardfp_atan2f   m_wv.l(atan2f.o)
+    0x8000d3bc   0x7000f82c   0x00000150   Code   RO         7542    i.__hardfp_cosf     m_wv.l(cosf.o)
+    0x8000d50c   0x7000f97c   0x000000c0   Code   RO         7548    i.__hardfp_modf     m_wv.l(modf.o)
     0x8000d5cc   0x7000fa3c   0x00000004   PAD
-    0x8000d5d0   0x7000fa40   0x000008c4   Code   RO         7538    i.__hardfp_pow      m_wv.l(pow.o)
-    0x8000de94   0x70010304   0x00000190   Code   RO         7551    i.__hardfp_sinf     m_wv.l(sinf.o)
-    0x8000e024   0x70010494   0x0000003a   Code   RO         7563    i.__hardfp_sqrtf    m_wv.l(sqrtf.o)
-    0x8000e05e   0x700104ce   0x00000070   Code   RO         7714    i.__kernel_poly     m_wv.l(poly.o)
+    0x8000d5d0   0x7000fa40   0x000008c4   Code   RO         7554    i.__hardfp_pow      m_wv.l(pow.o)
+    0x8000de94   0x70010304   0x00000190   Code   RO         7567    i.__hardfp_sinf     m_wv.l(sinf.o)
+    0x8000e024   0x70010494   0x0000003a   Code   RO         7579    i.__hardfp_sqrtf    m_wv.l(sqrtf.o)
+    0x8000e05e   0x700104ce   0x00000070   Code   RO         7730    i.__kernel_poly     m_wv.l(poly.o)
     0x8000e0ce   0x7001053e   0x00000002   PAD
-    0x8000e0d0   0x70010540   0x00000018   Code   RO         7676    i.__mathlib_dbl_divzero  m_wv.l(dunder.o)
-    0x8000e0e8   0x70010558   0x00000006   Code   RO         7678    i.__mathlib_dbl_infnan2  m_wv.l(dunder.o)
+    0x8000e0d0   0x70010540   0x00000018   Code   RO         7692    i.__mathlib_dbl_divzero  m_wv.l(dunder.o)
+    0x8000e0e8   0x70010558   0x00000006   Code   RO         7694    i.__mathlib_dbl_infnan2  m_wv.l(dunder.o)
     0x8000e0ee   0x7001055e   0x00000002   PAD
-    0x8000e0f0   0x70010560   0x00000018   Code   RO         7679    i.__mathlib_dbl_invalid  m_wv.l(dunder.o)
-    0x8000e108   0x70010578   0x00000018   Code   RO         7680    i.__mathlib_dbl_overflow  m_wv.l(dunder.o)
-    0x8000e120   0x70010590   0x00000018   Code   RO         7682    i.__mathlib_dbl_underflow  m_wv.l(dunder.o)
-    0x8000e138   0x700105a8   0x00000006   Code   RO         7701    i.__mathlib_flt_infnan  m_wv.l(funder.o)
-    0x8000e13e   0x700105ae   0x00000006   Code   RO         7702    i.__mathlib_flt_infnan2  m_wv.l(funder.o)
-    0x8000e144   0x700105b4   0x00000010   Code   RO         7703    i.__mathlib_flt_invalid  m_wv.l(funder.o)
-    0x8000e154   0x700105c4   0x00000010   Code   RO         7706    i.__mathlib_flt_underflow  m_wv.l(funder.o)
-    0x8000e164   0x700105d4   0x00000154   Code   RO         7722    i.__mathlib_rredf2  m_wv.l(rredf.o)
-    0x8000e2b8   0x70010728   0x0000000c   Code   RO         7762    i.__set_errno       mc_w.l(errno.o)
-    0x8000e2c4   0x70010734   0x00000184   Code   RO         7616    i._fp_digits        mc_w.l(printfa.o)
-    0x8000e448   0x700108b8   0x000006dc   Code   RO         7617    i._printf_core      mc_w.l(printfa.o)
-    0x8000eb24   0x70010f94   0x00000024   Code   RO         7618    i._printf_post_padding  mc_w.l(printfa.o)
-    0x8000eb48   0x70010fb8   0x0000002e   Code   RO         7619    i._printf_pre_padding  mc_w.l(printfa.o)
-    0x8000eb76   0x70010fe6   0x0000000a   Code   RO         7621    i._sputc            mc_w.l(printfa.o)
-    0x8000eb80   0x70010ff0   0x00000018   Code   RO         7692    i.fabs              m_wv.l(fabs.o)
-    0x8000eb98   0x70011008   0x0000006a   Code   RO         7559    i.sqrt              m_wv.l(sqrt.o)
-    0x8000ec02   0x70011072   0x0000003e   Code   RO         7565    i.sqrtf             m_wv.l(sqrtf.o)
-    0x8000ec40   0x700110b0   0x00000088   Data   RO         7541    .constdata          m_wv.l(pow.o)
-    0x8000ecc8   0x70011138   0x00000008   Data   RO         7716    .constdata          m_wv.l(qnan.o)
-    0x8000ecd0   0x70011140   0x00000020   Data   RO         7723    .constdata          m_wv.l(rredf.o)
-    0x8000ecf0   0x70011160   0x00000010   Data   RO         2926    .rodata.CLOCK_GetPllFreq.enetRefClkFreq  fsl_clock.o
-    0x8000ed00   0x70011170   0x00000008   Data   RO         6493    .rodata.armPllConfig_BOARD_BootClockRUN  clock_config.o
+    0x8000e0f0   0x70010560   0x00000018   Code   RO         7695    i.__mathlib_dbl_invalid  m_wv.l(dunder.o)
+    0x8000e108   0x70010578   0x00000018   Code   RO         7696    i.__mathlib_dbl_overflow  m_wv.l(dunder.o)
+    0x8000e120   0x70010590   0x00000018   Code   RO         7698    i.__mathlib_dbl_underflow  m_wv.l(dunder.o)
+    0x8000e138   0x700105a8   0x00000006   Code   RO         7717    i.__mathlib_flt_infnan  m_wv.l(funder.o)
+    0x8000e13e   0x700105ae   0x00000006   Code   RO         7718    i.__mathlib_flt_infnan2  m_wv.l(funder.o)
+    0x8000e144   0x700105b4   0x00000010   Code   RO         7719    i.__mathlib_flt_invalid  m_wv.l(funder.o)
+    0x8000e154   0x700105c4   0x00000010   Code   RO         7722    i.__mathlib_flt_underflow  m_wv.l(funder.o)
+    0x8000e164   0x700105d4   0x00000154   Code   RO         7738    i.__mathlib_rredf2  m_wv.l(rredf.o)
+    0x8000e2b8   0x70010728   0x0000000c   Code   RO         7778    i.__set_errno       mc_w.l(errno.o)
+    0x8000e2c4   0x70010734   0x00000184   Code   RO         7632    i._fp_digits        mc_w.l(printfa.o)
+    0x8000e448   0x700108b8   0x000006dc   Code   RO         7633    i._printf_core      mc_w.l(printfa.o)
+    0x8000eb24   0x70010f94   0x00000024   Code   RO         7634    i._printf_post_padding  mc_w.l(printfa.o)
+    0x8000eb48   0x70010fb8   0x0000002e   Code   RO         7635    i._printf_pre_padding  mc_w.l(printfa.o)
+    0x8000eb76   0x70010fe6   0x0000000a   Code   RO         7637    i._sputc            mc_w.l(printfa.o)
+    0x8000eb80   0x70010ff0   0x00000018   Code   RO         7708    i.fabs              m_wv.l(fabs.o)
+    0x8000eb98   0x70011008   0x0000006a   Code   RO         7575    i.sqrt              m_wv.l(sqrt.o)
+    0x8000ec02   0x70011072   0x0000003e   Code   RO         7581    i.sqrtf             m_wv.l(sqrtf.o)
+    0x8000ec40   0x700110b0   0x00000088   Data   RO         7557    .constdata          m_wv.l(pow.o)
+    0x8000ecc8   0x70011138   0x00000008   Data   RO         7732    .constdata          m_wv.l(qnan.o)
+    0x8000ecd0   0x70011140   0x00000020   Data   RO         7739    .constdata          m_wv.l(rredf.o)
+    0x8000ecf0   0x70011160   0x00000010   Data   RO         2942    .rodata.CLOCK_GetPllFreq.enetRefClkFreq  fsl_clock.o
+    0x8000ed00   0x70011170   0x00000008   Data   RO         6509    .rodata.armPllConfig_BOARD_BootClockRUN  clock_config.o
     0x8000ed08   0x70011178   0x000000c0   Data   RO           56    .rodata.load_fixed_openart_data.fixed_map  main.o
-    0x8000edc8   0x70011238   0x00000008   Data   RO         5070    .rodata.s_baudratePrescaler  fsl_lpspi.o
-    0x8000edd0   0x70011240   0x00000008   Data   RO         3619    .rodata.s_enetBases  fsl_enet.o
-    0x8000edd8   0x70011248   0x0000002c   Data   RO         4707    .rodata.s_gpioBases  fsl_gpio.o
-    0x8000ee04   0x70011274   0x0000000c   Data   RO         4705    .rodata.s_gpioClock  fsl_gpio.o
-    0x8000ee10   0x70011280   0x0000000c   Data   RO         4739    .rodata.s_gptBases  fsl_gpt.o
-    0x8000ee1c   0x7001128c   0x00000006   Data   RO         4738    .rodata.s_gptClocks  fsl_gpt.o
+    0x8000edc8   0x70011238   0x00000008   Data   RO         5086    .rodata.s_baudratePrescaler  fsl_lpspi.o
+    0x8000edd0   0x70011240   0x00000008   Data   RO         3635    .rodata.s_enetBases  fsl_enet.o
+    0x8000edd8   0x70011248   0x0000002c   Data   RO         4723    .rodata.s_gpioBases  fsl_gpio.o
+    0x8000ee04   0x70011274   0x0000000c   Data   RO         4721    .rodata.s_gpioClock  fsl_gpio.o
+    0x8000ee10   0x70011280   0x0000000c   Data   RO         4755    .rodata.s_gptBases  fsl_gpt.o
+    0x8000ee1c   0x7001128c   0x00000006   Data   RO         4754    .rodata.s_gptClocks  fsl_gpt.o
     0x8000ee22   0x70011292   0x00000002   PAD
-    0x8000ee24   0x70011294   0x00000014   Data   RO         5067    .rodata.s_lpspiBases  fsl_lpspi.o
-    0x8000ee38   0x700112a8   0x0000000a   Data   RO         5069    .rodata.s_lpspiClocks  fsl_lpspi.o
+    0x8000ee24   0x70011294   0x00000014   Data   RO         5083    .rodata.s_lpspiBases  fsl_lpspi.o
+    0x8000ee38   0x700112a8   0x0000000a   Data   RO         5085    .rodata.s_lpspiClocks  fsl_lpspi.o
     0x8000ee42   0x700112b2   0x00000002   PAD
-    0x8000ee44   0x700112b4   0x00000024   Data   RO         5234    .rodata.s_lpuartBases  fsl_lpuart.o
-    0x8000ee68   0x700112d8   0x00000012   Data   RO         5236    .rodata.s_lpuartClock  fsl_lpuart.o
+    0x8000ee44   0x700112b4   0x00000024   Data   RO         5250    .rodata.s_lpuartBases  fsl_lpuart.o
+    0x8000ee68   0x700112d8   0x00000012   Data   RO         5252    .rodata.s_lpuartClock  fsl_lpuart.o
     0x8000ee7a   0x700112ea   0x00000002   PAD
-    0x8000ee7c   0x700112ec   0x00000014   Data   RO         5407    .rodata.s_pwmBases  fsl_pwm.o
-    0x8000ee90   0x70011300   0x00000028   Data   RO         5406    .rodata.s_pwmClocks  fsl_pwm.o
-    0x8000eeb8   0x70011328   0x0000000c   Data   RO         6341    .rodata.s_usdhcBase  fsl_usdhc.o
+    0x8000ee7c   0x700112ec   0x00000014   Data   RO         5423    .rodata.s_pwmBases  fsl_pwm.o
+    0x8000ee90   0x70011300   0x00000028   Data   RO         5422    .rodata.s_pwmClocks  fsl_pwm.o
+    0x8000eeb8   0x70011328   0x0000000c   Data   RO         6357    .rodata.s_usdhcBase  fsl_usdhc.o
     0x8000eec4   0x70011334   0x00000027   Data   RO          164    .rodata.str1.1      openart_display.o
-    0x8000eeeb   0x7001135b   0x00000066   Data   RO          318    .rodata.str1.1      zf_common_debug.o
-    0x8000ef51   0x700113c1   0x0000002b   Data   RO          347    .rodata.str1.1      zf_common_fifo.o
-    0x8000ef7c   0x700113ec   0x0000004c   Data   RO          527    .rodata.str1.1      zf_driver_delay.o
-    0x8000efc8   0x70011438   0x00000030   Data   RO          702    .rodata.str1.1      zf_driver_gpio.o
-    0x8000eff8   0x70011468   0x0000002a   Data   RO          814    .rodata.str1.1      zf_driver_pwm.o
-    0x8000f022   0x70011492   0x0000006f   Data   RO         1157    .rodata.str1.1      zf_driver_spi.o
-    0x8000f091   0x70011501   0x0000002b   Data   RO         1216    .rodata.str1.1      zf_driver_uart.o
-    0x8000f0bc   0x7001152c   0x0000000c   Data   RO         2415    .rodata.str1.1      zf_device_gnss.o
-    0x8000f0c8   0x70011538   0x0000005f   Data   RO         2921    .rodata.str1.1      fsl_clock.o
-    0x8000f127   0x70011597   0x0000034b   Data   RO         3377    .rodata.str1.1      fsl_edma.o
-    0x8000f472   0x700118e2   0x00000348   Data   RO         3620    .rodata.str1.1      fsl_enet.o
-    0x8000f7ba   0x70011c2a   0x000005a2   Data   RO         3822    .rodata.str1.1      fsl_flexcan.o
-    0x8000fd5c   0x700121cc   0x00000049   Data   RO         4706    .rodata.str1.1      fsl_gpio.o
-    0x8000fda5   0x70012215   0x000000b4   Data   RO         4737    .rodata.str1.1      fsl_gpt.o
-    0x8000fe59   0x700122c9   0x00000120   Data   RO         5068    .rodata.str1.1      fsl_lpspi.o
-    0x8000ff79   0x700123e9   0x000001a0   Data   RO         5235    .rodata.str1.1      fsl_lpuart.o
-    0x80010119   0x70012589   0x000000d1   Data   RO         5405    .rodata.str1.1      fsl_pwm.o
-    0x800101ea   0x7001265a   0x00000257   Data   RO         5740    .rodata.str1.1      fsl_sai.o
-    0x80010441   0x700128b1   0x0000002b   Data   RO         6545    .rodata.str1.1      fsl_assert.o
+    0x8000eeeb   0x7001135b   0x00000066   Data   RO          334    .rodata.str1.1      zf_common_debug.o
+    0x8000ef51   0x700113c1   0x0000002b   Data   RO          363    .rodata.str1.1      zf_common_fifo.o
+    0x8000ef7c   0x700113ec   0x0000004c   Data   RO          543    .rodata.str1.1      zf_driver_delay.o
+    0x8000efc8   0x70011438   0x00000030   Data   RO          718    .rodata.str1.1      zf_driver_gpio.o
+    0x8000eff8   0x70011468   0x0000002a   Data   RO          830    .rodata.str1.1      zf_driver_pwm.o
+    0x8000f022   0x70011492   0x0000006f   Data   RO         1173    .rodata.str1.1      zf_driver_spi.o
+    0x8000f091   0x70011501   0x0000002b   Data   RO         1232    .rodata.str1.1      zf_driver_uart.o
+    0x8000f0bc   0x7001152c   0x0000000c   Data   RO         2431    .rodata.str1.1      zf_device_gnss.o
+    0x8000f0c8   0x70011538   0x0000005f   Data   RO         2937    .rodata.str1.1      fsl_clock.o
+    0x8000f127   0x70011597   0x0000034b   Data   RO         3393    .rodata.str1.1      fsl_edma.o
+    0x8000f472   0x700118e2   0x00000348   Data   RO         3636    .rodata.str1.1      fsl_enet.o
+    0x8000f7ba   0x70011c2a   0x000005a2   Data   RO         3838    .rodata.str1.1      fsl_flexcan.o
+    0x8000fd5c   0x700121cc   0x00000049   Data   RO         4722    .rodata.str1.1      fsl_gpio.o
+    0x8000fda5   0x70012215   0x000000b4   Data   RO         4753    .rodata.str1.1      fsl_gpt.o
+    0x8000fe59   0x700122c9   0x00000120   Data   RO         5084    .rodata.str1.1      fsl_lpspi.o
+    0x8000ff79   0x700123e9   0x000001a0   Data   RO         5251    .rodata.str1.1      fsl_lpuart.o
+    0x80010119   0x70012589   0x000000d1   Data   RO         5421    .rodata.str1.1      fsl_pwm.o
+    0x800101ea   0x7001265a   0x00000257   Data   RO         5756    .rodata.str1.1      fsl_sai.o
+    0x80010441   0x700128b1   0x0000002b   Data   RO         6561    .rodata.str1.1      fsl_assert.o
 
 
     Execution Region SDRAM_ncache (Exec base: 0x81e00000, Load base: 0x7001298c, Size: 0x00000000, Max: 0x00200000, ABSOLUTE)
@@ -19609,7 +19640,7 @@ Image component sizes
         80          0         12          4         12      33745   fsl_usdhc.o
        918          0          0          0          0       5957   isr.o
        302          0        192          0          0       1198   main.o
-       710          0          0          0          0       2532   main_control.o
+       710          0          0          0          0       5254   main_control.o
       3448         12         39          0     139991       7810   openart_display.o
        278          0          0          0        744       4857   openart_uart.o
        564        260       1024          0          0       2457   startup_mimxrt1064.o
@@ -19634,7 +19665,7 @@ Image component sizes
         36          0          0          0         16      17912   zf_driver_usb_cdc.o
 
     ----------------------------------------------------------------------
-     51482        740       8684        172     151932     627879   Object Totals
+     51482        740       8684        172     151932     630601   Object Totals
          0          0         48          0      10240          0   (incl. Generated)
       1106         12          6          3         17          0   (incl. Padding)
 
@@ -19711,8 +19742,8 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-     60544       1444       8860        176     151932     629439   Grand Totals
-     60544       1444       8860        176     151932     629439   ELF Image Totals
+     60544       1444       8860        176     151932     632161   Grand Totals
+     60544       1444       8860        176     151932     632161   ELF Image Totals
      60544       1444       8860        176          0          0   ROM Totals
 
 ==============================================================================
