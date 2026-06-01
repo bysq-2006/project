@@ -8,6 +8,6 @@
 #include "zf_common_headfile.h"
 
 uint8 heading_sensor_init(void);
-void heading_sensor_update(int8 x, int8 y);
+void heading_sensor_update(int8 x, int8 y, int8 w);
 
 #endif

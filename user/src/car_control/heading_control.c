@@ -74,19 +74,20 @@ uint8 heading_sensor_init(void)
 
 // 更新传感器并执行 PI 控制
 // 更新传感器并执行 PID 控制
-void heading_sensor_update(int8 x, int8 y)
+void heading_sensor_update(int8 x, int8 y, int8 w)
 {
     if(heading_sensor_ready)
     {
-        int8 w;
+        int8 heading_w;
 
         heading_sensor_read_raw();
         heading_last_x_raw_error = heading_x_raw_error;
         heading_x_raw_error = gyro_z_angle_get_output();
         heading_update_integral();
-        w = heading_limit_w((float)heading_x_raw_error * HEADING_CONTROL_P
+        heading_w = heading_limit_w((float)heading_x_raw_error * HEADING_CONTROL_P
             + heading_x_raw_error_sum * HEADING_CONTROL_I
             + (float)(heading_x_raw_error - heading_last_x_raw_error) * HEADING_CONTROL_D);
+        w = heading_limit_w((float)w + heading_w);
         gyro_z_angle_set_w(w);
         car_move_xyw(x, y, w);
     }
