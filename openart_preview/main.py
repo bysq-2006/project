@@ -54,9 +54,9 @@ GRID_DETECT_CONFIG = {
 # 网格绘制配置：只影响预览图像上的网格线和字符显示，不影响识别结果�?
 GRID_DRAW_CONFIG = {
     # 是否在预览图像上画网格线�?
-    "draw_lines": False,
+    "draw_lines": True,
     # 是否把缓存的网格识别结果用字符画到图像上�?
-    "draw_symbols": False,
+    "draw_symbols": True,
     # 网格线显示颜色�?
     "line_color": (255, 255, 0),
     # 网格识别字符显示颜色�?
@@ -132,7 +132,7 @@ while True:
     clock.tick()
 
     img = sensor.snapshot()
-    
+
     base_roi = last_base_roi
     detect_roi = last_detect_roi
 
@@ -204,7 +204,7 @@ while True:
     if should_print:
         print("fps:", clock.fps())
     send_detected_car(car_map_pos, angle)
-    
+
     if not map_sent:
         send_detected_map(last_grid_map, detect_roi,
                           GRID_DETECT_CONFIG["cols"], GRID_DETECT_CONFIG["rows"])
