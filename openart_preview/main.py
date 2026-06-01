@@ -121,9 +121,10 @@ sensor.skip_frames(time=2000)
 
 clock = time.clock()
 frame_id = 0
-last_base_roi = None
-last_detect_roi = None
-last_grid_map = None
+map_sent = False
+last_base_roi, last_detect_roi, last_grid_map = build_confident_map(
+    sensor.snapshot,
+    GRID_DETECT_CONFIG)
 
 while True:
     frame_id += 1
@@ -217,3 +218,8 @@ while True:
     if should_print:
         print("fps:", clock.fps())
     send_detected_car(car_map_pos, angle)
+
+    if not map_sent:
+        send_detected_map(last_grid_map, detect_roi,
+                          GRID_DETECT_CONFIG["cols"], GRID_DETECT_CONFIG["rows"])
+        map_sent = True

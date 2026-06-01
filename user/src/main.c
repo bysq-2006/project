@@ -9,7 +9,6 @@
 #define MAIN_CAR_X_SPEED            (20)
 #define MAIN_CAR_Y_SPEED            (20)
 #define MAIN_CAR_ARRIVE_PERCENT     (30)
-#define MAIN_MAP_REQUEST_INTERVAL_MS (1000)
 
 static void main_drive_path(main_control_context_t *ctx,
                             openart_pose_t *pose,
@@ -79,7 +78,6 @@ int main(void)
     static main_control_context_t main_control;
     openart_pose_t openart_pose = {0};
     openart_map_t openart_map = {0};
-    uint32 last_map_request_ms;
     main_control_state_t last_control_state;
 
     clock_init(SYSTEM_CLOCK_600M);
@@ -90,20 +88,11 @@ int main(void)
     openart_uart_init();
     openart_display_init();
     main_control_init(&main_control);
-    openart_uart_request_map();
-    last_map_request_ms = OSA_TimeGetMsec();
     last_control_state = main_control.state;
 
     while(1)
     {
         openart_uart_update(&openart_pose, &openart_map);
-        if((!openart_map.valid) &&
-           ((uint32)(OSA_TimeGetMsec() - last_map_request_ms) >= MAIN_MAP_REQUEST_INTERVAL_MS))
-        {
-            openart_uart_request_map();
-            last_map_request_ms = OSA_TimeGetMsec();
-        }
-
         if(openart_pose.valid && openart_map.valid)
         {
             last_control_state = main_control.state;
@@ -114,7 +103,6 @@ int main(void)
             {
                 openart_uart_clear_updated(&openart_pose, &openart_map);
                 openart_uart_request_map();
-                last_map_request_ms = OSA_TimeGetMsec();
             }
         }
         else
