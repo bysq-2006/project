@@ -1,49 +1,104 @@
 #include "zf_common_headfile.h"
+#include "car_control/car_control.h"
+#include "car_control/heading_control.h"
+#include "car_control/path_follow_control.h"
+#include "main_control/main_control.h"
 #include "openart_uart/openart_uart.h"
+#include "screen_print/openart_display.h"
 
-#define TEST_PACKET_HEADER_0        (0xAA)
-#define TEST_PACKET_HEADER_1        (0x55)
-#define TEST_PACKET_TYPE_0          ('C')
-#define TEST_PACKET_TYPE_1          ('T')
-#define TEST_PACKET_PAYLOAD_LEN     (1)
+#define MAIN_CAR_X_SPEED            (20)
+#define MAIN_CAR_Y_SPEED            (20)
+#define MAIN_CAR_ARRIVE_PERCENT     (30)
 
-static void test_send_packet(uint8 seq)
+static void main_drive_path(main_control_context_t *ctx,
+                            openart_pose_t *pose,
+                            openart_map_t *map)
 {
-    uint8 packet[9];
-    uint16 checksum = 0;
-    uint16 index;
+    path_follow_output_t follow = {0};
 
-    packet[0] = TEST_PACKET_HEADER_0;
-    packet[1] = TEST_PACKET_HEADER_1;
-    packet[2] = TEST_PACKET_TYPE_0;
-    packet[3] = TEST_PACKET_TYPE_1;
-    packet[4] = TEST_PACKET_PAYLOAD_LEN & 0xFF;
-    packet[5] = (TEST_PACKET_PAYLOAD_LEN >> 8) & 0xFF;
-    packet[6] = seq;
-
-    for(index = 2; index <= 6; index++)
+    if(MAIN_CONTROL_STATE_MOVE_TO_PUSH_POS == ctx->state)
     {
-        checksum = (uint16)(checksum + packet[index]);
+        follow = path_follow_update(pose,
+                                    map,
+                                    ctx->active_car_path,
+                                    &ctx->active_car_path_count,
+                                    MAIN_CAR_X_SPEED,
+                                    MAIN_CAR_Y_SPEED,
+                                    MAIN_CAR_ARRIVE_PERCENT);
+
+        if(follow.valid && follow.finished)
+        {
+            car_stop();
+            main_control_finish_move_to_push_pos(ctx);
+            openart_display_set_control_status((uint8)ctx->state, follow.valid, follow.x, follow.y);
+            return;
+        }
+    }
+    else if(MAIN_CONTROL_STATE_PUSH_BOX == ctx->state)
+    {
+        follow = path_follow_update(pose,
+                                    map,
+                                    ctx->active_push_car_path,
+                                    &ctx->active_push_car_path_count,
+                                    MAIN_CAR_X_SPEED,
+                                    MAIN_CAR_Y_SPEED,
+                                    MAIN_CAR_ARRIVE_PERCENT);
+
+        if(follow.valid && follow.finished)
+        {
+            car_stop();
+            main_control_finish_push_box(ctx);
+            openart_display_set_control_status((uint8)ctx->state, follow.valid, follow.x, follow.y);
+            return;
+        }
+    }
+    else
+    {
+        car_stop();
+        openart_display_set_control_status((uint8)ctx->state, 0, 0, 0);
+        return;
     }
 
-    packet[7] = checksum & 0xFF;
-    packet[8] = (checksum >> 8) & 0xFF;
+    if(follow.valid)
+    {
+        heading_sensor_update(follow.x, follow.y);
+    }
+    else
+    {
+        car_stop();
+        ctx->state = MAIN_CONTROL_STATE_ERROR;
+    }
 
-    uart_write_buffer(OPENART_UART_INDEX, packet, sizeof(packet));
+    openart_display_set_control_status((uint8)ctx->state, follow.valid, follow.x, follow.y);
 }
 
 int main(void)
 {
-    uint8 seq = 0;
+    static main_control_context_t main_control;
 
     clock_init(SYSTEM_CLOCK_600M);
     system_delay_ms(100);
 
+    car_init();
+    heading_sensor_init();
     openart_uart_init();
+    openart_display_init();
+    main_control_init(&main_control);
 
     while(1)
     {
-        test_send_packet(seq++);
-        system_delay_ms(1000);
+        openart_uart_update();
+        if(openart_pose.valid && openart_map.valid)
+        {
+            main_control_update(&main_control, &openart_pose, &openart_map);
+            main_drive_path(&main_control, &openart_pose, &openart_map);
+        }
+        else
+        {
+            car_stop();
+            openart_display_set_control_status((uint8)main_control.state, 0, 0, 0);
+        }
+        openart_display_update();
+        system_delay_ms(20);
     }
 }
