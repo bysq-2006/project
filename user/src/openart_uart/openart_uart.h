@@ -94,10 +94,10 @@ extern openart_uart_status_t openart_uart_status;
 // 初始化 OpenART UART 并清空接收结果。
 void openart_uart_init(void);
 // 非阻塞 UART 解析函数，建议在主循环中反复调用。
-void openart_uart_update(void);
+void openart_uart_update(openart_pose_t *pose, openart_map_t *map);
 // 将待处理的 UART 数据搬运到软件接收缓冲区。
 void openart_uart_interrupt_handler(void);
 // 只清除 updated 标志，不清除已经接收到的数据。
-void openart_uart_clear_updated(void);
+void openart_uart_clear_updated(openart_pose_t *pose, openart_map_t *map);
 
 #endif

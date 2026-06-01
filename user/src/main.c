@@ -10,6 +10,9 @@
 #define MAIN_CAR_Y_SPEED            (20)
 #define MAIN_CAR_ARRIVE_PERCENT     (30)
 
+openart_pose_t openart_pose;
+openart_map_t openart_map;
+
 static void main_drive_path(main_control_context_t *ctx,
                             openart_pose_t *pose,
                             openart_map_t *map)
@@ -61,7 +64,7 @@ static void main_drive_path(main_control_context_t *ctx,
 
     if(follow.valid)
     {
-        heading_sensor_update(follow.x, follow.y);
+        car_stop();
     }
     else
     {
@@ -87,7 +90,7 @@ int main(void)
 
     while(1)
     {
-        openart_uart_update();
+        openart_uart_update(&openart_pose, &openart_map);
         if(openart_pose.valid && openart_map.valid)
         {
             main_control_update(&main_control, &openart_pose, &openart_map);

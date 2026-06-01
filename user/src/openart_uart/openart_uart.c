@@ -14,8 +14,6 @@
 #define OPENART_RX_BUFFER_MASK      (OPENART_RX_BUFFER_SIZE - 1)
 
 
-openart_pose_t openart_pose;
-openart_map_t openart_map;
 openart_uart_status_t openart_uart_status;
 
 static uint8 packet_type0;
@@ -78,21 +76,6 @@ static uint8 openart_rx_buffer_pop(uint8 *data)
 
 void openart_uart_init(void)
 {
-    openart_pose.valid = 0;
-    openart_pose.updated = 0;
-    openart_pose.seq = 0;
-    openart_pose.x10 = 0;
-    openart_pose.y10 = 0;
-    openart_pose.angle10 = 0;
-
-    openart_map.valid = 0;
-    openart_map.updated = 0;
-    openart_map.seq = 0;
-    openart_map.cols = 0;
-    openart_map.rows = 0;
-    openart_map.width10 = 0;
-    openart_map.height10 = 0;
-
     openart_uart_status.rx_bytes = 0;
     openart_uart_status.packet_count = 0;
     openart_uart_status.pose_packets = 0;
@@ -108,10 +91,10 @@ void openart_uart_init(void)
 }
 
 
-void openart_uart_clear_updated(void)
+void openart_uart_clear_updated(openart_pose_t *pose, openart_map_t *map)
 {
-    openart_pose.updated = 0;
-    openart_map.updated = 0;
+    pose->updated = 0;
+    map->updated = 0;
 }
 
 
@@ -227,25 +210,25 @@ void openart_uart_interrupt_handler(void)
 }
 
 
-static uint8 openart_parse_pose_packet(void)
+static uint8 openart_parse_pose_packet(openart_pose_t *pose)
 {
     if(OPENART_POSE_PAYLOAD_LEN != packet_len)
     {
         return 0;
     }
 
-    openart_pose.seq = packet_payload[0];
-    openart_pose.valid = packet_payload[1] & 0x01;
-    openart_pose.x10 = openart_get_i16(&packet_payload[2]);
-    openart_pose.y10 = openart_get_i16(&packet_payload[4]);
-    openart_pose.angle10 = openart_get_u16(&packet_payload[6]);
-    openart_pose.updated = 1;
+    pose->seq = packet_payload[0];
+    pose->valid = packet_payload[1] & 0x01;
+    pose->x10 = openart_get_i16(&packet_payload[2]);
+    pose->y10 = openart_get_i16(&packet_payload[4]);
+    pose->angle10 = openart_get_u16(&packet_payload[6]);
+    pose->updated = 1;
 
     return 1;
 }
 
 
-static uint8 openart_parse_map_packet(void)
+static uint8 openart_parse_map_packet(openart_map_t *map)
 {
     uint16 cell_count;
     uint16 i;
@@ -255,51 +238,51 @@ static uint8 openart_parse_map_packet(void)
         return 0;
     }
 
-    openart_map.seq = packet_payload[0];
-    openart_map.valid = packet_payload[1] & 0x01;
-    openart_map.cols = packet_payload[2];
-    openart_map.rows = packet_payload[3];
-    openart_map.width10 = openart_get_u16(&packet_payload[4]);
-    openart_map.height10 = openart_get_u16(&packet_payload[6]);
+    map->seq = packet_payload[0];
+    map->valid = packet_payload[1] & 0x01;
+    map->cols = packet_payload[2];
+    map->rows = packet_payload[3];
+    map->width10 = openart_get_u16(&packet_payload[4]);
+    map->height10 = openart_get_u16(&packet_payload[6]);
 
-    if(!openart_map.valid)
+    if(!map->valid)
     {
-        openart_map.updated = 1;
+        map->updated = 1;
         return 1;
     }
 
-    if((0 == openart_map.cols) || (0 == openart_map.rows) ||
-       (OPENART_MAP_COLS_MAX < openart_map.cols) ||
-       (OPENART_MAP_ROWS_MAX < openart_map.rows))
+    if((0 == map->cols) || (0 == map->rows) ||
+       (OPENART_MAP_COLS_MAX < map->cols) ||
+       (OPENART_MAP_ROWS_MAX < map->rows))
     {
-        openart_map.valid = 0;
+        map->valid = 0;
         return 0;
     }
 
-    cell_count = (uint16)openart_map.cols * openart_map.rows;
+    cell_count = (uint16)map->cols * map->rows;
     if((OPENART_MAP_CELL_MAX < cell_count) ||
        (packet_len != (uint16)(OPENART_MAP_HEADER_LEN + cell_count)))
     {
-        openart_map.valid = 0;
+        map->valid = 0;
         return 0;
     }
 
     for(i = 0; i < cell_count; i++)
     {
-        openart_map.cells[i] = packet_payload[OPENART_MAP_HEADER_LEN + i];
+        map->cells[i] = packet_payload[OPENART_MAP_HEADER_LEN + i];
     }
 
-    openart_map.updated = 1;
+    map->updated = 1;
     return 1;
 }
 
 
-static void openart_handle_packet(void)
+static void openart_handle_packet(openart_pose_t *pose, openart_map_t *map)
 {
     if((OPENART_PACKET_POSE_0 == packet_type0) &&
        (OPENART_PACKET_POSE_1 == packet_type1))
     {
-        if(openart_parse_pose_packet())
+        if(openart_parse_pose_packet(pose))
         {
             openart_uart_status.pose_packets++;
         }
@@ -311,7 +294,7 @@ static void openart_handle_packet(void)
     else if((OPENART_PACKET_MAP_0 == packet_type0) &&
             (OPENART_PACKET_MAP_1 == packet_type1))
     {
-        if(openart_parse_map_packet())
+        if(openart_parse_map_packet(map))
         {
             openart_uart_status.map_packets++;
         }
@@ -327,10 +310,10 @@ static void openart_handle_packet(void)
 }
 
 
-void openart_uart_update(void)
+void openart_uart_update(openart_pose_t *pose, openart_map_t *map)
 {
     while(openart_try_receive_packet())
     {
-        openart_handle_packet();
+        openart_handle_packet(pose, map);
     }
 }

@@ -155,7 +155,7 @@ while True:
         angle_points = (front, back)
         car_center = ((front[0] + back[0]) / 2, (front[1] + back[1]) / 2)
         if detect_roi is not None:
-            car_map_pos = (car_center[0] - detect_roi[0], car_center[1] - detect_roi[1])
+            car_map_pos = (car_`center[0] - detect_roi[0], car_center[1] - detect_roi[1])
 
         # 绿色在车尾，青色在车头；角度使用 x 向右、y 向上的坐标系�?
         dx = front[0] - back[0]
