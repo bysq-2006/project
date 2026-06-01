@@ -35,7 +35,6 @@
 #define MAP_WALL_COLOR              RGB565(240, 240, 240)
 #define MAP_GOAL_COLOR              RGB565(180, 60, 255)
 #define MAP_BOX_COLOR               RGB565(240, 180, 0)
-#define MAP_CROSS_COLOR             RGB565(0, 255, 0)
 #define MAP_UNKNOWN_COLOR           RGB565(96, 96, 192)
 #define MAP_CAR_COLOR               RGB565(255, 64, 64)
 #define MAP_CAR_HEAD_COLOR          RGB565(0, 255, 255)
@@ -63,6 +62,10 @@ static int32 speed_last_x;
 static int32 speed_last_y;
 static uint8 speed_last_valid;
 static uint16 speed_px_s;
+static uint8 control_state;
+static uint8 control_follow_valid;
+static int8 control_follow_x;
+static int8 control_follow_y;
 
 
 static int16 abs16(int16 value)
@@ -87,51 +90,9 @@ static uint16 map_cell_color(uint8 cell)
             return MAP_GOAL_COLOR;
         case OPENART_CELL_YELLOW_BOX:
             return MAP_BOX_COLOR;
-        case OPENART_CELL_CROSS:
-            return MAP_BG_COLOR;
         default:
             return MAP_UNKNOWN_COLOR;
     }
-}
-
-
-static void canvas_draw_cross(uint16 *canvas, uint16 width, uint16 height,
-                              int16 x, int16 y, uint16 cell_w, uint16 cell_h, uint16 color)
-{
-    int16 center_x;
-    int16 center_y;
-    int16 half_w;
-    int16 half_h;
-
-    center_x = (int16)(x + (int16)(cell_w / 2U));
-    center_y = (int16)(y + (int16)(cell_h / 2U));
-
-    half_w = (int16)(cell_w / 2U);
-    half_h = (int16)(cell_h / 2U);
-    if(half_w > 2)
-    {
-        half_w = (int16)(half_w - 2);
-    }
-    if(half_h > 2)
-    {
-        half_h = (int16)(half_h - 2);
-    }
-
-    if(half_w < 1)
-    {
-        half_w = 1;
-    }
-    if(half_h < 1)
-    {
-        half_h = 1;
-    }
-
-    canvas_draw_line(canvas, width, height,
-                     (int16)(center_x - half_w), center_y,
-                     (int16)(center_x + half_w), center_y, color);
-    canvas_draw_line(canvas, width, height,
-                     center_x, (int16)(center_y - half_h),
-                     center_x, (int16)(center_y + half_h), color);
 }
 
 
@@ -502,20 +463,9 @@ static void render_map_canvas(void)
                 }
             }
 
-            if(OPENART_CELL_CROSS == cell)
-            {
-                canvas_fill_rect(map_canvas, MAP_CANVAS_W, MAP_CANVAS_H,
-                                 (int16)x + 1, (int16)y + 1,
-                                 MAP_CELL_W - 2, MAP_CELL_H - 2, MAP_BG_COLOR);
-                canvas_draw_cross(map_canvas, MAP_CANVAS_W, MAP_CANVAS_H,
-                                  (int16)x, (int16)y, MAP_CELL_W, MAP_CELL_H, MAP_CROSS_COLOR);
-            }
-            else
-            {
-                canvas_fill_rect(map_canvas, MAP_CANVAS_W, MAP_CANVAS_H,
-                                 (int16)x + 1, (int16)y + 1,
-                                 MAP_CELL_W - 2, MAP_CELL_H - 2, map_cell_color(cell));
-            }
+            canvas_fill_rect(map_canvas, MAP_CANVAS_W, MAP_CANVAS_H,
+                             (int16)x + 1, (int16)y + 1,
+                             MAP_CELL_W - 2, MAP_CELL_H - 2, map_cell_color(cell));
             canvas_draw_rect(map_canvas, MAP_CANVAS_W, MAP_CANVAS_H,
                              (int16)x, (int16)y, MAP_CELL_W, MAP_CELL_H, MAP_GRID_COLOR);
         }
@@ -583,17 +533,21 @@ static void render_status_debug_text(void)
     box_count = main_control_find_boxes(&openart_map, boxes, OPENART_MAP_CELL_MAX);
     goal_count = main_control_find_goals(&openart_map, goals, OPENART_MAP_CELL_MAX);
 
+    sprintf(line, "S:%u V:%u X:%d Y:%d",
+            control_state,
+            control_follow_valid,
+            control_follow_x,
+            control_follow_y);
+    ips200pro_label_show_string(status_debug_label_id[0], line);
+
     if(main_control_get_car_map_pos(&openart_pose, &openart_map, &car_pos))
     {
-        sprintf(line, "Car:(%u,%u)", car_pos.x, car_pos.y);
+        sprintf(line, "C:%u,%u B:%u G:%u", car_pos.x, car_pos.y, box_count, goal_count);
     }
     else
     {
-        sprintf(line, "Car:invalid");
+        sprintf(line, "C:inv B:%u G:%u", box_count, goal_count);
     }
-    ips200pro_label_show_string(status_debug_label_id[0], line);
-
-    sprintf(line, "Box:%u Goal:%u", box_count, goal_count);
     ips200pro_label_show_string(status_debug_label_id[1], line);
 }
 
@@ -605,6 +559,10 @@ void openart_display_init(void)
     speed_last_y = 0;
     speed_last_valid = 0;
     speed_px_s = 0;
+    control_state = 0;
+    control_follow_valid = 0;
+    control_follow_x = 0;
+    control_follow_y = 0;
 
     ips200pro_page_switch(ips200pro_init("", IPS200PRO_TITLE_BOTTOM, 30), PAGE_ANIM_OFF);
     ips200pro_set_default_font(FONT_SIZE_16);
@@ -636,6 +594,15 @@ void openart_display_init(void)
     ips200pro_set_color(status_debug_label_id[0], COLOR_BACKGROUND, RGB565_BLACK);
     ips200pro_set_color(status_debug_label_id[1], COLOR_FOREGROUND, RGB565_WHITE);
     ips200pro_set_color(status_debug_label_id[1], COLOR_BACKGROUND, RGB565_BLACK);
+}
+
+
+void openart_display_set_control_status(uint8 state, uint8 follow_valid, int8 follow_x, int8 follow_y)
+{
+    control_state = state;
+    control_follow_valid = follow_valid;
+    control_follow_x = follow_x;
+    control_follow_y = follow_y;
 }
 
 

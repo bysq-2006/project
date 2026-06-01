@@ -29,6 +29,7 @@ static void main_drive_path(main_control_context_t *ctx,
         {
             car_stop();
             main_control_finish_move_to_push_pos(ctx);
+            openart_display_set_control_status((uint8)ctx->state, follow.valid, follow.x, follow.y);
             return;
         }
     }
@@ -46,12 +47,14 @@ static void main_drive_path(main_control_context_t *ctx,
         {
             car_stop();
             main_control_finish_push_box(ctx);
+            openart_display_set_control_status((uint8)ctx->state, follow.valid, follow.x, follow.y);
             return;
         }
     }
     else
     {
         car_stop();
+        openart_display_set_control_status((uint8)ctx->state, 0, 0, 0);
         return;
     }
 
@@ -64,6 +67,8 @@ static void main_drive_path(main_control_context_t *ctx,
         car_stop();
         ctx->state = MAIN_CONTROL_STATE_ERROR;
     }
+
+    openart_display_set_control_status((uint8)ctx->state, follow.valid, follow.x, follow.y);
 }
 
 int main(void)
@@ -89,6 +94,7 @@ int main(void)
         else
         {
             car_stop();
+            openart_display_set_control_status((uint8)main_control.state, 0, 0, 0);
         }
         openart_display_update();
         system_delay_ms(20);

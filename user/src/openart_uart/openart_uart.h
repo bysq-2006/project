@@ -27,8 +27,6 @@
 #define OPENART_CELL_GOAL           (2)
 // 地图格子数值：黄色箱子。
 #define OPENART_CELL_YELLOW_BOX     (3)
-// 地图格子数值：绿色正十字标记。
-#define OPENART_CELL_CROSS          (4)
 // 地图格子数值：未知或不匹配结果。
 #define OPENART_CELL_UNKNOWN        (255)
 

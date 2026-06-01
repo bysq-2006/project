@@ -113,4 +113,5 @@
   ..\..\libraries\sdk\board\clock_config.h \
   ..\user\src\car_control\..\main_control\map_planner.h \
   ..\user\src\car_control\..\main_control\..\openart_uart\openart_uart.h \
-  ..\user\src\car_control\..\main_control\main_control.h
+  ..\user\src\car_control\..\main_control\main_control.h \
+  C:\Keil_v5\ARM\ARMCLANG\include\math.h
