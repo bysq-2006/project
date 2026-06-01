@@ -8,6 +8,9 @@
 #define OPENART_PACKET_POSE_1       ('O')
 #define OPENART_PACKET_MAP_0        ('M')
 #define OPENART_PACKET_MAP_1        ('P')
+#define OPENART_PACKET_REQUEST_0    ('R')
+#define OPENART_PACKET_REQUEST_1    ('Q')
+#define OPENART_REQUEST_MAP         ('M')
 #define OPENART_POSE_PAYLOAD_LEN    (8)
 #define OPENART_MAP_HEADER_LEN      (8)
 #define OPENART_RX_BUFFER_SIZE      (512)
@@ -34,6 +37,13 @@ static uint16 openart_get_u16(const uint8 *data)
 static int16 openart_get_i16(const uint8 *data)
 {
     return (int16)openart_get_u16(data);
+}
+
+
+static void openart_put_u16(uint8 *data, uint16 value)
+{
+    data[0] = (uint8)(value & 0xFF);
+    data[1] = (uint8)((value >> 8) & 0xFF);
 }
 
 
@@ -95,6 +105,24 @@ void openart_uart_clear_updated(openart_pose_t *pose, openart_map_t *map)
 {
     pose->updated = 0;
     map->updated = 0;
+}
+
+
+void openart_uart_request_map(void)
+{
+    uint8 packet[9];
+    uint16 checksum = 0;
+
+    packet[0] = OPENART_PACKET_HEADER_0;
+    packet[1] = OPENART_PACKET_HEADER_1;
+    packet[2] = OPENART_PACKET_REQUEST_0;
+    packet[3] = OPENART_PACKET_REQUEST_1;
+    openart_put_u16(&packet[4], 1);
+    packet[6] = OPENART_REQUEST_MAP;
+
+    checksum = (uint16)(packet[2] + packet[3] + packet[4] + packet[5] + packet[6]);
+    openart_put_u16(&packet[7], checksum);
+    uart_write_buffer(OPENART_UART_INDEX, packet, sizeof(packet));
 }
 
 

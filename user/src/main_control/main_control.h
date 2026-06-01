@@ -24,6 +24,8 @@ typedef enum
     MAIN_CONTROL_STATE_ERROR
 } main_control_state_t;
 
+#define MAIN_CONTROL_STATE_REQUEST_MAP ((main_control_state_t)100)
+
 // 单个箱子对应的一条候选执行方案。
 typedef struct
 {

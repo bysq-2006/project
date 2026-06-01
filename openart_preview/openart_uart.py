@@ -7,6 +7,8 @@ UART_BAUD = 115200
 PACKET_HEADER = b"\xAA\x55"
 PACKET_TYPE_POSE = b"PO"
 PACKET_TYPE_MAP = b"MP"
+PACKET_TYPE_REQUEST = b"RQ"
+REQUEST_MAP = ord("M")
 POSE_SCALE = 10
 MAP_SIZE_SCALE = 10
 
@@ -123,6 +125,14 @@ def receive_packet():
             return packet_type, payload
 
     return None
+
+
+def is_map_request(packet):
+    if packet is None:
+        return False
+
+    packet_type, payload = packet
+    return packet_type == PACKET_TYPE_REQUEST and len(payload) >= 1 and payload[0] == REQUEST_MAP
 
 
 def build_car_pose_payload(valid, map_x, map_y, angle_deg):

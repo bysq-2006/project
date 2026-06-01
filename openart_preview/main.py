@@ -9,7 +9,7 @@ import cmm
 from blob_detect import detect_targets
 from draw_utils import draw_blob, draw_grid, draw_grid_results
 from map_detect import build_confident_map
-from openart_uart import send_detected_car, send_detected_map
+from openart_uart import is_map_request, receive_packet, send_detected_car, send_detected_map
 
 
 # OpenMV �?LAB 阈值格式：（L最小，L最大，A最小，A最大，B最小，B最大）�?
@@ -28,7 +28,7 @@ GRID_DETECT_CONFIG = {
     # 地图高度方向的格子数量�?
     "rows": 16,
     # 地图 ROI 纠正和网格识别每隔多少毫秒运行一次�?
-    "sample_ms": 2000,
+    "sample_ms": 1000,
     # 网格分类用的颜色占比规则，格式：（名字，LAB阈值，最小占比）�?
     "color_ratios": (
         ("yellow_box", ((80, 100, -25, 5, 70, 110),), 0.20),
@@ -78,8 +78,8 @@ GRID_DRAW_CONFIG = {
 # 要检测的目标色块配置�?
 TARGETS = (
     # �?RGB 采样值换算得到的初始 LAB 阈值�?
-    ("cyan_marker", ((78, 100, -65, -25, -35, 10),), (0, 255, 255), 25),
-    ("green_marker", ((72, 100, -110, -60, 55, 100),), (0, 255, 0), 25),
+    ("cyan_marker", ((63, 98, -71, 2, -58, 26),), (0, 255, 255), 25),
+    ("green_marker", ((71, 97, -93, -32, -16, 89),), (0, 255, 0), 25),
 )
 
 
@@ -121,15 +121,28 @@ sensor.skip_frames(time=2000)
 
 clock = time.clock()
 frame_id = 0
-map_sent = False
-last_base_roi, last_detect_roi, last_grid_map = build_confident_map(
-    sensor.snapshot,
-    GRID_DETECT_CONFIG)
+last_base_roi = None
+last_detect_roi = None
+last_grid_map = None
 
 while True:
     frame_id += 1
     should_print = PRINT_EVERY_N_FRAMES and (frame_id % PRINT_EVERY_N_FRAMES) == 0
     clock.tick()
+
+    request_map = False
+    packet = receive_packet()
+    while packet is not None:
+        if is_map_request(packet):
+            request_map = True
+        packet = receive_packet()
+
+    if request_map:
+        last_base_roi, last_detect_roi, last_grid_map = build_confident_map(
+            sensor.snapshot,
+            GRID_DETECT_CONFIG)
+        send_detected_map(last_grid_map, last_detect_roi,
+                          GRID_DETECT_CONFIG["cols"], GRID_DETECT_CONFIG["rows"])
 
     img = sensor.snapshot()
 
@@ -204,8 +217,3 @@ while True:
     if should_print:
         print("fps:", clock.fps())
     send_detected_car(car_map_pos, angle)
-
-    if not map_sent:
-        send_detected_map(last_grid_map, detect_roi,
-                          GRID_DETECT_CONFIG["cols"], GRID_DETECT_CONFIG["rows"])
-        map_sent = True
