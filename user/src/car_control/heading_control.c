@@ -5,7 +5,11 @@
 #include "heading_control.h"
 #include "car_control.h"
 #include "../gyro_z_angle/gyro_z_angle.h"
-#include "../car_params.h"
+
+#define HEADING_CONTROL_P                   (0.1f)
+#define HEADING_CONTROL_I                   (0.001f)
+#define HEADING_CONTROL_D                   (0.5f)
+#define HEADING_CONTROL_I_LIMIT             (5000.0f)
 
 // 注意单位不是弧度，也不是角度
 static uint8 heading_sensor_ready = 0;

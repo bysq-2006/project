@@ -4,11 +4,13 @@
 *********************************************************************************************************************/
 
 #include "car_control.h"
-#include "../car_params.h"
 
-// 可调参数在 car_params.h：
-// CAR_MAX_DUTY, CAR_MOTOR_PWM_FREQ_HZ,
-// MOTOR1_GAIN_PERCENT, MOTOR2_GAIN_PERCENT, MOTOR3_GAIN_PERCENT, MOTOR4_GAIN_PERCENT。
+#define CAR_MAX_DUTY                        (50)
+#define CAR_MOTOR_PWM_FREQ_HZ               (17000)
+#define MOTOR1_GAIN_PERCENT                 (100)
+#define MOTOR2_GAIN_PERCENT                 (100)
+#define MOTOR3_GAIN_PERCENT                 (100)
+#define MOTOR4_GAIN_PERCENT                 (100)
 
 // 电机输出增益百分比，100 表示不补偿，200表示两倍电压。
 // 用相同 PWM 测完编码器计数后，后续主要调这里。

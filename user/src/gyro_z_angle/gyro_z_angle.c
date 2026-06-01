@@ -4,10 +4,12 @@
 
 #include "gyro_z_angle.h"
 #include "../screen_print/screen_print.h"
-#include "../car_params.h"
 #include <stdio.h>
 
 #define GYRO_Z_PRINT_BUFFER_SIZE    (32)
+#define GYRO_Z_DEAD_ZONE_RAW        (6)
+#define GYRO_Z_OUTPUT_SCALE         (0.002f)
+#define GYRO_Z_INTEGRAL_LIMIT_RAW   (2137500)
 
 static int16 gyro_z_raw;
 static int32 gyro_z_integral;
