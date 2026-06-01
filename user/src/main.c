@@ -10,9 +10,6 @@
 #define MAIN_CAR_Y_SPEED            (20)
 #define MAIN_CAR_ARRIVE_PERCENT     (30)
 
-openart_pose_t openart_pose;
-openart_map_t openart_map;
-
 static void main_drive_path(main_control_context_t *ctx,
                             openart_pose_t *pose,
                             openart_map_t *map)
@@ -78,6 +75,8 @@ static void main_drive_path(main_control_context_t *ctx,
 int main(void)
 {
     static main_control_context_t main_control;
+    openart_pose_t openart_pose = {0};
+    openart_map_t openart_map = {0};
 
     clock_init(SYSTEM_CLOCK_600M);
     system_delay_ms(100);
@@ -101,7 +100,7 @@ int main(void)
             car_stop();
             openart_display_set_control_status((uint8)main_control.state, 0, 0, 0);
         }
-        openart_display_update();
+        openart_display_update(&openart_pose, &openart_map);
         system_delay_ms(20);
     }
 }

@@ -54,9 +54,9 @@ GRID_DETECT_CONFIG = {
 # 网格绘制配置：只影响预览图像上的网格线和字符显示，不影响识别结果�?
 GRID_DRAW_CONFIG = {
     # 是否在预览图像上画网格线�?
-    "draw_lines": True,
+    "draw_lines": False,
     # 是否把缓存的网格识别结果用字符画到图像上�?
-    "draw_symbols": True,
+    "draw_symbols": False,
     # 网格线显示颜色�?
     "line_color": (255, 255, 0),
     # 网格识别字符显示颜色�?

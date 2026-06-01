@@ -84,10 +84,6 @@ typedef struct
     uint16 rx_overflows;
 } openart_uart_status_t;
 
-// 最新解析到的车位姿数据。
-extern openart_pose_t openart_pose;
-// 最新解析到的地图数据。
-extern openart_map_t openart_map;
 // UART 接收和解析的统计信息。
 extern openart_uart_status_t openart_uart_status;
 

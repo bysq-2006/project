@@ -82,7 +82,7 @@ static void screen_print_format_fixed10(char *buffer, int16 value10)
     }
 }
 
-void screen_print_openart_packet_status(void)
+void screen_print_openart_packet_status(const openart_pose_t *pose, const openart_map_t *map)
 {
     char buffer[SCREEN_PRINT_BUFFER_SIZE];
     char x_text[16];
@@ -106,23 +106,23 @@ void screen_print_openart_packet_status(void)
     screen_print_line(2, buffer);
 
     sprintf(buffer, "Pose v:%u s:%u",
-            openart_pose.valid,
-            openart_pose.seq);
+            pose->valid,
+            pose->seq);
     screen_print_line(3, buffer);
 
-    screen_print_format_fixed10(x_text, openart_pose.x10);
-    screen_print_format_fixed10(y_text, openart_pose.y10);
+    screen_print_format_fixed10(x_text, pose->x10);
+    screen_print_format_fixed10(y_text, pose->y10);
     sprintf(buffer, "X:%s Y:%s", x_text, y_text);
     screen_print_line(4, buffer);
 
-    screen_print_format_fixed10(angle_text, (int16)openart_pose.angle10);
+    screen_print_format_fixed10(angle_text, (int16)pose->angle10);
     sprintf(buffer, "Ang:%s", angle_text);
     screen_print_line(5, buffer);
 
     sprintf(buffer, "Map v:%u s:%u C:%u R:%u",
-            openart_map.valid,
-            openart_map.seq,
-            openart_map.cols,
-            openart_map.rows);
+            map->valid,
+            map->seq,
+            map->cols,
+            map->rows);
     screen_print_line(6, buffer);
 }

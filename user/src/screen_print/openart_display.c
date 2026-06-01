@@ -234,16 +234,16 @@ static void canvas_draw_line(uint16 *canvas, uint16 width, uint16 height,
 }
 
 
-static uint8 get_car_canvas_position(int16 *car_x, int16 *car_y)
+static uint8 get_car_canvas_position(const openart_pose_t *pose, const openart_map_t *map, int16 *car_x, int16 *car_y)
 {
-    if((!openart_pose.valid) || (!openart_map.valid) ||
-       (openart_map.width10 == 0) || (openart_map.height10 == 0))
+    if((!pose->valid) || (!map->valid) ||
+       (map->width10 == 0) || (map->height10 == 0))
     {
         return 0;
     }
 
-    *car_x = (int16)(((int32)openart_pose.x10 * MAP_CANVAS_W) / openart_map.width10);
-    *car_y = (int16)(((int32)openart_pose.y10 * MAP_CANVAS_H) / openart_map.height10);
+    *car_x = (int16)(((int32)pose->x10 * MAP_CANVAS_W) / map->width10);
+    *car_y = (int16)(((int32)pose->y10 * MAP_CANVAS_H) / map->height10);
 
     if(*car_x < 0)
     {
@@ -267,12 +267,12 @@ static uint8 get_car_canvas_position(int16 *car_x, int16 *car_y)
 }
 
 
-static uint8 get_car_cell_position(uint8 *car_col, uint8 *car_row)
+static uint8 get_car_cell_position(const openart_pose_t *pose, const openart_map_t *map, uint8 *car_col, uint8 *car_row)
 {
     int16 car_x;
     int16 car_y;
 
-    if(!get_car_canvas_position(&car_x, &car_y))
+    if(!get_car_canvas_position(pose, map, &car_x, &car_y))
     {
         return 0;
     }
@@ -355,7 +355,7 @@ static void draw_speed_bar(uint16 *canvas, uint16 width, uint16 height, uint16 s
 }
 
 
-static void draw_position_panel(uint16 *canvas, uint16 width, uint16 height)
+static void draw_position_panel(uint16 *canvas, uint16 width, uint16 height, const openart_pose_t *pose, const openart_map_t *map)
 {
     int16 panel_x;
     int16 panel_y;
@@ -383,7 +383,7 @@ static void draw_position_panel(uint16 *canvas, uint16 width, uint16 height)
     box_w = INFO_BOX_W - 8;
     box_h = INFO_BOX_H - 8;
 
-    if(get_car_canvas_position(&car_x, &car_y))
+    if(get_car_canvas_position(pose, map, &car_x, &car_y))
     {
         border_color = STATUS_VALID_COLOR;
         canvas_draw_rect(canvas, width, height, panel_x, panel_y, INFO_BOX_W, INFO_BOX_H, border_color);
@@ -394,7 +394,7 @@ static void draw_position_panel(uint16 *canvas, uint16 width, uint16 height)
 
         canvas_fill_rect(canvas, width, height, dot_x - 2, dot_y - 2, 5, 5, MAP_CAR_COLOR);
 
-        angle_rad = ((float)openart_pose.angle10 / 10.0f) * 0.01745329252f;
+        angle_rad = ((float)pose->angle10 / 10.0f) * 0.01745329252f;
         tip_x = (int16)(dot_x + (int16)(cosf(angle_rad) * CAR_HEAD_LEN));
         tip_y = (int16)(dot_y - (int16)(sinf(angle_rad) * CAR_HEAD_LEN));
         head1_x = (int16)(tip_x + (int16)(cosf(angle_rad + CAR_HEAD_ANGLE) * 4.0f));
@@ -415,7 +415,7 @@ static void draw_position_panel(uint16 *canvas, uint16 width, uint16 height)
 }
 
 
-static void render_map_canvas(void)
+static void render_map_canvas(const openart_pose_t *pose, const openart_map_t *map)
 {
     uint8 row;
     uint8 col;
@@ -434,10 +434,10 @@ static void render_map_canvas(void)
 
     canvas_fill(map_canvas, MAP_CANVAS_W, MAP_CANVAS_H, MAP_BG_COLOR);
     canvas_draw_rect(map_canvas, MAP_CANVAS_W, MAP_CANVAS_H, 0, 0, MAP_CANVAS_W, MAP_CANVAS_H,
-                     openart_map.valid ? MAP_GRID_COLOR : MAP_INVALID_BORDER);
+                     map->valid ? MAP_GRID_COLOR : MAP_INVALID_BORDER);
 
-    cols = openart_map.valid ? openart_map.cols : 0;
-    rows = openart_map.valid ? openart_map.rows : 0;
+    cols = map->valid ? map->cols : 0;
+    rows = map->valid ? map->rows : 0;
     if(cols > MAP_COLS_VIEW)
     {
         cols = MAP_COLS_VIEW;
@@ -454,12 +454,12 @@ static void render_map_canvas(void)
             x = (uint16)col * MAP_CELL_W;
             y = (uint16)row * MAP_CELL_H;
             cell = OPENART_CELL_BACKGROUND;
-            if((openart_map.valid) && (row < rows) && (col < cols))
+            if((map->valid) && (row < rows) && (col < cols))
             {
-                index = (uint16)row * openart_map.cols + col;
+                index = (uint16)row * map->cols + col;
                 if(index < OPENART_MAP_CELL_MAX)
                 {
-                    cell = openart_map.cells[index];
+                    cell = map->cells[index];
                 }
             }
 
@@ -471,7 +471,7 @@ static void render_map_canvas(void)
         }
     }
 
-    has_car = get_car_cell_position(&car_col, &car_row);
+    has_car = get_car_cell_position(pose, map, &car_col, &car_row);
     if(has_car)
     {
         x = (uint16)car_col * MAP_CELL_W;
@@ -479,13 +479,13 @@ static void render_map_canvas(void)
         canvas_draw_rect(map_canvas, MAP_CANVAS_W, MAP_CANVAS_H,
                          (int16)x, (int16)y, MAP_CELL_W, MAP_CELL_H, MAP_CAR_COLOR);
 
-        if(get_car_canvas_position(&car_x, &car_y))
+        if(get_car_canvas_position(pose, map, &car_x, &car_y))
         {
             canvas_fill_rect(map_canvas, MAP_CANVAS_W, MAP_CANVAS_H, car_x - 2, car_y - 2, 5, 5, MAP_CAR_COLOR);
 
-            if(openart_pose.valid)
+            if(pose->valid)
             {
-                float angle_rad = ((float)openart_pose.angle10 / 10.0f) * 0.01745329252f;
+                float angle_rad = ((float)pose->angle10 / 10.0f) * 0.01745329252f;
                 int16 tip_x = (int16)(car_x + (int16)(cosf(angle_rad) * CAR_HEAD_LEN));
                 int16 tip_y = (int16)(car_y - (int16)(sinf(angle_rad) * CAR_HEAD_LEN));
                 int16 head1_x = (int16)(tip_x + (int16)(cosf(angle_rad + CAR_HEAD_ANGLE) * 4.0f));
@@ -502,7 +502,7 @@ static void render_map_canvas(void)
 }
 
 
-static void render_status_canvas(void)
+static void render_status_canvas(const openart_pose_t *pose, const openart_map_t *map)
 {
     int16 car_x;
     int16 car_y;
@@ -512,16 +512,16 @@ static void render_status_canvas(void)
     canvas_draw_rect(status_canvas, STATUS_CANVAS_W, STATUS_CANVAS_H, 0, 0, STATUS_CANVAS_W, STATUS_CANVAS_H, STATUS_BORDER_COLOR);
 
     speed = 0;
-    if(get_car_canvas_position(&car_x, &car_y))
+    if(get_car_canvas_position(pose, map, &car_x, &car_y))
     {
         speed = estimate_speed_px_s(car_x, car_y);
     }
     draw_speed_bar(status_canvas, STATUS_CANVAS_W, STATUS_CANVAS_H, speed);
-    draw_position_panel(status_canvas, STATUS_CANVAS_W, STATUS_CANVAS_H);
+    draw_position_panel(status_canvas, STATUS_CANVAS_W, STATUS_CANVAS_H, pose, map);
 }
 
 
-static void render_status_debug_text(void)
+static void render_status_debug_text(const openart_pose_t *pose, const openart_map_t *map)
 {
     static main_control_map_pos_t boxes[OPENART_MAP_CELL_MAX];
     static main_control_map_pos_t goals[OPENART_MAP_CELL_MAX];
@@ -530,8 +530,8 @@ static void render_status_debug_text(void)
     uint16 box_count;
     uint16 goal_count;
 
-    box_count = main_control_find_boxes(&openart_map, boxes, OPENART_MAP_CELL_MAX);
-    goal_count = main_control_find_goals(&openart_map, goals, OPENART_MAP_CELL_MAX);
+    box_count = main_control_find_boxes(map, boxes, OPENART_MAP_CELL_MAX);
+    goal_count = main_control_find_goals(map, goals, OPENART_MAP_CELL_MAX);
 
     sprintf(line, "S:%u V:%u X:%d Y:%d",
             control_state,
@@ -540,7 +540,7 @@ static void render_status_debug_text(void)
             control_follow_y);
     ips200pro_label_show_string(status_debug_label_id[0], line);
 
-    if(main_control_get_car_map_pos(&openart_pose, &openart_map, &car_pos))
+    if(main_control_get_car_map_pos(pose, map, &car_pos))
     {
         sprintf(line, "C:%u,%u B:%u G:%u", car_pos.x, car_pos.y, box_count, goal_count);
     }
@@ -606,14 +606,14 @@ void openart_display_set_control_status(uint8 state, uint8 follow_valid, int8 fo
 }
 
 
-void openart_display_update(void)
+void openart_display_update(const openart_pose_t *pose, const openart_map_t *map)
 {
-    render_map_canvas();
+    render_map_canvas(pose, map);
 
     if(map_image_id != 0U)
     {
         ips200pro_image_display(map_image_id, map_canvas, MAP_CANVAS_W, MAP_CANVAS_H, IMAGE_RGB565, 0);
     }
 
-    render_status_debug_text();
+    render_status_debug_text(pose, map);
 }

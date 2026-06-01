@@ -3,9 +3,9 @@
 <title>Static Call Graph - [.\Objects\rt1064.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\Objects\rt1064.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6210000: Last Updated: Mon Jun  1 18:26:13 2026
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6210000: Last Updated: Mon Jun  1 18:58:30 2026
 <BR><P>
-<H3>Maximum Stack Usage =       1096 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
+<H3>Maximum Stack Usage =       1312 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
 main &rArr; openart_display_init &rArr; ips200pro_init &rArr; ips200pro_page_create &rArr; ips200pro_page_set_title_name &rArr; ips200pro_write_packet &rArr; ips200pro_send_buffer &rArr; spi_write_8bit_array &rArr; spi_write &rArr; LPSPI_MasterTransferBlocking &rArr; LPSPI_CheckTransferArgument &rArr; __aeabi_assert &rArr; DbgConsole_Printf &rArr; DbgConsole_Vprintf &rArr; DbgConsole_PrintfFormattedData &rArr; DbgConsole_ConvertFloatRadixNumToString &rArr; __hardfp_pow &rArr; sqrt
 <P>
@@ -962,8 +962,10 @@ Global Symbols
 
 <P><STRONG><a name="[269]"></a>__aeabi_memset8</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, memseta.o(.text), UNUSED)
 
-<P><STRONG><a name="[e7]"></a>__aeabi_memclr</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, memseta.o(.text), UNUSED)
+<P><STRONG><a name="[e7]"></a>__aeabi_memclr</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, memseta.o(.text))
 <BR><BR>[Calls]<UL><LI><a href="#[e8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memset
+</UL>
+<BR>[Called By]<UL><LI><a href="#[a9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
 <P><STRONG><a name="[26a]"></a>__aeabi_memclr4</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, memseta.o(.text), UNUSED)
@@ -2660,8 +2662,8 @@ Global Symbols
 <LI><a href="#[1e5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ips200pro_set_optimize
 </UL>
 
-<P><STRONG><a name="[a9]"></a>main</STRONG> (Thumb, 200 bytes, Stack size 32 bytes, main.o(.text.main))
-<BR><BR>[Stack]<UL><LI>Max Depth = 1096<LI>Call Chain = main &rArr; openart_display_init &rArr; ips200pro_init &rArr; ips200pro_page_create &rArr; ips200pro_page_set_title_name &rArr; ips200pro_write_packet &rArr; ips200pro_send_buffer &rArr; spi_write_8bit_array &rArr; spi_write &rArr; LPSPI_MasterTransferBlocking &rArr; LPSPI_CheckTransferArgument &rArr; __aeabi_assert &rArr; DbgConsole_Printf &rArr; DbgConsole_Vprintf &rArr; DbgConsole_PrintfFormattedData &rArr; DbgConsole_ConvertFloatRadixNumToString &rArr; __hardfp_pow &rArr; sqrt
+<P><STRONG><a name="[a9]"></a>main</STRONG> (Thumb, 198 bytes, Stack size 248 bytes, main.o(.text.main))
+<BR><BR>[Stack]<UL><LI>Max Depth = 1312<LI>Call Chain = main &rArr; openart_display_init &rArr; ips200pro_init &rArr; ips200pro_page_create &rArr; ips200pro_page_set_title_name &rArr; ips200pro_write_packet &rArr; ips200pro_send_buffer &rArr; spi_write_8bit_array &rArr; spi_write &rArr; LPSPI_MasterTransferBlocking &rArr; LPSPI_CheckTransferArgument &rArr; __aeabi_assert &rArr; DbgConsole_Printf &rArr; DbgConsole_Vprintf &rArr; DbgConsole_PrintfFormattedData &rArr; DbgConsole_ConvertFloatRadixNumToString &rArr; __hardfp_pow &rArr; sqrt
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1f9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;openart_display_update
 <LI><a href="#[1f8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;openart_display_set_control_status
@@ -2676,6 +2678,7 @@ Global Symbols
 <LI><a href="#[1cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;system_delay_ms
 <LI><a href="#[1ad]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;clock_init
 <LI><a href="#[1f7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main_drive_path
+<LI><a href="#[e7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memclr
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> entry9a.o(.ARM.Collect$$$$0000000B)
 </UL>
@@ -2773,8 +2776,8 @@ Global Symbols
 <LI><a href="#[1f7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main_drive_path
 </UL>
 
-<P><STRONG><a name="[1f9]"></a>openart_display_update</STRONG> (Thumb, 68 bytes, Stack size 16 bytes, openart_display.o(.text.openart_display_update))
-<BR><BR>[Stack]<UL><LI>Max Depth = 1032<LI>Call Chain = openart_display_update &rArr; render_status_debug_text &rArr; ips200pro_label_show_string &rArr; ips200pro_write_packet &rArr; ips200pro_send_buffer &rArr; spi_write_8bit_array &rArr; spi_write &rArr; LPSPI_MasterTransferBlocking &rArr; LPSPI_CheckTransferArgument &rArr; __aeabi_assert &rArr; DbgConsole_Printf &rArr; DbgConsole_Vprintf &rArr; DbgConsole_PrintfFormattedData &rArr; DbgConsole_ConvertFloatRadixNumToString &rArr; __hardfp_pow &rArr; sqrt
+<P><STRONG><a name="[1f9]"></a>openart_display_update</STRONG> (Thumb, 80 bytes, Stack size 24 bytes, openart_display.o(.text.openart_display_update))
+<BR><BR>[Stack]<UL><LI>Max Depth = 1040<LI>Call Chain = openart_display_update &rArr; render_status_debug_text &rArr; ips200pro_label_show_string &rArr; ips200pro_write_packet &rArr; ips200pro_send_buffer &rArr; spi_write_8bit_array &rArr; spi_write &rArr; LPSPI_MasterTransferBlocking &rArr; LPSPI_CheckTransferArgument &rArr; __aeabi_assert &rArr; DbgConsole_Printf &rArr; DbgConsole_Vprintf &rArr; DbgConsole_PrintfFormattedData &rArr; DbgConsole_ConvertFloatRadixNumToString &rArr; __hardfp_pow &rArr; sqrt
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1e0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ips200pro_image_display
 <LI><a href="#[210]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;render_status_debug_text
@@ -3358,7 +3361,7 @@ Local Symbols
 <LI><a href="#[1f3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;openart_display_init
 </UL>
 
-<P><STRONG><a name="[20f]"></a>render_map_canvas</STRONG> (Thumb, 1140 bytes, Stack size 152 bytes, openart_display.o(.text.render_map_canvas))
+<P><STRONG><a name="[20f]"></a>render_map_canvas</STRONG> (Thumb, 1096 bytes, Stack size 152 bytes, openart_display.o(.text.render_map_canvas))
 <BR><BR>[Stack]<UL><LI>Max Depth = 240<LI>Call Chain = render_map_canvas &rArr; canvas_draw_line &rArr; canvas_set_pixel
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1a4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;canvas_draw_line
@@ -3374,7 +3377,7 @@ Local Symbols
 <BR>[Called By]<UL><LI><a href="#[1f9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;openart_display_update
 </UL>
 
-<P><STRONG><a name="[210]"></a>render_status_debug_text</STRONG> (Thumb, 254 bytes, Stack size 104 bytes, openart_display.o(.text.render_status_debug_text))
+<P><STRONG><a name="[210]"></a>render_status_debug_text</STRONG> (Thumb, 242 bytes, Stack size 104 bytes, openart_display.o(.text.render_status_debug_text))
 <BR><BR>[Stack]<UL><LI>Max Depth = 1016<LI>Call Chain = render_status_debug_text &rArr; ips200pro_label_show_string &rArr; ips200pro_write_packet &rArr; ips200pro_send_buffer &rArr; spi_write_8bit_array &rArr; spi_write &rArr; LPSPI_MasterTransferBlocking &rArr; LPSPI_CheckTransferArgument &rArr; __aeabi_assert &rArr; DbgConsole_Printf &rArr; DbgConsole_Vprintf &rArr; DbgConsole_PrintfFormattedData &rArr; DbgConsole_ConvertFloatRadixNumToString &rArr; __hardfp_pow &rArr; sqrt
 </UL>
 <BR>[Calls]<UL><LI><a href="#[202]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main_control_find_goals
@@ -3406,16 +3409,16 @@ Local Symbols
 <BR>[Called By]<UL><LI><a href="#[20f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;render_map_canvas
 </UL>
 
-<P><STRONG><a name="[1be]"></a>get_car_cell_position</STRONG> (Thumb, 134 bytes, Stack size 24 bytes, openart_display.o(.text.get_car_cell_position))
-<BR><BR>[Stack]<UL><LI>Max Depth = 36<LI>Call Chain = get_car_cell_position &rArr; get_car_canvas_position
+<P><STRONG><a name="[1be]"></a>get_car_cell_position</STRONG> (Thumb, 142 bytes, Stack size 32 bytes, openart_display.o(.text.get_car_cell_position))
+<BR><BR>[Stack]<UL><LI>Max Depth = 52<LI>Call Chain = get_car_cell_position &rArr; get_car_canvas_position
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1bf]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;get_car_canvas_position
 </UL>
 <BR>[Called By]<UL><LI><a href="#[20f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;render_map_canvas
 </UL>
 
-<P><STRONG><a name="[1bf]"></a>get_car_canvas_position</STRONG> (Thumb, 230 bytes, Stack size 12 bytes, openart_display.o(.text.get_car_canvas_position))
-<BR><BR>[Stack]<UL><LI>Max Depth = 12<LI>Call Chain = get_car_canvas_position
+<P><STRONG><a name="[1bf]"></a>get_car_canvas_position</STRONG> (Thumb, 202 bytes, Stack size 20 bytes, openart_display.o(.text.get_car_canvas_position))
+<BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = get_car_canvas_position
 </UL>
 <BR>[Called By]<UL><LI><a href="#[1be]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;get_car_cell_position
 <LI><a href="#[20f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;render_map_canvas

@@ -109,4 +109,5 @@
   ..\..\libraries\components\sdmmc\common\fsl_sdmmc_spec.h \
   ..\..\libraries\components\sdmmc\sdmmc_config.h \
   ..\..\libraries\sdk\board\clock_config.h \
-  ..\user\src\gyro_z_angle\..\screen_print\screen_print.h
+  ..\user\src\gyro_z_angle\..\screen_print\screen_print.h \
+  ..\user\src\gyro_z_angle\..\screen_print\..\openart_uart\openart_uart.h
