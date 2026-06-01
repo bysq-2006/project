@@ -7,6 +7,7 @@
 *********************************************************************************************************************/
 
 #include "path_follow_control_local.h"
+#include <math.h>
 
 // 把本地模拟坐标限制在地图范围内。
 static int32 path_follow_local_clamp_int32(int32 value, int32 min_value, int32 max_value)
@@ -30,37 +31,44 @@ static void path_follow_local_apply_pose(openart_pose_t *pose,
 {
     int32 next_x10;
     int32 next_y10;
+    int16 map_dx;
+    int16 map_dy;
+    float angle_rad;
+    float sin_angle;
+    float cos_angle;
 
     if((0 == pose) || (0 == map) || (0 == output) || (!pose->valid) || (!output->valid) || output->finished)
     {
         return;
     }
 
-    /*
-     * Treat the returned x/y as direct per-step deltas in map x10/y10 units.
-     * This is a simple offline simulation model, so the result is intentionally coarse.
-     */
-    next_x10 = (int32)pose->x10 + (int32)output->x;
-    next_y10 = (int32)pose->y10 + (int32)output->y;
+    angle_rad = (float)pose->angle10 * PATH_FOLLOW_ANGLE10_TO_RAD;
+    sin_angle = sinf(angle_rad);
+    cos_angle = cosf(angle_rad);
+    map_dx = (int16)((float)output->x * sin_angle + (float)output->y * cos_angle);
+    map_dy = (int16)((float)output->x * cos_angle - (float)output->y * sin_angle);
+
+    next_x10 = (int32)pose->x10 + (int32)map_dx;
+    next_y10 = (int32)pose->y10 + (int32)map_dy;
 
     /*
      * Avoid overshooting the current target when the simulated step would move
      * beyond it on either axis.
      */
-    if((output->x > 0) && (next_x10 > output->target_x10))
+    if((map_dx > 0) && (next_x10 > output->target_x10))
     {
         next_x10 = output->target_x10;
     }
-    else if((output->x < 0) && (next_x10 < output->target_x10))
+    else if((map_dx < 0) && (next_x10 < output->target_x10))
     {
         next_x10 = output->target_x10;
     }
 
-    if((output->y > 0) && (next_y10 > output->target_y10))
+    if((map_dy > 0) && (next_y10 > output->target_y10))
     {
         next_y10 = output->target_y10;
     }
-    else if((output->y < 0) && (next_y10 < output->target_y10))
+    else if((map_dy < 0) && (next_y10 < output->target_y10))
     {
         next_y10 = output->target_y10;
     }

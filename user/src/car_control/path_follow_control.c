@@ -3,6 +3,7 @@
 *********************************************************************************************************************/
 
 #include "path_follow_control.h"
+#include <math.h>
 
 static int16 path_follow_abs_int16(int16 value)
 {
@@ -24,21 +25,22 @@ static int8 path_follow_apply_sign(int16 diff, int8 value)
     return value;
 }
 
-static int8 path_follow_limit_speed(int32 value, int8 max_speed)
+static void path_follow_map_diff_to_car_diff(int16 map_dx,
+                                             int16 map_dy,
+                                             uint16 angle10,
+                                             int16 *car_dx,
+                                             int16 *car_dy)
 {
-    int8 abs_max;
+    float angle_rad;
+    float sin_angle;
+    float cos_angle;
 
-    abs_max = path_follow_abs_int8(max_speed);
-    if(value > abs_max)
-    {
-        return abs_max;
-    }
-    if(value < -abs_max)
-    {
-        return (int8)-abs_max;
-    }
+    angle_rad = (float)angle10 * PATH_FOLLOW_ANGLE10_TO_RAD;
+    sin_angle = sinf(angle_rad);
+    cos_angle = cosf(angle_rad);
 
-    return (int8)value;
+    *car_dx = (int16)((float)map_dx * sin_angle + (float)map_dy * cos_angle);
+    *car_dy = (int16)((float)map_dx * cos_angle - (float)map_dy * sin_angle);
 }
 
 static void path_follow_shift_path(main_control_map_pos_t *path, uint16 *path_count)
@@ -186,8 +188,8 @@ static void path_follow_calc_speed(int16 dx,
         }
     }
 
-    output->x = path_follow_apply_sign(dx, path_follow_limit_speed(x_value, max_x));
-    output->y = path_follow_apply_sign(dy, path_follow_limit_speed(y_value, max_y));
+    output->x = path_follow_apply_sign(dx, (int8)x_value);
+    output->y = path_follow_apply_sign(dy, (int8)y_value);
 }
 
 path_follow_output_t path_follow_update(const openart_pose_t *pose,
@@ -198,21 +200,13 @@ path_follow_output_t path_follow_update(const openart_pose_t *pose,
                                         int8 y_speed,
                                         uint8 arrive_percent)
 {
-    path_follow_output_t output;
+    path_follow_output_t output = {0};
     int16 target_x10;
     int16 target_y10;
     int16 dx;
     int16 dy;
-
-    output.x = 0;
-    output.y = 0;
-    output.valid = 0;
-    output.arrived = 0;
-    output.finished = 0;
-    output.target.x = 0;
-    output.target.y = 0;
-    output.target_x10 = 0;
-    output.target_y10 = 0;
+    int16 car_dx;
+    int16 car_dy;
 
     if((0 == pose) || (0 == map) || (0 == path) || (0 == path_count) ||
        (!pose->valid) || (!map->valid))
@@ -260,7 +254,8 @@ path_follow_output_t path_follow_update(const openart_pose_t *pose,
     // 根据当前车位置到目标点中心的直线方向，计算 x/y 两个方向应该给的速度。
     dx = (int16)(target_x10 - pose->x10);
     dy = (int16)(target_y10 - pose->y10);
-    path_follow_calc_speed(dx, dy, x_speed, y_speed, &output);
+    path_follow_map_diff_to_car_diff(dx, dy, pose->angle10, &car_dx, &car_dy);
+    path_follow_calc_speed(car_dx, car_dy, x_speed, y_speed, &output);
 
     return output;
 }

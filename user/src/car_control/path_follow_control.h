@@ -8,6 +8,8 @@
 #include "zf_common_headfile.h"
 #include "../main_control/map_planner.h"
 
+#define PATH_FOLLOW_ANGLE10_TO_RAD          (0.001745329252f)
+
 typedef struct
 {
     // 本次建议给 car_move_xy() 的 x 轴速度，正数向右，负数向左。
