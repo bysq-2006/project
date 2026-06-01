@@ -20,6 +20,13 @@ CELL_CODE = {
 
 _pose_uart = None
 _packet_seq = 0
+_rx_buf = bytearray()
+
+
+def _drop_rx_bytes(count):
+    global _rx_buf
+
+    _rx_buf = _rx_buf[count:]
 
 
 def init_uart(uart_id=UART_ID, baudrate=UART_BAUD):
@@ -82,6 +89,40 @@ def _send_packet(packet_type, payload):
     _put_u16(packet, checksum)
 
     return uart.write(packet)
+
+
+def receive_packet():
+    uart = init_uart()
+
+    if uart.any():
+        data = uart.read()
+        if data:
+            _rx_buf.extend(data)
+
+    while len(_rx_buf) >= 8:
+        if _rx_buf[0] != 0xAA or _rx_buf[1] != 0x55:
+            _drop_rx_bytes(1)
+            continue
+
+        payload_len = _rx_buf[4] | (_rx_buf[5] << 8)
+        packet_len = 8 + payload_len
+        if len(_rx_buf) < packet_len:
+            return None
+
+        checksum_calc = 0
+        for byte in _rx_buf[2:6 + payload_len]:
+            checksum_calc = (checksum_calc + byte) & 0xFFFF
+
+        checksum_recv = (_rx_buf[6 + payload_len] |
+                         (_rx_buf[7 + payload_len] << 8))
+        packet_type = bytes(_rx_buf[2:4])
+        payload = bytes(_rx_buf[6:6 + payload_len])
+        _drop_rx_bytes(packet_len)
+
+        if checksum_calc == checksum_recv:
+            return packet_type, payload
+
+    return None
 
 
 def build_car_pose_payload(valid, map_x, map_y, angle_deg):
