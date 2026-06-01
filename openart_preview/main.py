@@ -8,8 +8,7 @@ import cmm
 
 from blob_detect import detect_targets
 from draw_utils import draw_blob, draw_grid, draw_grid_results
-from grid_classifier import classify_grid
-from point_locator import get_detect_rois
+from map_detect import build_confident_map
 from openart_uart import send_detected_car, send_detected_map
 
 
@@ -29,7 +28,7 @@ GRID_DETECT_CONFIG = {
     # 地图高度方向的格子数量�?
     "rows": 16,
     # 地图 ROI 纠正和网格识别每隔多少毫秒运行一次�?
-    "update_interval_ms": 1000,
+    "sample_ms": 2000,
     # 网格分类用的颜色占比规则，格式：（名字，LAB阈值，最小占比）�?
     "color_ratios": (
         ("yellow_box", ((80, 100, -25, 5, 70, 110),), 0.20),
@@ -39,6 +38,18 @@ GRID_DETECT_CONFIG = {
     ),
     # 没有任何颜色占比达标时，默认当成这个类型�?
     "fallback": "background",
+    "manual_points": None,
+    "thresholds": (
+        (25, 56, 17, 86, -113, -57),
+        (80, 100, -25, 5, 70, 110),
+        (45, 75, 70, 110, -75, -35),
+        (78, 100, -65, -25, -35, 10),
+        (72, 100, -110, -60, 55, 100),
+    ),
+    "min_pixels": 200,
+    "scale_w": 1.2,
+    "scale_h": 1.12,
+    "search_ratio": 2 / 3,
 }
 # 网格绘制配置：只影响预览图像上的网格线和字符显示，不影响识别结果�?
 GRID_DRAW_CONFIG = {
@@ -59,29 +70,6 @@ GRID_DRAW_CONFIG = {
         "yellow_box": "$",
     },
 }
-# 地图识别范围配置，集中放这里方便调参�?
-RANGE_CONFIG = {
-    # 手动识别范围，格式：((左上x, 左上y), (右下x, 右下y))；不想手动限制就�?None�?
-    "manual_points": None,
-    # 自动识别范围的阈值，多个颜色放在同一次联通检测里�?
-    "thresholds": (
-        (25, 56, 17, 86, -113, -57),
-        (80, 100, -25, 5, 70, 110),
-        (45, 75, 70, 110, -75, -35),
-        (78, 100, -65, -25, -35, 10),
-        (72, 100, -110, -60, 55, 100),
-    ),
-    # 自动识别地图范围时，过滤小色块的最小像�?面积�?
-    "min_pixels": 200,
-    # 自动 ROI 放大时，宽度乘以这个系数�?
-    "scale_w": 1.2,
-    # 自动 ROI 放大时，高度乘以这个系数�?
-    "scale_h": 1.12,
-    # 自动识别地图范围时，只搜索画面左侧的比例�?
-    "search_ratio": 2 / 3,
-}
-
-
 # 每一项格式：
 # 位置1：目标名字，用来区分检测到的是什么�?
 # 位置2：LAB 阈值范围，格式�?((L最�? L最�? A最�? A最�? B最�? B最�?,)�?
@@ -133,10 +121,10 @@ sensor.skip_frames(time=2000)
 
 clock = time.clock()
 frame_id = 0
-last_map_update_ms = None
-last_base_roi = None
-last_detect_roi = None
-last_grid_map = None
+map_sent = False
+last_base_roi, last_detect_roi, last_grid_map = build_confident_map(
+    sensor.snapshot,
+    GRID_DETECT_CONFIG)
 
 while True:
     frame_id += 1
@@ -144,28 +132,7 @@ while True:
     clock.tick()
 
     img = sensor.snapshot()
-
-    now_ms = time.ticks_ms()
-    should_update_map = (last_map_update_ms is None or
-                         time.ticks_diff(now_ms, last_map_update_ms) >= GRID_DETECT_CONFIG["update_interval_ms"])
-    grid_map = last_grid_map
-    # 每隔一段时间更新一次地图识别范围和网格识别结果，其他时候继续使用上次的结果，避免频繁运行耗时的识别函数�?
-    if should_update_map:
-        # 识别地图位置
-        new_base_roi, new_detect_roi = get_detect_rois(img, RANGE_CONFIG)
-        last_map_update_ms = now_ms
-        if new_detect_roi is not None:
-            last_base_roi = new_base_roi
-            last_detect_roi = new_detect_roi
-            # 识别地图里的网格信息
-            if GRID_DETECT_CONFIG["enabled"]:
-                grid_map = classify_grid(img, new_detect_roi,
-                                         GRID_DETECT_CONFIG["cols"], GRID_DETECT_CONFIG["rows"],
-                                         GRID_DETECT_CONFIG["color_ratios"],
-                                         GRID_DETECT_CONFIG["fallback"])
-                if grid_map:
-                    last_grid_map = grid_map
-
+    
     base_roi = last_base_roi
     detect_roi = last_detect_roi
 
@@ -207,7 +174,7 @@ while True:
 
     # 所有绘图统一放到这里，先算完数据再画�?
     if DRAW_DEBUG:
-        search_line_x = int(img.width() * RANGE_CONFIG["search_ratio"])
+        search_line_x = int(img.width() * GRID_DETECT_CONFIG["search_ratio"])
         try:
             img.draw_line((search_line_x, 0, search_line_x, img.height()), color=(255, 255, 0), thickness=2)
         except TypeError:
@@ -237,7 +204,8 @@ while True:
     if should_print:
         print("fps:", clock.fps())
     send_detected_car(car_map_pos, angle)
-    if should_update_map:
+    
+    if not map_sent:
         send_detected_map(last_grid_map, detect_roi,
                           GRID_DETECT_CONFIG["cols"], GRID_DETECT_CONFIG["rows"])
-
+        map_sent = True

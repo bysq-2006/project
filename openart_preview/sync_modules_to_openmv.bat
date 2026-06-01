@@ -30,5 +30,17 @@ for %%F in ("%SRC%*.py") do (
     )
 )
 
+if exist "%SRC%map_detect\" (
+    if not exist "%DEST%map_detect\" mkdir "%DEST%map_detect\"
+    for %%F in ("%SRC%map_detect\*.py") do (
+        echo copy map_detect\%%~nxF
+        copy /Y "%%~fF" "%DEST%map_detect\" >nul
+        if errorlevel 1 (
+            echo Failed to copy map_detect\%%~nxF
+            exit /b 1
+        )
+    )
+)
+
 echo.
 echo Done.
