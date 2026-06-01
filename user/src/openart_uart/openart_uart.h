@@ -12,9 +12,9 @@
 // 主控板 UART 接收引脚，连接到 OpenART 的 TX。
 #define OPENART_UART_RX_PIN         (UART1_RX_B13)
 
-// 地图最大列数，应与 OpenART 的 GRID_CONFIG["cols"] 保持一致。
+// 地图最大列数，应与 OpenART 的 GRID_DETECT_CONFIG["cols"] 保持一致。
 #define OPENART_MAP_COLS_MAX        (12)
-// 地图最大行数，应与 OpenART 的 GRID_CONFIG["rows"] 保持一致。
+// 地图最大行数，应与 OpenART 的 GRID_DETECT_CONFIG["rows"] 保持一致。
 #define OPENART_MAP_ROWS_MAX        (16)
 // 接收缓存中可保存的最大地图格子数量。
 #define OPENART_MAP_CELL_MAX        (OPENART_MAP_COLS_MAX * OPENART_MAP_ROWS_MAX)
