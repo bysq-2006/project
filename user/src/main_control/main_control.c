@@ -107,7 +107,10 @@ void main_control_finish_path(main_control_context_t *ctx)
 {
     if((0 != ctx) && (MAIN_CONTROL_STATE_RUN_PATH == ctx->state[0]))
     {
-        main_control_add_task(ctx, ctx->has_active_plan ? MAIN_CONTROL_STATE_PLAN : MAIN_CONTROL_STATE_FINISHED);
+        if(MAIN_CONTROL_TASK_EMPTY == ctx->state[1])
+        {
+            main_control_add_task(ctx, ctx->has_active_plan ? MAIN_CONTROL_STATE_PLAN : MAIN_CONTROL_STATE_FINISHED);
+        }
         main_control_shift_task(ctx);
         ctx->has_active_plan = 0;
         ctx->active_path_count = 0;
