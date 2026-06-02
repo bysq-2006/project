@@ -14,6 +14,23 @@ static void main_control_clear_output(main_control_output_t *output)
     output->plan_ready = 0;
 }
 
+static uint16 main_control_angle_to_angle10(int16 angle)
+{
+    int32 angle10;
+
+    angle10 = (int32)angle * 10;
+    while(angle10 < 0)
+    {
+        angle10 += 3600;
+    }
+    while(angle10 >= 3600)
+    {
+        angle10 -= 3600;
+    }
+
+    return (uint16)angle10;
+}
+
 void main_control_add_task(main_control_context_t *ctx,
                            main_control_state_t state)
 {
@@ -139,6 +156,16 @@ main_control_output_t main_control_update(main_control_context_t *ctx,
             {
                 output.plan_ready = 1;
             }
+            break;
+
+        case MAIN_CONTROL_STATE_TURN:
+            pose->angle10 = main_control_angle_to_angle10(ctx->target_heading_angle);
+            pose->updated = 1;
+            pose->seq++;
+            main_control_shift_task(ctx);
+            break;
+
+        case MAIN_CONTROL_STATE_SCAN_ID:
             break;
 
         case MAIN_CONTROL_STATE_RUN_PATH:

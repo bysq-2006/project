@@ -18,10 +18,14 @@ typedef enum
 {
     // 等待状态。
     MAIN_CONTROL_STATE_WAIT = 0,
-    // Start identifying each box and goal id.
+    // 寻找每个箱子和目标点的编号。
     MAIN_CONTROL_STATE_FIND_IDS,
     // 正在规划接下来要走的路径。
     MAIN_CONTROL_STATE_PLAN,
+    // 正在转向到目标角度。
+    MAIN_CONTROL_STATE_TURN,
+    // 请求摄像头识别编号。
+    MAIN_CONTROL_STATE_SCAN_ID,
     // 正在执行当前决策生成的路径。
     MAIN_CONTROL_STATE_RUN_PATH,
     // 所有任务完成。
@@ -86,8 +90,8 @@ typedef struct
     main_control_map_pos_t active_path[MAIN_CONTROL_ACTIVE_PATH_MAX];
     // 当前完整路径长度。
     uint16 active_path_count;
-    // Target heading angle passed to heading control.
-    int8 target_heading_angle;
+    // 目标转向角度。
+    int16 target_heading_angle;
 
     // 当前方案中的箱子起点。
     main_control_map_pos_t active_box_start;
