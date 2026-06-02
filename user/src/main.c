@@ -2,6 +2,7 @@
 #include "car_control/car_control.h"
 #include "car_control/heading_control.h"
 #include "car_control/path_follow_control.h"
+#include "gyro_z_angle/gyro_z_angle.h"
 #include "main_control/main_control.h"
 #include "main_control/main_control_sync.h"
 #include "openart_uart/openart_uart.h"
@@ -68,6 +69,7 @@ int main(void)
 
     car_init();
     heading_sensor_init();
+    gyro_z_angle_init();
     openart_uart_init();
     openart_display_init();
     main_control_init(&main_control);
@@ -75,6 +77,7 @@ int main(void)
 
     while(1)
     {
+        gyro_z_angle_update(20);
         openart_uart_update(&openart_pose, &openart_map);
         if(openart_pose.valid && openart_map.valid)
         {
