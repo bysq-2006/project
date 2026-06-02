@@ -1,7 +1,7 @@
 #ifndef _MAIN_CONTROL_SYNC_H_
 #define _MAIN_CONTROL_SYNC_H_
 
-#include "main_control.h"
+#include "map_planner.h"
 
 typedef struct
 {
@@ -23,8 +23,7 @@ typedef struct
 } main_control_sync_status_t;
 
 void main_control_sync_reset(void);
-void main_control_sync_apply_push_result(openart_map_t *map, const main_control_context_t *ctx);
-const main_control_sync_status_t *main_control_sync_update(const openart_map_t *map);
+const main_control_sync_status_t *main_control_sync_update(openart_pose_t *pose, openart_map_t *map);
 const main_control_sync_status_t *main_control_sync_get_status(void);
 
 #endif

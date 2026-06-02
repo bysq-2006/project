@@ -31,7 +31,6 @@ static void main_drive_path(main_control_context_t *ctx,
         if(follow.valid && follow.finished)
         {
             car_stop();
-            main_control_sync_apply_push_result(map, ctx);
             main_control_finish_path(ctx);
             openart_display_set_control_status((uint8)ctx->state, follow.valid, follow.x, follow.y);
             return;
@@ -81,7 +80,7 @@ int main(void)
         openart_uart_update(&openart_pose, &openart_map);
         if(openart_pose.valid && openart_map.valid)
         {
-            main_control_sync_update(&openart_map);
+            main_control_sync_update(&openart_pose, &openart_map);
             main_control_update(&main_control, &openart_pose, &openart_map);
             main_drive_path(&main_control, &openart_pose, &openart_map);
         }

@@ -1,44 +1,17 @@
 #include "main_control_sync.h"
 
 static main_control_sync_status_t sync_status;
-static uint8 last_cells[OPENART_MAP_CELL_MAX];
-static uint16 last_cell_count;
-static uint8 last_cols;
-static uint8 last_rows;
-
-static uint8 is_box(uint8 cell)
-{
-    return (OPENART_CELL_YELLOW_BOX == cell);
-}
-
-static uint8 is_goal(uint8 cell)
-{
-    return (OPENART_CELL_GOAL == cell);
-}
+static uint8 sim_cells[OPENART_MAP_CELL_MAX];
+static uint16 sim_cell_count;
+static uint8 sim_cols;
+static uint8 sim_rows;
+static uint8 sim_valid;
+static uint8 last_car_valid;
+static main_control_map_pos_t last_car;
 
 static uint16 map_index(const openart_map_t *map, main_control_map_pos_t pos)
 {
     return (uint16)pos.y * map->cols + pos.x;
-}
-
-static main_control_map_pos_t index_pos(const openart_map_t *map, uint16 index)
-{
-    main_control_map_pos_t pos;
-
-    pos.x = (uint8)(index % map->cols);
-    pos.y = (uint8)(index / map->cols);
-    return pos;
-}
-
-static uint8 same_pos(main_control_map_pos_t a, main_control_map_pos_t b)
-{
-    return ((a.x == b.x) && (a.y == b.y));
-}
-
-static uint8 valid_pos(const openart_map_t *map, main_control_map_pos_t pos)
-{
-    return ((0 != map) && map->valid && (0 != map->cols) && (0 != map->rows) &&
-            (pos.x < map->cols) && (pos.y < map->rows));
 }
 
 static uint8 valid_map(const openart_map_t *map, uint16 *cell_count)
@@ -52,18 +25,143 @@ static uint8 valid_map(const openart_map_t *map, uint16 *cell_count)
     return (*cell_count <= OPENART_MAP_CELL_MAX);
 }
 
-static void store_map(const openart_map_t *map, uint16 cell_count)
+static uint8 valid_xy(const openart_map_t *map, int16 x, int16 y)
+{
+    return ((0 <= x) && (0 <= y) && (x < map->cols) && (y < map->rows));
+}
+
+static uint8 can_push_to(uint8 cell)
+{
+    return ((OPENART_CELL_BACKGROUND == cell) || (OPENART_CELL_GOAL == cell));
+}
+
+static void copy_cells(uint8 *dst, const uint8 *src, uint16 count)
 {
     uint16 i;
 
-    for(i = 0; i < cell_count; i++)
+    for(i = 0; i < count; i++)
     {
-        last_cells[i] = map->cells[i];
+        dst[i] = src[i];
+    }
+}
+
+static void reset_sim_map(const openart_map_t *map, uint16 cell_count)
+{
+    copy_cells(sim_cells, map->cells, cell_count);
+    sim_cell_count = cell_count;
+    sim_cols = map->cols;
+    sim_rows = map->rows;
+    sim_valid = 1;
+    last_car_valid = 0;
+}
+
+static void set_pose_cell(openart_pose_t *pose, const openart_map_t *map, main_control_map_pos_t pos)
+{
+    pose->x10 = (int16)(((uint32)pos.x * 2U + 1U) * map->width10 / ((uint32)map->cols * 2U));
+    pose->y10 = (int16)(((uint32)pos.y * 2U + 1U) * map->height10 / ((uint32)map->rows * 2U));
+    pose->updated = 1;
+    pose->seq++;
+}
+
+static void count_sim_cells(void)
+{
+    uint16 i;
+
+    sync_status.box_count = 0;
+    sync_status.goal_count = 0;
+    for(i = 0; i < sim_cell_count; i++)
+    {
+        if(OPENART_CELL_YELLOW_BOX == sim_cells[i])
+        {
+            sync_status.box_count++;
+        }
+        else if(OPENART_CELL_GOAL == sim_cells[i])
+        {
+            sync_status.goal_count++;
+        }
+    }
+}
+
+static void update_collision(openart_pose_t *pose, openart_map_t *map)
+{
+    main_control_map_pos_t car;
+    main_control_map_pos_t next;
+    int16 dx;
+    int16 dy;
+    int16 next_x;
+    int16 next_y;
+    uint16 box_index;
+    uint16 next_index;
+    uint8 next_cell;
+
+    if(!main_control_get_car_map_pos(pose, map, &car))
+    {
+        last_car_valid = 0;
+        return;
+    }
+    if(!last_car_valid)
+    {
+        last_car = car;
+        last_car_valid = 1;
+        return;
     }
 
-    last_cell_count = cell_count;
-    last_cols = map->cols;
-    last_rows = map->rows;
+    dx = (int16)car.x - last_car.x;
+    dy = (int16)car.y - last_car.y;
+    if((0 == dx) && (0 == dy))
+    {
+        return;
+    }
+    if(((dx < 0 ? -dx : dx) + (dy < 0 ? -dy : dy)) != 1)
+    {
+        last_car = car;
+        return;
+    }
+
+    box_index = map_index(map, car);
+    if(OPENART_CELL_YELLOW_BOX != sim_cells[box_index])
+    {
+        last_car = car;
+        return;
+    }
+
+    next_x = (int16)car.x + dx;
+    next_y = (int16)car.y + dy;
+    if(!valid_xy(map, next_x, next_y))
+    {
+        set_pose_cell(pose, map, last_car);
+        return;
+    }
+
+    next.x = (uint8)next_x;
+    next.y = (uint8)next_y;
+    next_index = map_index(map, next);
+    next_cell = sim_cells[next_index];
+    if(!can_push_to(next_cell))
+    {
+        set_pose_cell(pose, map, last_car);
+        return;
+    }
+
+    sim_cells[box_index] = OPENART_CELL_BACKGROUND;
+    sim_cells[next_index] = (OPENART_CELL_GOAL == next_cell) ? OPENART_CELL_BACKGROUND : OPENART_CELL_YELLOW_BOX;
+
+    sync_status.map_changed = 1;
+    sync_status.box_from = car;
+    sync_status.box_to = next;
+    if(OPENART_CELL_GOAL == next_cell)
+    {
+        sync_status.box_completed = 1;
+        sync_status.completed_goal = next;
+        sync_status.completed_count++;
+    }
+    else
+    {
+        sync_status.box_moved = 1;
+        sync_status.move_count++;
+    }
+
+    last_car = car;
 }
 
 void main_control_sync_reset(void)
@@ -71,46 +169,16 @@ void main_control_sync_reset(void)
     static const main_control_sync_status_t empty_status = {0};
 
     sync_status = empty_status;
-    last_cell_count = 0;
-    last_cols = 0;
-    last_rows = 0;
+    sim_cell_count = 0;
+    sim_cols = 0;
+    sim_rows = 0;
+    sim_valid = 0;
+    last_car_valid = 0;
 }
 
-void main_control_sync_apply_push_result(openart_map_t *map, const main_control_context_t *ctx)
+const main_control_sync_status_t *main_control_sync_update(openart_pose_t *pose, openart_map_t *map)
 {
-    main_control_map_pos_t old_pos;
-    main_control_map_pos_t new_pos;
-
-    if((0 == map) || (0 == ctx) || (!ctx->has_active_plan))
-    {
-        return;
-    }
-
-    old_pos = ctx->active_box_current;
-    new_pos = ctx->active_box_end;
-    if((!valid_pos(map, old_pos)) || (!valid_pos(map, new_pos)) || (!valid_pos(map, ctx->active_goal)))
-    {
-        return;
-    }
-
-    map->cells[map_index(map, old_pos)] = OPENART_CELL_BACKGROUND;
-    map->cells[map_index(map, new_pos)] = same_pos(new_pos, ctx->active_goal) ?
-                                          OPENART_CELL_BACKGROUND :
-                                          OPENART_CELL_YELLOW_BOX;
-    map->updated = 1;
-    map->seq++;
-}
-
-const main_control_sync_status_t *main_control_sync_update(const openart_map_t *map)
-{
-    uint16 i;
     uint16 cell_count;
-    uint8 old_cell;
-    uint8 new_cell;
-    uint8 removed_box;
-    uint8 added_box;
-    uint8 removed_goal;
-    uint8 compare_last;
 
     sync_status.valid = 0;
     sync_status.map_changed = 0;
@@ -118,78 +186,24 @@ const main_control_sync_status_t *main_control_sync_update(const openart_map_t *
     sync_status.box_completed = 0;
     sync_status.box_count = 0;
     sync_status.goal_count = 0;
-    removed_box = 0;
-    added_box = 0;
-    removed_goal = 0;
 
-    if(!valid_map(map, &cell_count))
+    if((0 == pose) || (!valid_map(map, &cell_count)))
     {
         return &sync_status;
+    }
+
+    if((!sim_valid) || (sim_cols != map->cols) || (sim_rows != map->rows) || (sim_cell_count != cell_count))
+    {
+        reset_sim_map(map, cell_count);
     }
 
     sync_status.valid = 1;
-    compare_last = (sync_status.initialized && (last_cols == map->cols) && (last_rows == map->rows));
+    sync_status.initialized = 1;
+    update_collision(pose, map);
+    count_sim_cells();
 
-    for(i = 0; i < cell_count; i++)
-    {
-        new_cell = map->cells[i];
-
-        if(is_box(new_cell))
-        {
-            sync_status.box_count++;
-        }
-        else if(is_goal(new_cell))
-        {
-            sync_status.goal_count++;
-        }
-
-        if(!compare_last)
-        {
-            continue;
-        }
-
-        old_cell = (i < last_cell_count) ? last_cells[i] : OPENART_CELL_UNKNOWN;
-        if(old_cell != new_cell)
-        {
-            sync_status.map_changed = 1;
-        }
-        if((!removed_box) && is_box(old_cell) && (!is_box(new_cell)))
-        {
-            removed_box = 1;
-            sync_status.box_from = index_pos(map, i);
-        }
-        if((!added_box) && (!is_box(old_cell)) && is_box(new_cell))
-        {
-            added_box = 1;
-            sync_status.box_to = index_pos(map, i);
-        }
-        if((!removed_goal) && is_goal(old_cell) && (!is_goal(new_cell)))
-        {
-            removed_goal = 1;
-            sync_status.completed_goal = index_pos(map, i);
-        }
-    }
-
-    if(!compare_last)
-    {
-        sync_status.initialized = 1;
-        store_map(map, cell_count);
-        return &sync_status;
-    }
-
-    if(removed_box && added_box)
-    {
-        sync_status.box_moved = 1;
-        sync_status.move_count++;
-    }
-    else if(removed_box && removed_goal)
-    {
-        sync_status.box_completed = 1;
-        sync_status.box_to = sync_status.completed_goal;
-        sync_status.completed_count++;
-    }
-
-    store_map(map, cell_count);
+    copy_cells(map->cells, sim_cells, cell_count);
+    map->updated = 1;
     return &sync_status;
 }
 

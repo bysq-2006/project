@@ -1,5 +1,8 @@
-./objects/gyro_z_angle.o: ..\user\src\gyro_z_angle\gyro_z_angle.c \
-  ..\user\src\gyro_z_angle\gyro_z_angle.h \
+./objects/main_control_find_ids.o: \
+  ..\user\src\main_control\main_control_find_ids.c \
+  ..\user\src\main_control\main_control_find_ids.h \
+  ..\user\src\main_control\main_control.h \
+  ..\user\src\main_control\map_planner.h \
   ..\..\libraries\zf_common\zf_common_headfile.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdio.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdint.h \
@@ -108,4 +111,5 @@
   ..\..\libraries\sdk\drives\fsl_usdhc.h \
   ..\..\libraries\components\sdmmc\common\fsl_sdmmc_spec.h \
   ..\..\libraries\components\sdmmc\sdmmc_config.h \
-  ..\..\libraries\sdk\board\clock_config.h
+  ..\..\libraries\sdk\board\clock_config.h \
+  ..\user\src\main_control\..\openart_uart\openart_uart.h
