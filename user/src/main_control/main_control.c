@@ -1,6 +1,5 @@
 #include "main_control.h"
 
-// 清空主控本次 update 的输出结果。
 static void main_control_clear_output(main_control_output_t *output)
 {
     if(0 == output)
@@ -13,7 +12,6 @@ static void main_control_clear_output(main_control_output_t *output)
     output->plan_ready = 0;
 }
 
-// 复制一段地图路径，最多复制 OPENART_MAP_CELL_MAX 个点。
 static void main_control_copy_path(main_control_map_pos_t *dst,
                                    const main_control_map_pos_t *src,
                                    uint16 count)
@@ -36,7 +34,6 @@ static void main_control_copy_path(main_control_map_pos_t *dst,
     }
 }
 
-// 统计路径从起点到指定目标点一共有多少个有效点。
 static uint16 main_control_count_path_to_target(const main_control_map_pos_t *path,
                                                 main_control_map_pos_t target)
 {
@@ -58,7 +55,6 @@ static uint16 main_control_count_path_to_target(const main_control_map_pos_t *pa
     return 0;
 }
 
-// 根据箱子路径第一步反推出小车需要站立的推点。
 static uint8 main_control_calc_push_pos(const main_control_map_pos_t *box_path,
                                         main_control_map_pos_t *push_pos)
 {
@@ -88,7 +84,6 @@ static uint8 main_control_calc_push_pos(const main_control_map_pos_t *box_path,
     return 1;
 }
 
-// 找到箱子当前直线推动段的终点，也就是第一个拐点前的位置。
 static uint16 main_control_find_push_segment_end(const main_control_map_pos_t *box_path,
                                                  uint16 box_path_count)
 {
@@ -119,7 +114,6 @@ static uint16 main_control_find_push_segment_end(const main_control_map_pos_t *b
     return (uint16)(box_path_count - 1);
 }
 
-// 把箱子的第一段推动路径转换成小车推动时需要跟随的路径。
 static uint8 main_control_fill_push_car_path(const main_control_map_pos_t *box_path,
                                              uint16 box_path_count,
                                              main_control_map_pos_t *push_car_path,
@@ -152,7 +146,48 @@ static uint8 main_control_fill_push_car_path(const main_control_map_pos_t *box_p
     return 1;
 }
 
-// 为单个箱子生成候选方案，包括箱子路径、小车推点路径和总代价。
+static uint8 main_control_fill_active_path(main_control_context_t *ctx,
+                                           const main_control_plan_t *plan)
+{
+    main_control_map_pos_t push_car_path[OPENART_MAP_CELL_MAX];
+    uint16 push_car_path_count;
+    uint16 active_count;
+    uint16 i;
+
+    if((0 == ctx) || (0 == plan) || (!plan->valid))
+    {
+        return 0;
+    }
+
+    if(!main_control_fill_push_car_path(plan->box_path,
+                                        plan->box_path_count,
+                                        push_car_path,
+                                        &push_car_path_count,
+                                        &ctx->active_box_end))
+    {
+        return 0;
+    }
+
+    if((uint32)plan->car_path_count + (uint32)push_car_path_count > MAIN_CONTROL_ACTIVE_PATH_MAX)
+    {
+        return 0;
+    }
+
+    active_count = 0;
+    for(i = 0; i < plan->car_path_count; i++)
+    {
+        ctx->active_path[active_count++] = plan->car_path[i];
+    }
+    for(i = 0; i < push_car_path_count; i++)
+    {
+        ctx->active_path[active_count++] = push_car_path[i];
+    }
+
+    ctx->active_path_count = active_count;
+
+    return (0 != active_count);
+}
+
 static uint8 main_control_build_box_plan(main_control_plan_t *plan,
                                          const openart_map_t *map,
                                          main_control_map_pos_t car_pos,
@@ -228,7 +263,6 @@ static uint8 main_control_build_box_plan(main_control_plan_t *plan,
     return 1;
 }
 
-// 遍历所有箱子并选择当前总代价最低的执行方案。
 static uint8 main_control_build_best_plan(main_control_context_t *ctx,
                                           const openart_pose_t *pose,
                                           const openart_map_t *map)
@@ -248,6 +282,7 @@ static uint8 main_control_build_best_plan(main_control_context_t *ctx,
     ctx->goal_count = main_control_find_goals(map, ctx->goals, OPENART_MAP_CELL_MAX);
     ctx->plan_count = 0;
     ctx->best_plan_index = 0;
+    ctx->active_path_count = 0;
 
     if((0 == ctx->box_count) || (0 == ctx->goal_count))
     {
@@ -288,16 +323,7 @@ static uint8 main_control_build_best_plan(main_control_context_t *ctx,
         return 0;
     }
 
-    main_control_copy_path(ctx->active_car_path,
-                           ctx->plans[ctx->best_plan_index].car_path,
-                           ctx->plans[ctx->best_plan_index].car_path_count);
-    ctx->active_car_path_count = ctx->plans[ctx->best_plan_index].car_path_count;
-
-    if(!main_control_fill_push_car_path(ctx->plans[ctx->best_plan_index].box_path,
-                                        ctx->plans[ctx->best_plan_index].box_path_count,
-                                        ctx->active_push_car_path,
-                                        &ctx->active_push_car_path_count,
-                                        &ctx->active_box_end))
+    if(!main_control_fill_active_path(ctx, &ctx->plans[ctx->best_plan_index]))
     {
         ctx->state = MAIN_CONTROL_STATE_ERROR;
         return 0;
@@ -312,7 +338,6 @@ static uint8 main_control_build_best_plan(main_control_context_t *ctx,
     return 1;
 }
 
-// 初始化主控上下文，相当于创建一个新的主控对象。
 void main_control_init(main_control_context_t *ctx)
 {
     if(0 == ctx)
@@ -325,8 +350,7 @@ void main_control_init(main_control_context_t *ctx)
     ctx->goal_count = 0;
     ctx->plan_count = 0;
     ctx->best_plan_index = 0;
-    ctx->active_car_path_count = 0;
-    ctx->active_push_car_path_count = 0;
+    ctx->active_path_count = 0;
     ctx->active_box_start.x = 0;
     ctx->active_box_start.y = 0;
     ctx->active_box_current.x = 0;
@@ -339,26 +363,16 @@ void main_control_init(main_control_context_t *ctx)
     ctx->has_active_plan = 0;
 }
 
-// 通知主控小车已经到达推点，下一步进入推箱子状态。
-void main_control_finish_move_to_push_pos(main_control_context_t *ctx)
+void main_control_finish_path(main_control_context_t *ctx)
 {
-    if((0 != ctx) && (MAIN_CONTROL_STATE_MOVE_TO_PUSH_POS == ctx->state))
-    {
-        ctx->state = MAIN_CONTROL_STATE_PUSH_BOX;
-    }
-}
-
-// 通知主控当前推动段已经完成，下一步重新规划。
-void main_control_finish_push_box(main_control_context_t *ctx)
-{
-    if((0 != ctx) && (MAIN_CONTROL_STATE_PUSH_BOX == ctx->state))
+    if((0 != ctx) && (MAIN_CONTROL_STATE_RUN_PATH == ctx->state))
     {
         ctx->state = MAIN_CONTROL_STATE_PLAN;
         ctx->has_active_plan = 0;
+        ctx->active_path_count = 0;
     }
 }
 
-// 主控状态机入口；每调用一次就推进一次规划或运动控制。
 main_control_output_t main_control_update(main_control_context_t *ctx,
                                           openart_pose_t *pose,
                                           openart_map_t *map)
@@ -383,13 +397,12 @@ main_control_output_t main_control_update(main_control_context_t *ctx,
         case MAIN_CONTROL_STATE_PLAN:
             if(main_control_build_best_plan(ctx, pose, map))
             {
-                ctx->state = MAIN_CONTROL_STATE_MOVE_TO_PUSH_POS;
+                ctx->state = MAIN_CONTROL_STATE_RUN_PATH;
                 output.plan_ready = 1;
             }
             break;
 
-        case MAIN_CONTROL_STATE_MOVE_TO_PUSH_POS:
-        case MAIN_CONTROL_STATE_PUSH_BOX:
+        case MAIN_CONTROL_STATE_RUN_PATH:
             break;
 
         case MAIN_CONTROL_STATE_FINISHED:

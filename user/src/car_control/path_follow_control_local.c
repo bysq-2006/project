@@ -177,33 +177,19 @@ static void main_control_local_sync_box_push(openart_map_t *map,
                                              const openart_pose_t *pose)
 {
     main_control_map_pos_t next_box_pos;
-    main_control_map_pos_t car_pos;
 
-    if((0 == ctx) || (!ctx->has_active_plan) || (MAIN_CONTROL_STATE_PUSH_BOX != ctx->state))
+    if((0 == ctx) || (!ctx->has_active_plan) || (MAIN_CONTROL_STATE_RUN_PATH != ctx->state))
     {
         return;
     }
 
-    if(0 == ctx->active_push_car_path_count)
+    (void)pose;
+
+    if(0 != ctx->active_path_count)
     {
-        next_box_pos = ctx->active_box_end;
+        return;
     }
-    else
-    {
-        next_box_pos = ctx->active_push_car_path[0];
-        if(main_control_get_car_map_pos(pose, map, &car_pos) &&
-           main_control_local_same_pos(car_pos, ctx->active_push_car_path[0]))
-        {
-            if(ctx->active_push_car_path_count > 1)
-            {
-                next_box_pos = ctx->active_push_car_path[1];
-            }
-            else
-            {
-                next_box_pos = ctx->active_box_end;
-            }
-        }
-    }
+    next_box_pos = ctx->active_box_end;
 
     if(!main_control_local_same_pos(ctx->active_box_current, next_box_pos))
     {
@@ -230,31 +216,12 @@ main_control_local_output_t main_control_update_local(main_control_context_t *ct
         return output;
     }
 
-    if(MAIN_CONTROL_STATE_MOVE_TO_PUSH_POS == ctx->state)
+    if(MAIN_CONTROL_STATE_RUN_PATH == ctx->state)
     {
         output.follow = path_follow_update_local(pose,
                                                  map,
-                                                 ctx->active_car_path,
-                                                 &ctx->active_car_path_count,
-                                                 MAIN_CONTROL_LOCAL_X_SPEED,
-                                                 MAIN_CONTROL_LOCAL_Y_SPEED,
-                                                 MAIN_CONTROL_LOCAL_ARRIVE_PERCENT);
-        if(output.follow.valid && output.follow.finished)
-        {
-            main_control_finish_move_to_push_pos(ctx);
-            output.motion_finished = 1;
-        }
-        else if(!output.follow.valid)
-        {
-            ctx->state = MAIN_CONTROL_STATE_ERROR;
-        }
-    }
-    else if(MAIN_CONTROL_STATE_PUSH_BOX == ctx->state)
-    {
-        output.follow = path_follow_update_local(pose,
-                                                 map,
-                                                 ctx->active_push_car_path,
-                                                 &ctx->active_push_car_path_count,
+                                                 ctx->active_path,
+                                                 &ctx->active_path_count,
                                                  MAIN_CONTROL_LOCAL_X_SPEED,
                                                  MAIN_CONTROL_LOCAL_Y_SPEED,
                                                  MAIN_CONTROL_LOCAL_ARRIVE_PERCENT);
@@ -264,7 +231,7 @@ main_control_local_output_t main_control_update_local(main_control_context_t *ct
         }
         if(output.follow.valid && output.follow.finished)
         {
-            main_control_finish_push_box(ctx);
+            main_control_finish_path(ctx);
             output.motion_finished = 1;
         }
         else if(!output.follow.valid)
