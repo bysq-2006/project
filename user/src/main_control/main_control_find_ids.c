@@ -254,6 +254,8 @@ uint8 main_control_find_ids_main(main_control_context_t *ctx,
         ctx->has_active_plan = 0;
         main_control_add_task(ctx, MAIN_CONTROL_STATE_RUN_PATH);
         main_control_add_task(ctx, MAIN_CONTROL_STATE_TURN);
+        ctx->wait_ms = 500;
+        main_control_add_task(ctx, MAIN_CONTROL_STATE_WAIT);
         main_control_add_task(ctx, MAIN_CONTROL_STATE_SCAN_ID);
         main_control_add_task(ctx, MAIN_CONTROL_STATE_FIND_IDS);
         main_control_shift_task(ctx);
