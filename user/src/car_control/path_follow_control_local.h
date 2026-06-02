@@ -42,8 +42,4 @@ path_follow_output_t path_follow_update_local(openart_pose_t *pose,
                                               int8 y_speed,
                                               uint8 arrive_percent);
 
-main_control_local_output_t main_control_update_local(main_control_context_t *ctx,
-                                                      openart_pose_t *pose,
-                                                      openart_map_t *map);
-
 #endif
