@@ -75,6 +75,7 @@ void main_control_init(main_control_context_t *ctx)
     ctx->best_plan_index = 0;
     ctx->active_path_count = 0;
     ctx->target_heading_angle = 0;
+    ctx->turn_start_ms = MAIN_CONTROL_TURN_TIME_INVALID;
     ctx->active_box_start.x = 0;
     ctx->active_box_start.y = 0;
     ctx->active_box_current.x = 0;
@@ -136,6 +137,19 @@ main_control_output_t main_control_update(main_control_context_t *ctx,
             if(main_control_build_best_plan(ctx, pose, map))
             {
                 output.plan_ready = 1;
+            }
+            break;
+
+        case MAIN_CONTROL_STATE_TURN:
+            if(MAIN_CONTROL_TURN_TIME_INVALID == ctx->turn_start_ms)
+            {
+                ctx->target_heading_angle = MAIN_CONTROL_TURN_TARGET;
+                ctx->turn_start_ms = timer_get(GPT_TIM_1);
+            }
+            if((uint32)(timer_get(GPT_TIM_1) - ctx->turn_start_ms) >= MAIN_CONTROL_TURN_STABLE_MS)
+            {
+                ctx->turn_start_ms = MAIN_CONTROL_TURN_TIME_INVALID;
+                main_control_shift_task(ctx);
             }
             break;
 

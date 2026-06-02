@@ -13,15 +13,23 @@
 #define MAIN_CONTROL_TASK_MAX           (16U)
 // 主控待执行任务列表里的空位置。
 #define MAIN_CONTROL_TASK_EMPTY         (0xFF)
+// 转向后等待稳定的时间。
+#define MAIN_CONTROL_TURN_STABLE_MS     (500U)
+// 转向任务还没有记录开始时间。
+#define MAIN_CONTROL_TURN_TIME_INVALID  (0xFFFFFFFFU)
+// 转向任务临时使用的目标转向值。
+#define MAIN_CONTROL_TURN_TARGET        (90)
 
 typedef enum
 {
     // 空闲状态。
     MAIN_CONTROL_STATE_IDLE = 0,
-    // 开始寻找每个箱子和目标的编号。
+    // 开始寻找每一个箱子和目标的编号。
     MAIN_CONTROL_STATE_FIND_IDS,
     // 正在规划接下来要走的路径。
     MAIN_CONTROL_STATE_PLAN,
+    // 改变目标转向，并等待姿态稳定。
+    MAIN_CONTROL_STATE_TURN,
     // 正在执行当前决策生成的路径。
     MAIN_CONTROL_STATE_RUN_PATH,
     // 所有任务完成。
@@ -63,7 +71,6 @@ typedef struct
 // 主控长期保存的上下文数据。
 typedef struct
 {
-    // 当前主控状态。
     // 待执行任务列表，state[0] 是当前任务。
     main_control_state_t state[MAIN_CONTROL_TASK_MAX];
 
@@ -83,12 +90,14 @@ typedef struct
     // 当前最优方案下标。
     uint16 best_plan_index;
 
-    // 当前决策生成的唯一完整小车路径。
+    // 当前决策生成的一条完整小车路径。
     main_control_map_pos_t active_path[MAIN_CONTROL_ACTIVE_PATH_MAX];
     // 当前完整路径长度。
     uint16 active_path_count;
     // 传给航向控制的目标转向角度。
     int8 target_heading_angle;
+    // 转向任务开始时的毫秒时间。
+    uint32 turn_start_ms;
 
     // 当前方案中的箱子起点。
     main_control_map_pos_t active_box_start;
@@ -123,7 +132,7 @@ void main_control_add_task(main_control_context_t *ctx,
                            main_control_state_t state);
 // 丢弃当前任务，并将后续任务整体前移。
 void main_control_shift_task(main_control_context_t *ctx);
-// 推进一次主控状态机。
+// 推进一次主控任务。
 main_control_output_t main_control_update(main_control_context_t *ctx,
                                           openart_pose_t *pose,
                                           openart_map_t *map);

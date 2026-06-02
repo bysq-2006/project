@@ -63,6 +63,8 @@ int main(void)
     clock_init(SYSTEM_CLOCK_600M);
     system_delay_ms(100);
 
+    timer_init(GPT_TIM_1, TIMER_MS);
+    timer_start(GPT_TIM_1);
     car_init();
     gyro_z_angle_init();
     openart_uart_init();
