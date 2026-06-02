@@ -1,7 +1,7 @@
 #include "zf_common_headfile.h"
 #include "car_control/car_control.h"
 #include "car_control/heading_control.h"
-#include "car_control/path_follow_control.h"
+#include "car_control/path_follow_control_local.h"
 #include "gyro_z_angle/gyro_z_angle.h"
 #include "main_control/main_control.h"
 #include "main_control/main_control_sync.h"
@@ -20,13 +20,13 @@ static void main_drive_path(main_control_context_t *ctx,
 
     if(MAIN_CONTROL_STATE_RUN_PATH == ctx->state)
     {
-        follow = path_follow_update(pose,
-                                    map,
-                                    ctx->active_path,
-                                    &ctx->active_path_count,
-                                    MAIN_CAR_X_SPEED,
-                                    MAIN_CAR_Y_SPEED,
-                                    MAIN_CAR_ARRIVE_PERCENT);
+        follow = path_follow_update_local(pose,
+                                          map,
+                                          ctx->active_path,
+                                          &ctx->active_path_count,
+                                          MAIN_CAR_X_SPEED,
+                                          MAIN_CAR_Y_SPEED,
+                                          MAIN_CAR_ARRIVE_PERCENT);
 
         if(follow.valid && follow.finished)
         {
@@ -47,7 +47,7 @@ static void main_drive_path(main_control_context_t *ctx,
     // 正常情况这里要跑。测试的时候临时用car_stop()
     if(follow.valid)
     {
-        heading_sensor_update(follow.x, follow.y, ctx->target_heading_angle);
+        car_stop();
     }
     else
     {
