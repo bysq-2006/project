@@ -29,8 +29,8 @@ typedef struct
  * Behavior:
  * - Calls path_follow_update() to get the same steering output as the real version.
  * - Applies that output directly to pose->x10 / pose->y10.
- * - Leaves the path shifting behavior unchanged, because path_follow_update()
- *   still consumes arrived waypoints from path[] and path_count.
+ * - Does not modify the map state or box positions. Box synchronization is
+ *   handled by main_control_sync.c in the normal runtime flow.
  *
  * This is intended for offline logic testing, not for real motion control.
  */

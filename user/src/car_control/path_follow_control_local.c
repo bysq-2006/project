@@ -9,7 +9,6 @@
 #include "path_follow_control_local.h"
 #include <math.h>
 
-// 把本地模拟坐标限制在地图范围内。
 static int32 path_follow_local_clamp_int32(int32 value, int32 min_value, int32 max_value)
 {
     if(value < min_value)
@@ -24,7 +23,6 @@ static int32 path_follow_local_clamp_int32(int32 value, int32 min_value, int32 m
     return value;
 }
 
-// 根据路径跟随输出直接修改 pose，模拟小车移动一步。
 static void path_follow_local_apply_pose(openart_pose_t *pose,
                                          const openart_map_t *map,
                                          const path_follow_output_t *output)
@@ -88,7 +86,6 @@ static void path_follow_local_apply_pose(openart_pose_t *pose,
     pose->seq++;
 }
 
-// 本地版路径跟随入口；不调用真实车控接口，只修改 pose。
 path_follow_output_t path_follow_update_local(openart_pose_t *pose,
                                               const openart_map_t *map,
                                               main_control_map_pos_t *path,
@@ -105,7 +102,6 @@ path_follow_output_t path_follow_update_local(openart_pose_t *pose,
     return output;
 }
 
-// 清空本地主控包装函数的输出。
 static void main_control_local_clear_output(main_control_local_output_t *output)
 {
     if(0 == output)
@@ -128,80 +124,6 @@ static void main_control_local_clear_output(main_control_local_output_t *output)
     output->motion_finished = 0;
 }
 
-// 本地测试时直接修改地图，把箱子从起点移动到本段终点。
-static uint8 main_control_local_same_pos(main_control_map_pos_t a, main_control_map_pos_t b)
-{
-    return ((a.x == b.x) && (a.y == b.y));
-}
-
-static uint16 main_control_local_map_index(const openart_map_t *map, main_control_map_pos_t pos)
-{
-    return (uint16)pos.y * map->cols + pos.x;
-}
-
-static uint8 main_control_local_map_pos_valid(const openart_map_t *map, main_control_map_pos_t pos)
-{
-    return ((0 != map) && map->valid && (0 != map->cols) && (0 != map->rows) &&
-            (pos.x < map->cols) && (pos.y < map->rows));
-}
-
-static void main_control_local_set_box_pos(openart_map_t *map,
-                                           main_control_map_pos_t old_pos,
-                                           main_control_map_pos_t new_pos,
-                                           main_control_map_pos_t goal_pos)
-{
-    if((!main_control_local_map_pos_valid(map, old_pos)) ||
-       (!main_control_local_map_pos_valid(map, new_pos)) ||
-       (!main_control_local_map_pos_valid(map, goal_pos)))
-    {
-        return;
-    }
-
-    map->cells[main_control_local_map_index(map, old_pos)] = OPENART_CELL_BACKGROUND;
-
-    if(main_control_local_same_pos(new_pos, goal_pos))
-    {
-        map->cells[main_control_local_map_index(map, new_pos)] = OPENART_CELL_BACKGROUND;
-    }
-    else
-    {
-        map->cells[main_control_local_map_index(map, new_pos)] = OPENART_CELL_YELLOW_BOX;
-    }
-
-    map->updated = 1;
-    map->seq++;
-}
-
-static void main_control_local_sync_box_push(openart_map_t *map,
-                                             main_control_context_t *ctx,
-                                             const openart_pose_t *pose)
-{
-    main_control_map_pos_t next_box_pos;
-
-    if((0 == ctx) || (!ctx->has_active_plan) || (MAIN_CONTROL_STATE_RUN_PATH != ctx->state))
-    {
-        return;
-    }
-
-    (void)pose;
-
-    if(0 != ctx->active_path_count)
-    {
-        return;
-    }
-    next_box_pos = ctx->active_box_end;
-
-    if(!main_control_local_same_pos(ctx->active_box_current, next_box_pos))
-    {
-        main_control_local_set_box_pos(map,
-                                       ctx->active_box_current,
-                                       next_box_pos,
-                                       ctx->active_goal);
-        ctx->active_box_current = next_box_pos;
-    }
-}
-
-// 本地主控入口；调用纯主控状态机，并用本地路径跟随模拟执行。
 main_control_local_output_t main_control_update_local(main_control_context_t *ctx,
                                                       openart_pose_t *pose,
                                                       openart_map_t *map)
@@ -225,10 +147,6 @@ main_control_local_output_t main_control_update_local(main_control_context_t *ct
                                                  MAIN_CONTROL_LOCAL_X_SPEED,
                                                  MAIN_CONTROL_LOCAL_Y_SPEED,
                                                  MAIN_CONTROL_LOCAL_ARRIVE_PERCENT);
-        if(output.follow.valid)
-        {
-            main_control_local_sync_box_push(map, ctx, pose);
-        }
         if(output.follow.valid && output.follow.finished)
         {
             main_control_finish_path(ctx);
