@@ -3,6 +3,7 @@
 #include "car_control/heading_control.h"
 #include "car_control/path_follow_control.h"
 #include "main_control/main_control.h"
+#include "main_control/main_control_sync.h"
 #include "openart_uart/openart_uart.h"
 #include "screen_print/openart_display.h"
 
@@ -47,6 +48,7 @@ static void main_drive_path(main_control_context_t *ctx,
         if(follow.valid && follow.finished)
         {
             car_stop();
+            main_control_sync_apply_push_result(map, ctx);
             main_control_finish_push_box(ctx);
             openart_display_set_control_status((uint8)ctx->state, follow.valid, follow.x, follow.y);
             return;
@@ -78,7 +80,6 @@ int main(void)
     static main_control_context_t main_control;
     openart_pose_t openart_pose = {0};
     openart_map_t openart_map = {0};
-    main_control_state_t last_control_state;
 
     clock_init(SYSTEM_CLOCK_600M);
     system_delay_ms(100);
@@ -88,22 +89,16 @@ int main(void)
     openart_uart_init();
     openart_display_init();
     main_control_init(&main_control);
-    last_control_state = main_control.state;
+    main_control_sync_reset();
 
     while(1)
     {
         openart_uart_update(&openart_pose, &openart_map);
         if(openart_pose.valid && openart_map.valid)
         {
-            last_control_state = main_control.state;
+            main_control_sync_update(&openart_map);
             main_control_update(&main_control, &openart_pose, &openart_map);
             main_drive_path(&main_control, &openart_pose, &openart_map);
-            if((MAIN_CONTROL_STATE_REQUEST_MAP == main_control.state) &&
-               (MAIN_CONTROL_STATE_REQUEST_MAP != last_control_state))
-            {
-                openart_uart_clear_updated(&openart_pose, &openart_map);
-                openart_uart_request_map();
-            }
         }
         else
         {

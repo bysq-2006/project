@@ -353,7 +353,7 @@ void main_control_finish_push_box(main_control_context_t *ctx)
 {
     if((0 != ctx) && (MAIN_CONTROL_STATE_PUSH_BOX == ctx->state))
     {
-        ctx->state = MAIN_CONTROL_STATE_REQUEST_MAP;
+        ctx->state = MAIN_CONTROL_STATE_PLAN;
         ctx->has_active_plan = 0;
     }
 }
@@ -390,13 +390,6 @@ main_control_output_t main_control_update(main_control_context_t *ctx,
 
         case MAIN_CONTROL_STATE_MOVE_TO_PUSH_POS:
         case MAIN_CONTROL_STATE_PUSH_BOX:
-            break;
-
-        case MAIN_CONTROL_STATE_REQUEST_MAP:
-            if(map->updated && map->valid)
-            {
-                ctx->state = MAIN_CONTROL_STATE_PLAN;
-            }
             break;
 
         case MAIN_CONTROL_STATE_FINISHED:
