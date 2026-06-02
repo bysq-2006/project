@@ -9,11 +9,15 @@
 #define MAIN_CONTROL_BOX_PATH_TURN_COST (10U)
 // 小车完整执行路径最大长度：到推点路径 + 推箱跟随路径。
 #define MAIN_CONTROL_ACTIVE_PATH_MAX    (OPENART_MAP_CELL_MAX * 2)
+// 主控任务列表最大长度。
+#define MAIN_CONTROL_TASK_MAX           (16U)
+// 主控任务列表中的空位置。
+#define MAIN_CONTROL_TASK_EMPTY         (0xFF)
 
 typedef enum
 {
-    // 空闲状态。
-    MAIN_CONTROL_STATE_IDLE = 0,
+    // 等待状态。
+    MAIN_CONTROL_STATE_WAIT = 0,
     // Start identifying each box and goal id.
     MAIN_CONTROL_STATE_FIND_IDS,
     // 正在规划接下来要走的路径。
@@ -60,7 +64,7 @@ typedef struct
 typedef struct
 {
     // 当前主控状态。
-    main_control_state_t state;
+    main_control_state_t state[MAIN_CONTROL_TASK_MAX];
 
     // 地图里找到的箱子列表。
     main_control_map_pos_t boxes[OPENART_MAP_CELL_MAX];
@@ -98,6 +102,10 @@ typedef struct
     uint32 replan_count;
     // 当前是否有可执行方案。
     uint8 has_active_plan;
+    // 每次主循环的间隔时间。
+    uint16 update_interval_ms;
+    // 当前等待任务还需要等待的时间。
+    uint16 wait_ms;
 } main_control_context_t;
 
 // 单次更新的返回结果。
@@ -112,7 +120,13 @@ typedef struct
 } main_control_output_t;
 
 // 初始化主控上下文。
-void main_control_init(main_control_context_t *ctx);
+void main_control_init(main_control_context_t *ctx,
+                       uint16 update_interval_ms);
+// 添加一个任务到队尾。
+void main_control_add_task(main_control_context_t *ctx,
+                           main_control_state_t state);
+// 丢弃当前任务，并将后续任务整体前移。
+void main_control_shift_task(main_control_context_t *ctx);
 // 推进一次主控状态机。
 main_control_output_t main_control_update(main_control_context_t *ctx,
                                           openart_pose_t *pose,

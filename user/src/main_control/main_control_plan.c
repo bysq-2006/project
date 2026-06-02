@@ -316,18 +316,20 @@ uint8 main_control_build_best_plan(main_control_context_t *ctx,
     {
         if(main_control_fill_return_path(ctx, pose, map))
         {
-            ctx->state = MAIN_CONTROL_STATE_RUN_PATH;
+            main_control_add_task(ctx, MAIN_CONTROL_STATE_RUN_PATH);
         }
         else
         {
-            ctx->state = MAIN_CONTROL_STATE_FINISHED;
+            main_control_add_task(ctx, MAIN_CONTROL_STATE_FINISHED);
         }
+        main_control_shift_task(ctx);
         return 0;
     }
 
     if(!main_control_get_car_map_pos(pose, map, &car_pos))
     {
-        ctx->state = MAIN_CONTROL_STATE_ERROR;
+        main_control_add_task(ctx, MAIN_CONTROL_STATE_ERROR);
+        main_control_shift_task(ctx);
         return 0;
     }
 
@@ -354,13 +356,15 @@ uint8 main_control_build_best_plan(main_control_context_t *ctx,
 
     if(MAIN_CONTROL_PATH_COST_INVALID == best_cost)
     {
-        ctx->state = MAIN_CONTROL_STATE_ERROR;
+        main_control_add_task(ctx, MAIN_CONTROL_STATE_ERROR);
+        main_control_shift_task(ctx);
         return 0;
     }
 
     if(!main_control_fill_active_path(ctx, &ctx->plans[ctx->best_plan_index]))
     {
-        ctx->state = MAIN_CONTROL_STATE_ERROR;
+        main_control_add_task(ctx, MAIN_CONTROL_STATE_ERROR);
+        main_control_shift_task(ctx);
         return 0;
     }
 
@@ -369,6 +373,9 @@ uint8 main_control_build_best_plan(main_control_context_t *ctx,
     ctx->active_goal = ctx->plans[ctx->best_plan_index].goal_pos;
     ctx->has_active_plan = 1;
     ctx->replan_count++;
+
+    main_control_add_task(ctx, MAIN_CONTROL_STATE_RUN_PATH);
+    main_control_shift_task(ctx);
 
     return 1;
 }

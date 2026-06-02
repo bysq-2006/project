@@ -11,6 +11,7 @@
 #define MAIN_CAR_X_SPEED            (20)
 #define MAIN_CAR_Y_SPEED            (20)
 #define MAIN_CAR_ARRIVE_PERCENT     (30)
+#define MAIN_CONTROL_UPDATE_MS      (20)
 
 static void main_drive_path(main_control_context_t *ctx,
                             openart_pose_t *pose,
@@ -18,7 +19,7 @@ static void main_drive_path(main_control_context_t *ctx,
 {
     path_follow_output_t follow = {0};
 
-    if(MAIN_CONTROL_STATE_RUN_PATH == ctx->state)
+    if(MAIN_CONTROL_STATE_RUN_PATH == ctx->state[0])
     {
         follow = path_follow_update_local(pose,
                                           map,
@@ -32,14 +33,14 @@ static void main_drive_path(main_control_context_t *ctx,
         {
             car_stop();
             main_control_finish_path(ctx);
-            openart_display_set_control_status((uint8)ctx->state, follow.valid, follow.x, follow.y);
+            openart_display_set_control_status((uint8)ctx->state[0], follow.valid, follow.x, follow.y);
             return;
         }
     }
     else
     {
         car_stop();
-        openart_display_set_control_status((uint8)ctx->state, 0, 0, 0);
+        openart_display_set_control_status((uint8)ctx->state[0], 0, 0, 0);
         return;
     }
 
@@ -51,10 +52,11 @@ static void main_drive_path(main_control_context_t *ctx,
     else
     {
         car_stop();
-        ctx->state = MAIN_CONTROL_STATE_ERROR;
+        main_control_add_task(ctx, MAIN_CONTROL_STATE_ERROR);
+        main_control_shift_task(ctx);
     }
 
-    openart_display_set_control_status((uint8)ctx->state, follow.valid, follow.x, follow.y);
+    openart_display_set_control_status((uint8)ctx->state[0], follow.valid, follow.x, follow.y);
 }
 
 int main(void)
@@ -71,7 +73,7 @@ int main(void)
     gyro_z_angle_init();
     openart_uart_init();
     openart_display_init();
-    main_control_init(&main_control);
+    main_control_init(&main_control, MAIN_CONTROL_UPDATE_MS);
     main_control_sync_reset();
 
     while(1)
@@ -87,9 +89,9 @@ int main(void)
         else
         {
             car_stop();
-            openart_display_set_control_status((uint8)main_control.state, 0, 0, 0);
+            openart_display_set_control_status((uint8)main_control.state[0], 0, 0, 0);
         }
         openart_display_update(&openart_pose, &openart_map);
-        system_delay_ms(20);
+        system_delay_ms(MAIN_CONTROL_UPDATE_MS);
     }
 }

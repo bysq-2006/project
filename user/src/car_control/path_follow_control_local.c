@@ -109,7 +109,7 @@ static void main_control_local_clear_output(main_control_local_output_t *output)
         return;
     }
 
-    output->control.state = MAIN_CONTROL_STATE_IDLE;
+    output->control.state = MAIN_CONTROL_STATE_WAIT;
     output->control.valid = 0;
     output->control.plan_ready = 0;
     output->follow.x = 0;
@@ -138,7 +138,7 @@ main_control_local_output_t main_control_update_local(main_control_context_t *ct
         return output;
     }
 
-    if(MAIN_CONTROL_STATE_RUN_PATH == ctx->state)
+    if(MAIN_CONTROL_STATE_RUN_PATH == ctx->state[0])
     {
         output.follow = path_follow_update_local(pose,
                                                  map,
@@ -154,11 +154,12 @@ main_control_local_output_t main_control_update_local(main_control_context_t *ct
         }
         else if(!output.follow.valid)
         {
-            ctx->state = MAIN_CONTROL_STATE_ERROR;
+            main_control_add_task(ctx, MAIN_CONTROL_STATE_ERROR);
+            main_control_shift_task(ctx);
         }
     }
 
-    output.control.state = ctx->state;
+    output.control.state = ctx->state[0];
 
     return output;
 }
