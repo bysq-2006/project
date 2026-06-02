@@ -43,6 +43,44 @@ static uint16 main_control_count_path_to_target(const main_control_map_pos_t *pa
     return 0;
 }
 
+static uint8 main_control_cell_is_box_id(uint8 cell)
+{
+    return ((OPENART_CELL_BOX_ID_BASE <= cell) && (cell <= OPENART_CELL_BOX_ID_MAX));
+}
+
+static uint8 main_control_cell_is_goal_id(uint8 cell)
+{
+    return ((OPENART_CELL_GOAL_ID_BASE <= cell) && (cell <= OPENART_CELL_GOAL_ID_MAX));
+}
+
+static uint8 main_control_plan_match_box_goal(const openart_map_t *map,
+                                              main_control_map_pos_t box_pos,
+                                              main_control_map_pos_t goal_pos)
+{
+    uint8 box_cell;
+    uint8 goal_cell;
+
+    if((0 == map) || (box_pos.x >= map->cols) || (box_pos.y >= map->rows) ||
+       (goal_pos.x >= map->cols) || (goal_pos.y >= map->rows))
+    {
+        return 0;
+    }
+
+    box_cell = map->cells[(uint16)box_pos.y * map->cols + box_pos.x];
+    goal_cell = map->cells[(uint16)goal_pos.y * map->cols + goal_pos.x];
+
+    if((OPENART_CELL_YELLOW_BOX == box_cell) && (OPENART_CELL_GOAL == goal_cell))
+    {
+        return 1;
+    }
+    if(main_control_cell_is_box_id(box_cell) && main_control_cell_is_goal_id(goal_cell))
+    {
+        return ((box_cell - OPENART_CELL_BOX_ID_BASE) == (goal_cell - OPENART_CELL_GOAL_ID_BASE));
+    }
+
+    return 0;
+}
+
 static uint8 main_control_calc_push_pos(const main_control_map_pos_t *box_path,
                                         main_control_map_pos_t *push_pos)
 {
@@ -244,6 +282,11 @@ static uint8 main_control_build_box_plan(main_control_plan_t *plan,
 
     for(i = 0; i < goal_count; i++)
     {
+        if(!main_control_plan_match_box_goal(map, box_pos, goals[i]))
+        {
+            continue;
+        }
+
         cost = main_control_astar_find_path(map, box_pos, goals[i], candidate_path, MAIN_CONTROL_BOX_PATH_TURN_COST);
         if(cost < best_box_cost)
         {

@@ -27,6 +27,12 @@
 #define OPENART_CELL_GOAL           (2)
 // 地图格子数值：黄色箱子。
 #define OPENART_CELL_YELLOW_BOX     (3)
+// 带编号目标点：20-29 对应编号 0-9。
+#define OPENART_CELL_GOAL_ID_BASE   (20)
+#define OPENART_CELL_GOAL_ID_MAX    (29)
+// 带编号箱子：30-39 对应编号 0-9。
+#define OPENART_CELL_BOX_ID_BASE    (30)
+#define OPENART_CELL_BOX_ID_MAX     (39)
 // 地图格子数值：未知或不匹配结果。
 #define OPENART_CELL_UNKNOWN        (255)
 

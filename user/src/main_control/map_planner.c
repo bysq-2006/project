@@ -3,7 +3,45 @@
 // 判断地图格子是否允许 A* 通行。
 static uint8 main_control_is_walkable_cell(uint8 cell)
 {
-    return ((OPENART_CELL_BACKGROUND == cell) || (OPENART_CELL_GOAL == cell));
+    return ((OPENART_CELL_BACKGROUND == cell) || (OPENART_CELL_GOAL == cell) ||
+            ((OPENART_CELL_GOAL_ID_BASE <= cell) && (cell <= OPENART_CELL_GOAL_ID_MAX)));
+}
+
+static uint8 main_control_is_box_cell(uint8 cell)
+{
+    return ((OPENART_CELL_YELLOW_BOX == cell) ||
+            ((OPENART_CELL_BOX_ID_BASE <= cell) && (cell <= OPENART_CELL_BOX_ID_MAX)));
+}
+
+static uint8 main_control_is_goal_cell(uint8 cell)
+{
+    return ((OPENART_CELL_GOAL == cell) ||
+            ((OPENART_CELL_GOAL_ID_BASE <= cell) && (cell <= OPENART_CELL_GOAL_ID_MAX)));
+}
+
+static uint8 main_control_box_matches_goal(uint8 box_cell, uint8 goal_cell)
+{
+    if((OPENART_CELL_YELLOW_BOX == box_cell) && (OPENART_CELL_GOAL == goal_cell))
+    {
+        return 1;
+    }
+    if(((OPENART_CELL_BOX_ID_BASE <= box_cell) && (box_cell <= OPENART_CELL_BOX_ID_MAX)) &&
+       ((OPENART_CELL_GOAL_ID_BASE <= goal_cell) && (goal_cell <= OPENART_CELL_GOAL_ID_MAX)))
+    {
+        return ((box_cell - OPENART_CELL_BOX_ID_BASE) == (goal_cell - OPENART_CELL_GOAL_ID_BASE));
+    }
+
+    return 0;
+}
+
+static uint8 main_control_box_can_enter_cell(uint8 box_cell, uint8 target_cell, uint8 next_cell, uint8 is_target)
+{
+    if(OPENART_CELL_BACKGROUND == next_cell)
+    {
+        return 1;
+    }
+
+    return (is_target && main_control_box_matches_goal(box_cell, target_cell));
 }
 
 // 把二维地图坐标转换成 cells[] 一维下标。
@@ -58,7 +96,7 @@ uint16 main_control_find_boxes(const openart_map_t *map, main_control_map_pos_t 
         for(col = 0; col < map->cols; col++)
         {
             index = (uint16)row * map->cols + col;
-            if(OPENART_CELL_YELLOW_BOX == map->cells[index])
+            if(main_control_is_box_cell(map->cells[index]))
             {
                 if(count < max_boxes)
                 {
@@ -94,7 +132,7 @@ uint16 main_control_find_goals(const openart_map_t *map, main_control_map_pos_t 
         for(col = 0; col < map->cols; col++)
         {
             index = (uint16)row * map->cols + col;
-            if(OPENART_CELL_GOAL == map->cells[index])
+            if(main_control_is_goal_cell(map->cells[index]))
             {
                 if(count < max_goals)
                 {
@@ -323,6 +361,8 @@ uint32 main_control_astar_find_path(const openart_map_t *map,
     uint16 target_index;
     uint16 best_target_state;
     uint16 path_index;
+    uint8 start_cell;
+    uint8 target_cell;
     uint8 dir;
     uint8 current_dir;
     int16 next_x;
@@ -349,6 +389,8 @@ uint32 main_control_astar_find_path(const openart_map_t *map,
 
     start_index = main_control_map_index(map, start.x, start.y);
     target_index = main_control_map_index(map, target.x, target.y);
+    start_cell = map->cells[start_index];
+    target_cell = map->cells[target_index];
 
     state_count = cell_count * MAIN_CONTROL_ASTAR_DIR_COUNT;
     for(i = 0; i < state_count; i++)
@@ -416,7 +458,10 @@ uint32 main_control_astar_find_path(const openart_map_t *map,
 
             next_index = main_control_map_index(map, (uint8)next_x, (uint8)next_y);
             if((start_index != next_index) &&
-               (!main_control_is_walkable_cell(map->cells[next_index])))
+               (!main_control_box_can_enter_cell(start_cell,
+                                                 target_cell,
+                                                 map->cells[next_index],
+                                                 (uint8)(next_index == target_index))))
             {
                 continue;
             }

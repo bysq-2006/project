@@ -32,7 +32,35 @@ static uint8 valid_xy(const openart_map_t *map, int16 x, int16 y)
 
 static uint8 can_push_to(uint8 cell)
 {
-    return ((OPENART_CELL_BACKGROUND == cell) || (OPENART_CELL_GOAL == cell));
+    return ((OPENART_CELL_BACKGROUND == cell) || (OPENART_CELL_GOAL == cell) ||
+            ((OPENART_CELL_GOAL_ID_BASE <= cell) && (cell <= OPENART_CELL_GOAL_ID_MAX)));
+}
+
+static uint8 is_box_cell(uint8 cell)
+{
+    return ((OPENART_CELL_YELLOW_BOX == cell) ||
+            ((OPENART_CELL_BOX_ID_BASE <= cell) && (cell <= OPENART_CELL_BOX_ID_MAX)));
+}
+
+static uint8 is_goal_cell(uint8 cell)
+{
+    return ((OPENART_CELL_GOAL == cell) ||
+            ((OPENART_CELL_GOAL_ID_BASE <= cell) && (cell <= OPENART_CELL_GOAL_ID_MAX)));
+}
+
+static uint8 box_matches_goal(uint8 box_cell, uint8 goal_cell)
+{
+    if((OPENART_CELL_YELLOW_BOX == box_cell) && (OPENART_CELL_GOAL == goal_cell))
+    {
+        return 1;
+    }
+    if((OPENART_CELL_BOX_ID_BASE <= box_cell) && (box_cell <= OPENART_CELL_BOX_ID_MAX) &&
+       (OPENART_CELL_GOAL_ID_BASE <= goal_cell) && (goal_cell <= OPENART_CELL_GOAL_ID_MAX))
+    {
+        return ((box_cell - OPENART_CELL_BOX_ID_BASE) == (goal_cell - OPENART_CELL_GOAL_ID_BASE));
+    }
+
+    return 0;
 }
 
 static void copy_cells(uint8 *dst, const uint8 *src, uint16 count)
@@ -71,11 +99,11 @@ static void count_sim_cells(void)
     sync_status.goal_count = 0;
     for(i = 0; i < sim_cell_count; i++)
     {
-        if(OPENART_CELL_YELLOW_BOX == sim_cells[i])
+        if(is_box_cell(sim_cells[i]))
         {
             sync_status.box_count++;
         }
-        else if(OPENART_CELL_GOAL == sim_cells[i])
+        else if(is_goal_cell(sim_cells[i]))
         {
             sync_status.goal_count++;
         }
@@ -92,6 +120,7 @@ static void update_collision(openart_pose_t *pose, openart_map_t *map)
     int16 next_y;
     uint16 box_index;
     uint16 next_index;
+    uint8 box_cell;
     uint8 next_cell;
 
     if(!main_control_get_car_map_pos(pose, map, &car))
@@ -119,7 +148,8 @@ static void update_collision(openart_pose_t *pose, openart_map_t *map)
     }
 
     box_index = map_index(map, car);
-    if(OPENART_CELL_YELLOW_BOX != sim_cells[box_index])
+    box_cell = sim_cells[box_index];
+    if(!is_box_cell(box_cell))
     {
         last_car = car;
         return;
@@ -142,14 +172,19 @@ static void update_collision(openart_pose_t *pose, openart_map_t *map)
         set_pose_cell(pose, map, last_car);
         return;
     }
+    if(is_goal_cell(next_cell) && (!box_matches_goal(box_cell, next_cell)))
+    {
+        set_pose_cell(pose, map, last_car);
+        return;
+    }
 
     sim_cells[box_index] = OPENART_CELL_BACKGROUND;
-    sim_cells[next_index] = (OPENART_CELL_GOAL == next_cell) ? OPENART_CELL_BACKGROUND : OPENART_CELL_YELLOW_BOX;
+    sim_cells[next_index] = is_goal_cell(next_cell) ? OPENART_CELL_BACKGROUND : box_cell;
 
     sync_status.map_changed = 1;
     sync_status.box_from = car;
     sync_status.box_to = next;
-    if(OPENART_CELL_GOAL == next_cell)
+    if(is_goal_cell(next_cell))
     {
         sync_status.box_completed = 1;
         sync_status.completed_goal = next;
