@@ -14,14 +14,61 @@ static void main_control_clear_output(main_control_output_t *output)
     output->plan_ready = 0;
 }
 
-void main_control_init(main_control_context_t *ctx)
+void main_control_add_task(main_control_context_t *ctx,
+                           main_control_state_t state)
 {
+    uint8 i;
+
     if(0 == ctx)
     {
         return;
     }
 
-    ctx->state = MAIN_CONTROL_STATE_IDLE;
+    for(i = 0; i < MAIN_CONTROL_TASK_MAX; i++)
+    {
+        if(MAIN_CONTROL_TASK_EMPTY == ctx->state[i])
+        {
+            ctx->state[i] = state;
+            return;
+        }
+    }
+}
+
+void main_control_shift_task(main_control_context_t *ctx)
+{
+    uint8 i;
+
+    if(0 == ctx)
+    {
+        return;
+    }
+
+    for(i = 1; i < MAIN_CONTROL_TASK_MAX; i++)
+    {
+        ctx->state[i - 1] = ctx->state[i];
+    }
+
+    ctx->state[MAIN_CONTROL_TASK_MAX - 1] = MAIN_CONTROL_TASK_EMPTY;
+    if(MAIN_CONTROL_TASK_EMPTY == ctx->state[0])
+    {
+        ctx->state[0] = MAIN_CONTROL_STATE_IDLE;
+    }
+}
+
+void main_control_init(main_control_context_t *ctx)
+{
+    uint8 i;
+
+    if(0 == ctx)
+    {
+        return;
+    }
+
+    for(i = 0; i < MAIN_CONTROL_TASK_MAX; i++)
+    {
+        ctx->state[i] = MAIN_CONTROL_TASK_EMPTY;
+    }
+    ctx->state[0] = MAIN_CONTROL_STATE_IDLE;
     ctx->box_count = 0;
     ctx->goal_count = 0;
     ctx->plan_count = 0;
@@ -42,9 +89,10 @@ void main_control_init(main_control_context_t *ctx)
 
 void main_control_finish_path(main_control_context_t *ctx)
 {
-    if((0 != ctx) && (MAIN_CONTROL_STATE_RUN_PATH == ctx->state))
+    if((0 != ctx) && (MAIN_CONTROL_STATE_RUN_PATH == ctx->state[0]))
     {
-        ctx->state = ctx->has_active_plan ? MAIN_CONTROL_STATE_PLAN : MAIN_CONTROL_STATE_FINISHED;
+        main_control_add_task(ctx, ctx->has_active_plan ? MAIN_CONTROL_STATE_PLAN : MAIN_CONTROL_STATE_FINISHED);
+        main_control_shift_task(ctx);
         ctx->has_active_plan = 0;
         ctx->active_path_count = 0;
     }
@@ -64,24 +112,29 @@ main_control_output_t main_control_update(main_control_context_t *ctx,
     }
 
     output.valid = 1;
+    if(MAIN_CONTROL_TASK_EMPTY == ctx->state[0])
+    {
+        ctx->state[0] = MAIN_CONTROL_STATE_ERROR;
+    }
 
-    switch(ctx->state)
+    switch(ctx->state[0])
     {
         case MAIN_CONTROL_STATE_IDLE:
-            ctx->state = MAIN_CONTROL_STATE_FIND_IDS;
+            main_control_add_task(ctx, MAIN_CONTROL_STATE_FIND_IDS);
+            main_control_shift_task(ctx);
             break;
 
         case MAIN_CONTROL_STATE_FIND_IDS:
             if(main_control_find_ids_main(ctx, pose, map))
             {
-                ctx->state = MAIN_CONTROL_STATE_PLAN;
+                main_control_add_task(ctx, MAIN_CONTROL_STATE_PLAN);
+                main_control_shift_task(ctx);
             }
             break;
 
         case MAIN_CONTROL_STATE_PLAN:
             if(main_control_build_best_plan(ctx, pose, map))
             {
-                ctx->state = MAIN_CONTROL_STATE_RUN_PATH;
                 output.plan_ready = 1;
             }
             break;
@@ -95,7 +148,7 @@ main_control_output_t main_control_update(main_control_context_t *ctx,
             break;
     }
 
-    output.state = ctx->state;
+    output.state = ctx->state[0];
 
     return output;
 }

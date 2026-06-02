@@ -1,7 +1,6 @@
 #include "zf_common_headfile.h"
 #include "car_control/car_control.h"
-#include "car_control/heading_control.h"
-#include "car_control/path_follow_control.h"
+#include "car_control/path_follow_control_local.h"
 #include "gyro_z_angle/gyro_z_angle.h"
 #include "main_control/main_control.h"
 #include "main_control/main_control_sync.h"
@@ -18,44 +17,41 @@ static void main_drive_path(main_control_context_t *ctx,
 {
     path_follow_output_t follow = {0};
 
-    if(MAIN_CONTROL_STATE_RUN_PATH == ctx->state)
+    if(MAIN_CONTROL_STATE_RUN_PATH == ctx->state[0])
     {
-        follow = path_follow_update(pose,
-                                    map,
-                                    ctx->active_path,
-                                    &ctx->active_path_count,
-                                    MAIN_CAR_X_SPEED,
-                                    MAIN_CAR_Y_SPEED,
-                                    MAIN_CAR_ARRIVE_PERCENT);
+        follow = path_follow_update_local(pose,
+                                          map,
+                                          ctx->active_path,
+                                          &ctx->active_path_count,
+                                          MAIN_CAR_X_SPEED,
+                                          MAIN_CAR_Y_SPEED,
+                                          MAIN_CAR_ARRIVE_PERCENT);
 
         if(follow.valid && follow.finished)
         {
             car_stop();
             main_control_sync_apply_push_result(map, ctx);
             main_control_finish_path(ctx);
-            openart_display_set_control_status((uint8)ctx->state, follow.valid, follow.x, follow.y);
+            openart_display_set_control_status((uint8)ctx->state[0], follow.valid, follow.x, follow.y);
             return;
         }
     }
     else
     {
         car_stop();
-        openart_display_set_control_status((uint8)ctx->state, 0, 0, 0);
+        openart_display_set_control_status((uint8)ctx->state[0], 0, 0, 0);
         return;
     }
 
     // 正常情况这里要跑。测试的时候临时用car_stop()
-    if(follow.valid)
-    {
-        heading_sensor_update(follow.x, follow.y, ctx->target_heading_angle);
-    }
-    else
+    if(!follow.valid)
     {
         car_stop();
-        ctx->state = MAIN_CONTROL_STATE_ERROR;
+        main_control_add_task(ctx, MAIN_CONTROL_STATE_ERROR);
+        main_control_shift_task(ctx);
     }
 
-    openart_display_set_control_status((uint8)ctx->state, follow.valid, follow.x, follow.y);
+    openart_display_set_control_status((uint8)ctx->state[0], follow.valid, follow.x, follow.y);
 }
 
 int main(void)
@@ -68,7 +64,6 @@ int main(void)
     system_delay_ms(100);
 
     car_init();
-    heading_sensor_init();
     gyro_z_angle_init();
     openart_uart_init();
     openart_display_init();
@@ -88,7 +83,7 @@ int main(void)
         else
         {
             car_stop();
-            openart_display_set_control_status((uint8)main_control.state, 0, 0, 0);
+            openart_display_set_control_status((uint8)main_control.state[0], 0, 0, 0);
         }
         openart_display_update(&openart_pose, &openart_map);
         system_delay_ms(20);

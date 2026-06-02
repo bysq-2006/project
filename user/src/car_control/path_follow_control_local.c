@@ -86,6 +86,31 @@ static void path_follow_local_apply_pose(openart_pose_t *pose,
     pose->seq++;
 }
 
+// 本地仿真里的转向输入：直接更新车头角度。
+static void path_follow_local_apply_heading(openart_pose_t *pose, int8 w)
+{
+    int32 angle10;
+
+    if((0 == pose) || (!pose->valid))
+    {
+        return;
+    }
+
+    angle10 = (int32)pose->angle10 + (int32)w * 10;
+    while(angle10 < 0)
+    {
+        angle10 += 3600;
+    }
+    while(angle10 >= 3600)
+    {
+        angle10 -= 3600;
+    }
+
+    pose->angle10 = (uint16)angle10;
+    pose->updated = 1;
+    pose->seq++;
+}
+
 path_follow_output_t path_follow_update_local(openart_pose_t *pose,
                                               const openart_map_t *map,
                                               main_control_map_pos_t *path,
@@ -138,7 +163,7 @@ main_control_local_output_t main_control_update_local(main_control_context_t *ct
         return output;
     }
 
-    if(MAIN_CONTROL_STATE_RUN_PATH == ctx->state)
+    if(MAIN_CONTROL_STATE_RUN_PATH == ctx->state[0])
     {
         output.follow = path_follow_update_local(pose,
                                                  map,
@@ -147,6 +172,10 @@ main_control_local_output_t main_control_update_local(main_control_context_t *ct
                                                  MAIN_CONTROL_LOCAL_X_SPEED,
                                                  MAIN_CONTROL_LOCAL_Y_SPEED,
                                                  MAIN_CONTROL_LOCAL_ARRIVE_PERCENT);
+        if(output.follow.valid)
+        {
+            path_follow_local_apply_heading(pose, (int8)ctx->target_heading_angle);
+        }
         if(output.follow.valid && output.follow.finished)
         {
             main_control_finish_path(ctx);
@@ -154,11 +183,12 @@ main_control_local_output_t main_control_update_local(main_control_context_t *ct
         }
         else if(!output.follow.valid)
         {
-            ctx->state = MAIN_CONTROL_STATE_ERROR;
+            main_control_add_task(ctx, MAIN_CONTROL_STATE_ERROR);
+            main_control_shift_task(ctx);
         }
     }
 
-    output.control.state = ctx->state;
+    output.control.state = ctx->state[0];
 
     return output;
 }
