@@ -1798,6 +1798,9 @@
             <name>$PROJ_DIR$\..\..\user\src\main_control\main_control.c</name>
         </file>
         <file>
+            <name>$PROJ_DIR$\..\..\user\src\main_control\main_control_find_ids.c</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\..\..\user\src\main_control\main_control_plan.c</name>
         </file>
         <file>
@@ -1829,6 +1832,9 @@
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\user\src\main_control\main_control.h</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\user\src\main_control\main_control_find_ids.h</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\user\src\main_control\main_control_plan.h</name>

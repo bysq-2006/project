@@ -445,6 +445,11 @@
               <FilePath>..\user\src\main_control\main_control.c</FilePath>
             </File>
             <File>
+              <FileName>main_control_find_ids.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user\src\main_control\main_control_find_ids.c</FilePath>
+            </File>
+            <File>
               <FileName>main_control_plan.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\user\src\main_control\main_control_plan.c</FilePath>
@@ -513,6 +518,11 @@
               <FileName>main_control.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\user\src\main_control\main_control.h</FilePath>
+            </File>
+            <File>
+              <FileName>main_control_find_ids.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\user\src\main_control\main_control_find_ids.h</FilePath>
             </File>
             <File>
               <FileName>main_control_plan.h</FileName>

@@ -47,7 +47,7 @@ static void main_drive_path(main_control_context_t *ctx,
     // 正常情况这里要跑。测试的时候临时用car_stop()
     if(follow.valid)
     {
-        car_stop();
+        heading_sensor_update(follow.x, follow.y, ctx->target_heading_angle);
     }
     else
     {

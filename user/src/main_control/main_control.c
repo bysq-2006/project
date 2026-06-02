@@ -1,4 +1,5 @@
 #include "main_control.h"
+#include "main_control_find_ids.h"
 #include "main_control_plan.h"
 
 static void main_control_clear_output(main_control_output_t *output)
@@ -20,12 +21,13 @@ void main_control_init(main_control_context_t *ctx)
         return;
     }
 
-    ctx->state = MAIN_CONTROL_STATE_PLAN;
+    ctx->state = MAIN_CONTROL_STATE_IDLE;
     ctx->box_count = 0;
     ctx->goal_count = 0;
     ctx->plan_count = 0;
     ctx->best_plan_index = 0;
     ctx->active_path_count = 0;
+    ctx->target_heading_angle = 0;
     ctx->active_box_start.x = 0;
     ctx->active_box_start.y = 0;
     ctx->active_box_current.x = 0;
@@ -66,7 +68,14 @@ main_control_output_t main_control_update(main_control_context_t *ctx,
     switch(ctx->state)
     {
         case MAIN_CONTROL_STATE_IDLE:
-            ctx->state = MAIN_CONTROL_STATE_PLAN;
+            ctx->state = MAIN_CONTROL_STATE_FIND_IDS;
+            break;
+
+        case MAIN_CONTROL_STATE_FIND_IDS:
+            if(main_control_find_ids_main(ctx, pose, map))
+            {
+                ctx->state = MAIN_CONTROL_STATE_PLAN;
+            }
             break;
 
         case MAIN_CONTROL_STATE_PLAN:
