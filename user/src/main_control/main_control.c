@@ -188,6 +188,46 @@ static uint8 main_control_fill_active_path(main_control_context_t *ctx,
     return (0 != active_count);
 }
 
+static uint8 main_control_fill_return_path(main_control_context_t *ctx,
+                                           const openart_pose_t *pose,
+                                           const openart_map_t *map)
+{
+    main_control_map_pos_t car_pos;
+    main_control_map_pos_t target;
+    uint32 cost;
+    uint16 path_count;
+
+    if((0 == ctx) || (0 == pose) || (0 == map) || (map->rows <= 1))
+    {
+        return 0;
+    }
+
+    if(!main_control_get_car_map_pos(pose, map, &car_pos))
+    {
+        return 0;
+    }
+
+    target.x = (uint8)(map->cols / 2);
+    target.y = 1;
+
+    cost = main_control_astar_find_car_path(map, car_pos, target, ctx->active_path);
+    if(MAIN_CONTROL_PATH_COST_INVALID == cost)
+    {
+        return 0;
+    }
+
+    path_count = main_control_count_path_to_target(ctx->active_path, target);
+    if(0 == path_count)
+    {
+        return 0;
+    }
+
+    ctx->active_path_count = path_count;
+    ctx->has_active_plan = 0;
+
+    return 1;
+}
+
 static uint8 main_control_build_box_plan(main_control_plan_t *plan,
                                          const openart_map_t *map,
                                          main_control_map_pos_t car_pos,
@@ -286,7 +326,14 @@ static uint8 main_control_build_best_plan(main_control_context_t *ctx,
 
     if((0 == ctx->box_count) || (0 == ctx->goal_count))
     {
-        ctx->state = MAIN_CONTROL_STATE_FINISHED;
+        if(main_control_fill_return_path(ctx, pose, map))
+        {
+            ctx->state = MAIN_CONTROL_STATE_RUN_PATH;
+        }
+        else
+        {
+            ctx->state = MAIN_CONTROL_STATE_FINISHED;
+        }
         return 0;
     }
 
@@ -367,7 +414,7 @@ void main_control_finish_path(main_control_context_t *ctx)
 {
     if((0 != ctx) && (MAIN_CONTROL_STATE_RUN_PATH == ctx->state))
     {
-        ctx->state = MAIN_CONTROL_STATE_PLAN;
+        ctx->state = ctx->has_active_plan ? MAIN_CONTROL_STATE_PLAN : MAIN_CONTROL_STATE_FINISHED;
         ctx->has_active_plan = 0;
         ctx->active_path_count = 0;
     }
