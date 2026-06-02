@@ -63,6 +63,30 @@ static uint8 box_matches_goal(uint8 box_cell, uint8 goal_cell)
     return 0;
 }
 
+static uint8 is_box_id_cell(uint8 cell)
+{
+    return ((OPENART_CELL_BOX_ID_BASE <= cell) && (cell <= OPENART_CELL_BOX_ID_MAX));
+}
+
+static uint8 is_goal_id_cell(uint8 cell)
+{
+    return ((OPENART_CELL_GOAL_ID_BASE <= cell) && (cell <= OPENART_CELL_GOAL_ID_MAX));
+}
+
+static void apply_map_id_updates(const openart_map_t *map, uint16 cell_count)
+{
+    uint16 i;
+
+    for(i = 0; i < cell_count; i++)
+    {
+        // 扫描状态会直接把地图里的普通目标/箱子改成编号格子，这里同步到模拟地图。
+        if(is_goal_id_cell(map->cells[i]) || is_box_id_cell(map->cells[i]))
+        {
+            sim_cells[i] = map->cells[i];
+        }
+    }
+}
+
 static void copy_cells(uint8 *dst, const uint8 *src, uint16 count)
 {
     uint16 i;
@@ -234,6 +258,7 @@ const main_control_sync_status_t *main_control_sync_update(openart_pose_t *pose,
 
     sync_status.valid = 1;
     sync_status.initialized = 1;
+    apply_map_id_updates(map, cell_count);
     update_collision(pose, map);
     count_sim_cells();
 

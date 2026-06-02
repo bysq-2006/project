@@ -31,6 +31,64 @@ static uint16 main_control_angle_to_angle10(int16 angle)
     return (uint16)angle10;
 }
 
+static uint8 main_control_count_id_cell(const openart_map_t *map,
+                                        uint8 id_base,
+                                        uint8 id_max)
+{
+    uint16 i;
+    uint16 count;
+    uint16 cell_count;
+
+    count = 0;
+    if((0 == map) || (!map->valid))
+    {
+        return 0;
+    }
+
+    cell_count = (uint16)map->cols * map->rows;
+    if(cell_count > OPENART_MAP_CELL_MAX)
+    {
+        cell_count = OPENART_MAP_CELL_MAX;
+    }
+
+    for(i = 0; i < cell_count; i++)
+    {
+        if((id_base <= map->cells[i]) && (map->cells[i] <= id_max))
+        {
+            count++;
+        }
+    }
+
+    return (uint8)(count % 10);
+}
+
+static void main_control_scan_id_local(main_control_context_t *ctx,
+                                       openart_map_t *map)
+{
+    uint16 index;
+    uint8 id;
+
+    if((0 == ctx) || (0 == map) || (!map->valid) ||
+       (ctx->active_goal.x >= map->cols) || (ctx->active_goal.y >= map->rows))
+    {
+        return;
+    }
+
+    index = (uint16)ctx->active_goal.y * map->cols + ctx->active_goal.x;
+    if(OPENART_CELL_GOAL == map->cells[index])
+    {
+        id = main_control_count_id_cell(map, OPENART_CELL_GOAL_ID_BASE, OPENART_CELL_GOAL_ID_MAX);
+        map->cells[index] = OPENART_CELL_GOAL_ID_BASE + id;
+    }
+    else if(OPENART_CELL_YELLOW_BOX == map->cells[index])
+    {
+        id = main_control_count_id_cell(map, OPENART_CELL_BOX_ID_BASE, OPENART_CELL_BOX_ID_MAX);
+        map->cells[index] = OPENART_CELL_BOX_ID_BASE + id;
+    }
+
+    map->updated = 1;
+}
+
 void main_control_add_task(main_control_context_t *ctx,
                            main_control_state_t state)
 {
@@ -169,6 +227,9 @@ main_control_output_t main_control_update(main_control_context_t *ctx,
             break;
 
         case MAIN_CONTROL_STATE_SCAN_ID:
+            // 本地模拟时先直接给当前目标格子一个编号，后面再替换成摄像头结果。
+            main_control_scan_id_local(ctx, map);
+            main_control_shift_task(ctx);
             break;
 
         case MAIN_CONTROL_STATE_RUN_PATH:

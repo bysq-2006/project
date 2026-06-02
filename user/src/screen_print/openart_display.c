@@ -35,6 +35,7 @@
 #define MAP_WALL_COLOR              RGB565(240, 240, 240)
 #define MAP_GOAL_COLOR              RGB565(180, 60, 255)
 #define MAP_BOX_COLOR               RGB565(240, 180, 0)
+#define MAP_ID_TEXT_COLOR           RGB565(0, 0, 0)
 #define MAP_UNKNOWN_COLOR           RGB565(96, 96, 192)
 #define MAP_CAR_COLOR               RGB565(255, 64, 64)
 #define MAP_CAR_HEAD_COLOR          RGB565(0, 255, 255)
@@ -67,7 +68,6 @@ static uint8 control_follow_valid;
 static int8 control_follow_x;
 static int8 control_follow_y;
 
-
 static int16 abs16(int16 value)
 {
     return (value < 0) ? (int16)-value : value;
@@ -77,9 +77,32 @@ static int16 abs16(int16 value)
 static void canvas_draw_line(uint16 *canvas, uint16 width, uint16 height,
                              int16 x0, int16 y0, int16 x1, int16 y1, uint16 color);
 
+static uint8 map_cell_id(uint8 cell)
+{
+    if((OPENART_CELL_GOAL_ID_BASE <= cell) && (cell <= OPENART_CELL_GOAL_ID_MAX))
+    {
+        return (uint8)(cell - OPENART_CELL_GOAL_ID_BASE);
+    }
+    if((OPENART_CELL_BOX_ID_BASE <= cell) && (cell <= OPENART_CELL_BOX_ID_MAX))
+    {
+        return (uint8)(cell - OPENART_CELL_BOX_ID_BASE);
+    }
+
+    return 0xFF;
+}
+
 
 static uint16 map_cell_color(uint8 cell)
 {
+    if((OPENART_CELL_GOAL_ID_BASE <= cell) && (cell <= OPENART_CELL_GOAL_ID_MAX))
+    {
+        return MAP_GOAL_COLOR;
+    }
+    if((OPENART_CELL_BOX_ID_BASE <= cell) && (cell <= OPENART_CELL_BOX_ID_MAX))
+    {
+        return MAP_BOX_COLOR;
+    }
+
     switch(cell)
     {
         case OPENART_CELL_BACKGROUND:
@@ -191,6 +214,60 @@ static void canvas_draw_rect(uint16 *canvas, uint16 width, uint16 height,
     {
         canvas_set_pixel(canvas, width, height, x, i, color);
         canvas_set_pixel(canvas, width, height, right, i, color);
+    }
+}
+
+static void canvas_draw_digit(uint16 *canvas, uint16 width, uint16 height,
+                              uint8 digit, int16 x, int16 y, uint16 color)
+{
+    static const uint8 segment_map[10] =
+    {
+        0x3F, 0x06, 0x5B, 0x4F, 0x66,
+        0x6D, 0x7D, 0x07, 0x7F, 0x6F
+    };
+    uint8 mask;
+    uint16 seg_w;
+    uint16 seg_h;
+    uint16 thick;
+
+    if(digit >= 10)
+    {
+        return;
+    }
+
+    mask = segment_map[digit];
+    seg_w = 8;
+    seg_h = 11;
+    thick = 2;
+
+    // 七段数字：0x01 上，0x02 右上，0x04 右下，0x08 下，0x10 左下，0x20 左上，0x40 中。
+    if(mask & 0x01)
+    {
+        canvas_fill_rect(canvas, width, height, x + 1, y, seg_w - 2, thick, color);
+    }
+    if(mask & 0x02)
+    {
+        canvas_fill_rect(canvas, width, height, x + (int16)seg_w - 2, y + 1, thick, 4, color);
+    }
+    if(mask & 0x04)
+    {
+        canvas_fill_rect(canvas, width, height, x + (int16)seg_w - 2, y + 6, thick, 4, color);
+    }
+    if(mask & 0x08)
+    {
+        canvas_fill_rect(canvas, width, height, x + 1, y + (int16)seg_h - 2, seg_w - 2, thick, color);
+    }
+    if(mask & 0x10)
+    {
+        canvas_fill_rect(canvas, width, height, x, y + 6, thick, 4, color);
+    }
+    if(mask & 0x20)
+    {
+        canvas_fill_rect(canvas, width, height, x, y + 1, thick, 4, color);
+    }
+    if(mask & 0x40)
+    {
+        canvas_fill_rect(canvas, width, height, x + 1, y + 5, seg_w - 2, thick, color);
     }
 }
 
@@ -420,6 +497,7 @@ static void render_map_canvas(const openart_pose_t *pose, const openart_map_t *m
     uint8 row;
     uint8 col;
     uint8 cell;
+    uint8 id;
     uint8 cols;
     uint8 rows;
     uint8 has_car;
@@ -468,6 +546,14 @@ static void render_map_canvas(const openart_pose_t *pose, const openart_map_t *m
                              MAP_CELL_W - 2, MAP_CELL_H - 2, map_cell_color(cell));
             canvas_draw_rect(map_canvas, MAP_CANVAS_W, MAP_CANVAS_H,
                              (int16)x, (int16)y, MAP_CELL_W, MAP_CELL_H, MAP_GRID_COLOR);
+            id = map_cell_id(cell);
+            if(id < 10)
+            {
+                canvas_draw_digit(map_canvas, MAP_CANVAS_W, MAP_CANVAS_H, id,
+                                  (int16)x + (int16)((MAP_CELL_W - 8) / 2),
+                                  (int16)y + (int16)((MAP_CELL_H - 11) / 2),
+                                  MAP_ID_TEXT_COLOR);
+            }
         }
     }
 
