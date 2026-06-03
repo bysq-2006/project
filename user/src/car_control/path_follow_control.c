@@ -5,6 +5,9 @@
 #include "path_follow_control.h"
 #include <math.h>
 
+#define PATH_FOLLOW_SLOW_PERCENT           (80)
+#define PATH_FOLLOW_MIN_SPEED              (4)
+
 static int16 path_follow_abs_int16(int16 value)
 {
     return (value >= 0) ? value : -value;
@@ -15,6 +18,11 @@ static int8 path_follow_abs_int8(int8 value)
     return (value >= 0) ? value : -value;
 }
 
+static int16 path_follow_max_int16(int16 a, int16 b)
+{
+    return (a > b) ? a : b;
+}
+
 static int8 path_follow_apply_sign(int16 diff, int8 value)
 {
     if(diff < 0)
@@ -23,6 +31,35 @@ static int8 path_follow_apply_sign(int16 diff, int8 value)
     }
 
     return value;
+}
+
+static int8 path_follow_scale_speed(int8 max_speed, int16 distance, int16 slow_distance)
+{
+    int32 value;
+    int8 min_speed;
+
+    if(max_speed <= 0)
+    {
+        return 0;
+    }
+    if((slow_distance <= 0) || (distance >= slow_distance))
+    {
+        return max_speed;
+    }
+
+    value = ((int32)max_speed * distance + slow_distance - 1) / slow_distance;
+    min_speed = (PATH_FOLLOW_MIN_SPEED < max_speed) ? PATH_FOLLOW_MIN_SPEED : max_speed;
+
+    if(value < min_speed)
+    {
+        value = min_speed;
+    }
+    if(value > max_speed)
+    {
+        value = max_speed;
+    }
+
+    return (int8)value;
 }
 
 static void path_follow_map_diff_to_car_diff(int16 map_dx,
@@ -120,10 +157,12 @@ static void path_follow_calc_speed(int16 dx,
                                    int16 dy,
                                    int8 x_speed,
                                    int8 y_speed,
+                                   int16 slow_distance,
                                    path_follow_output_t *output)
 {
     int16 abs_dx;
     int16 abs_dy;
+    int16 distance;
     int8 max_x;
     int8 max_y;
     int32 x_value;
@@ -136,6 +175,9 @@ static void path_follow_calc_speed(int16 dx,
     abs_dy = path_follow_abs_int16(dy);
     max_x = path_follow_abs_int8(x_speed);
     max_y = path_follow_abs_int8(y_speed);
+    distance = path_follow_max_int16(abs_dx, abs_dy);
+    max_x = path_follow_scale_speed(max_x, distance, slow_distance);
+    max_y = path_follow_scale_speed(max_y, distance, slow_distance);
 
     if((0 == abs_dx) && (0 == abs_dy))
     {
@@ -207,6 +249,7 @@ path_follow_output_t path_follow_update(const openart_pose_t *pose,
     int16 dy;
     int16 car_dx;
     int16 car_dy;
+    int16 slow_distance_x10;
 
     if((0 == pose) || (0 == map) || (0 == path) || (0 == path_count) ||
        (!pose->valid) || (!map->valid))
@@ -255,7 +298,9 @@ path_follow_output_t path_follow_update(const openart_pose_t *pose,
     dx = (int16)(target_x10 - pose->x10);
     dy = (int16)(target_y10 - pose->y10);
     path_follow_map_diff_to_car_diff(dx, dy, pose->angle10, &car_dx, &car_dy);
-    path_follow_calc_speed(car_dx, car_dy, x_speed, y_speed, &output);
+    slow_distance_x10 = path_follow_max_int16((int16)((int32)map->width10 * PATH_FOLLOW_SLOW_PERCENT / ((int32)map->cols * 100)),
+                                              (int16)((int32)map->height10 * PATH_FOLLOW_SLOW_PERCENT / ((int32)map->rows * 100)));
+    path_follow_calc_speed(car_dx, car_dy, x_speed, y_speed, slow_distance_x10, &output);
 
     return output;
 }
