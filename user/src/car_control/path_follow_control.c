@@ -3,15 +3,24 @@
 *********************************************************************************************************************/
 
 #include "path_follow_control.h"
-#include <math.h>
 
-#define PATH_FOLLOW_PID_X_P                 (0.10f)
+#define PATH_FOLLOW_PID_X_P                 (0.16f)
 #define PATH_FOLLOW_PID_X_I                 (0.0010f)
-#define PATH_FOLLOW_PID_X_D                 (0.0f)
-#define PATH_FOLLOW_PID_Y_P                 (0.08f)
+#define PATH_FOLLOW_PID_X_D                 (0.1f)
+#define PATH_FOLLOW_PID_Y_P                 (0.09f)
 #define PATH_FOLLOW_PID_Y_I                 (0.0010f)
-#define PATH_FOLLOW_PID_Y_D                 (0.0f)
+#define PATH_FOLLOW_PID_Y_D                 (0.1f)
 #define PATH_FOLLOW_PID_I_LIMIT             (1000.0f)
+
+/*
+ * 脉冲式运动参数：
+ * path_follow_update 每调用一次，计数 +1。
+ * 例如主循环 20ms 调一次：MOVE_CALLS=4 约等于动 80ms，STOP_CALLS=6 约等于停 120ms。
+ * 跑过头就减小 MOVE_CALLS 或增大 STOP_CALLS。
+ * 不动/走太慢就增大 MOVE_CALLS 或减小 STOP_CALLS。
+ */
+#define PATH_FOLLOW_PULSE_MOVE_CALLS        (2)
+#define PATH_FOLLOW_PULSE_STOP_CALLS        (1)
 
 typedef struct
 {
@@ -24,6 +33,12 @@ static path_follow_pid_axis_t path_follow_pid_y = {0.0f, 0.0f};
 static uint8 path_follow_pid_has_target = 0;
 static int16 path_follow_pid_target_x10 = 0;
 static int16 path_follow_pid_target_y10 = 0;
+
+static uint8 path_follow_pulse_has_target = 0;
+static int16 path_follow_pulse_target_x10 = 0;
+static int16 path_follow_pulse_target_y10 = 0;
+static uint8 path_follow_pulse_is_moving = 1;
+static uint16 path_follow_pulse_counter = 0;
 
 static int16 path_follow_abs_int16(int16 value)
 {
@@ -50,22 +65,107 @@ static float path_follow_limit_float(float value, float min_value, float max_val
     return value;
 }
 
+static void path_follow_reset_pulse(void)
+{
+    path_follow_pulse_has_target = 0;
+    path_follow_pulse_target_x10 = 0;
+    path_follow_pulse_target_y10 = 0;
+    path_follow_pulse_is_moving = 1;
+    path_follow_pulse_counter = 0;
+}
+
+static void path_follow_prepare_pulse(int16 target_x10, int16 target_y10)
+{
+    if((!path_follow_pulse_has_target) ||
+       (path_follow_pulse_target_x10 != target_x10) ||
+       (path_follow_pulse_target_y10 != target_y10))
+    {
+        path_follow_pulse_has_target = 1;
+        path_follow_pulse_target_x10 = target_x10;
+        path_follow_pulse_target_y10 = target_y10;
+        path_follow_pulse_is_moving = 1;
+        path_follow_pulse_counter = 0;
+    }
+}
+
+static uint8 path_follow_pulse_allow_move(void)
+{
+    if(PATH_FOLLOW_PULSE_MOVE_CALLS <= 0)
+    {
+        return 0;
+    }
+
+    if(PATH_FOLLOW_PULSE_STOP_CALLS <= 0)
+    {
+        return 1;
+    }
+
+    if(path_follow_pulse_is_moving)
+    {
+        path_follow_pulse_counter++;
+        if(path_follow_pulse_counter >= PATH_FOLLOW_PULSE_MOVE_CALLS)
+        {
+            path_follow_pulse_is_moving = 0;
+            path_follow_pulse_counter = 0;
+        }
+        return 1;
+    }
+
+    path_follow_pulse_counter++;
+    if(path_follow_pulse_counter >= PATH_FOLLOW_PULSE_STOP_CALLS)
+    {
+        path_follow_pulse_is_moving = 1;
+        path_follow_pulse_counter = 0;
+    }
+
+    return 0;
+}
+
 static void path_follow_map_diff_to_car_diff(int16 map_dx,
                                              int16 map_dy,
                                              uint16 angle10,
                                              int16 *car_dx,
                                              int16 *car_dy)
 {
-    float angle_rad;
-    float sin_angle;
-    float cos_angle;
+    uint16 angle_norm;
+    uint8 direction;
 
-    angle_rad = (float)angle10 * PATH_FOLLOW_ANGLE10_TO_RAD;
-    sin_angle = sinf(angle_rad);
-    cos_angle = cosf(angle_rad);
+    /*
+     * 这里不再使用连续角度 sin/cos。
+     * 先把车头角度强制吸附到最近的四个方向：
+     *   0:   0 度附近
+     *   1:  90 度附近
+     *   2: 180 度附近
+     *   3: 270 度附近
+     *
+     * angle10 单位是 0.1 度，所以 90 度 = 900。
+     * +450 表示四舍五入到最近的 90 度，而不是直接向下取整。
+     */
+    angle_norm = angle10 % 3600;
+    direction = (uint8)(((angle_norm + 450) / 900) % 4);
 
-    *car_dx = (int16)((float)map_dx * sin_angle + (float)map_dy * cos_angle);
-    *car_dy = (int16)((float)map_dx * cos_angle - (float)map_dy * sin_angle);
+    switch(direction)
+    {
+        case 0:
+            *car_dx = map_dy;
+            *car_dy = map_dx;
+            break;
+
+        case 1:
+            *car_dx = map_dx;
+            *car_dy = (int16)(-map_dy);
+            break;
+
+        case 2:
+            *car_dx = (int16)(-map_dy);
+            *car_dy = (int16)(-map_dx);
+            break;
+
+        default:
+            *car_dx = (int16)(-map_dx);
+            *car_dy = map_dy;
+            break;
+    }
 }
 
 static void path_follow_shift_path(main_control_map_pos_t *path, uint16 *path_count)
@@ -243,6 +343,7 @@ path_follow_output_t path_follow_update(const openart_pose_t *pose,
     {
         path_follow_pid_has_target = 0;
         path_follow_reset_pid(0.0f, 0.0f);
+        path_follow_reset_pulse();
         return output;
     }
 
@@ -250,6 +351,7 @@ path_follow_output_t path_follow_update(const openart_pose_t *pose,
     {
         path_follow_pid_has_target = 0;
         path_follow_reset_pid(0.0f, 0.0f);
+        path_follow_reset_pulse();
         output.valid = 1;
         output.finished = 1;
         return output;
@@ -277,6 +379,7 @@ path_follow_output_t path_follow_update(const openart_pose_t *pose,
     {
         path_follow_pid_has_target = 0;
         path_follow_reset_pid(0.0f, 0.0f);
+        path_follow_reset_pulse();
         output.valid = 1;
         output.finished = 1;
         return output;
@@ -291,7 +394,19 @@ path_follow_output_t path_follow_update(const openart_pose_t *pose,
     dx = (int16)(target_x10 - pose->x10);
     dy = (int16)(target_y10 - pose->y10);
     path_follow_map_diff_to_car_diff(dx, dy, pose->angle10, &car_dx, &car_dy);
-    path_follow_calc_speed(car_dx, car_dy, x_speed, y_speed, &output);
+
+    path_follow_prepare_pulse(output.target_x10, output.target_y10);
+    if(path_follow_pulse_allow_move())
+    {
+        path_follow_calc_speed(car_dx, car_dy, x_speed, y_speed, &output);
+    }
+    else
+    {
+        /* 停顿阶段：不给电机输出，让车体惯性消掉，同时等待视觉位置刷新。 */
+        output.x = 0;
+        output.y = 0;
+        path_follow_reset_pid((float)car_dx, (float)car_dy);
+    }
 
     return output;
 }

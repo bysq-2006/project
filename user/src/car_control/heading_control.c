@@ -17,7 +17,7 @@
 // W_LIMIT：最终旋转输出最大值，限制给底盘的最大转向力度。
 #define HEADING_CONTROL_W_LIMIT             (100.0f)
 // W_MIN：最终旋转输出最小值，用来克服电机小占空比不动的问题，0 表示关闭。
-#define HEADING_CONTROL_W_MIN               (8.0f)
+#define HEADING_CONTROL_W_MIN               (0.0f)
 // OUTPUT_GAIN：PID 总输出倍率，整体放大或缩小修正力度。
 #define HEADING_CONTROL_OUTPUT_GAIN         (1.0f)
 // OUTPUT_DIR：PID 输出方向
