@@ -10,7 +10,7 @@
 
 #define MAIN_CAR_X_SPEED            (12)
 #define MAIN_CAR_Y_SPEED            (6)
-#define MAIN_CAR_ARRIVE_PERCENT     (40)
+#define MAIN_CAR_ARRIVE_PERCENT     (30)
 #define MAIN_CONTROL_UPDATE_MS      (20)
 
 static void main_drive_path(main_control_context_t *ctx,
