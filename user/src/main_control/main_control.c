@@ -139,8 +139,7 @@ void main_control_init(main_control_context_t *ctx,
     {
         ctx->state[i] = MAIN_CONTROL_TASK_EMPTY;
     }
-    ctx->state[0] = MAIN_CONTROL_STATE_WAIT;
-    ctx->state[1] = MAIN_CONTROL_STATE_FIND_IDS;
+    ctx->state[0] = MAIN_CONTROL_STATE_PLAN;
     ctx->box_count = 0;
     ctx->goal_count = 0;
     ctx->plan_count = 0;

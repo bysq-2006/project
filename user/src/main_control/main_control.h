@@ -20,12 +20,12 @@ typedef enum
     MAIN_CONTROL_STATE_WAIT = 0,
     // 寻找每个箱子和目标点的编号。
     MAIN_CONTROL_STATE_FIND_IDS,
-    // 正在规划接下来要走的路径。
-    MAIN_CONTROL_STATE_PLAN,
     // 正在转向到目标角度。
     MAIN_CONTROL_STATE_TURN,
     // 请求摄像头识别编号。
     MAIN_CONTROL_STATE_SCAN_ID,
+    // 正在根据当前box和target生成执行方案。
+    MAIN_CONTROL_STATE_PLAN,
     // 正在执行当前决策生成的路径。
     MAIN_CONTROL_STATE_RUN_PATH,
     // 所有任务完成。
