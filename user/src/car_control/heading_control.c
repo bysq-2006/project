@@ -6,10 +6,10 @@
 #include "car_control.h"
 #include "../gyro_z_angle/gyro_z_angle.h"
 
-#define HEADING_CONTROL_P                   (2.26f)
-#define HEADING_CONTROL_I                   (0.0226f)
-#define HEADING_CONTROL_D                   (11.3f)
-#define HEADING_CONTROL_I_LIMIT             (221.0f)
+#define HEADING_CONTROL_P                   (2.80f)
+#define HEADING_CONTROL_I                   (0.0280f)
+#define HEADING_CONTROL_D                   (14.0f)
+#define HEADING_CONTROL_I_LIMIT             (178.6f)
 #define HEADING_CONTROL_W_LIMIT             (100.0f)
 #define HEADING_CONTROL_OUTPUT_GAIN         (1.0f)
 #define HEADING_CONTROL_OUTPUT_DIR          (1.0f)
