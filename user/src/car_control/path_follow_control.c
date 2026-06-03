@@ -1,9 +1,29 @@
-/*********************************************************************************************************************
+﻿/*********************************************************************************************************************
 * path_follow_control.c
 *********************************************************************************************************************/
 
 #include "path_follow_control.h"
 #include <math.h>
+
+#define PATH_FOLLOW_PID_X_P                 (0.10f)
+#define PATH_FOLLOW_PID_X_I                 (0.0010f)
+#define PATH_FOLLOW_PID_X_D                 (0.0f)
+#define PATH_FOLLOW_PID_Y_P                 (0.08f)
+#define PATH_FOLLOW_PID_Y_I                 (0.0010f)
+#define PATH_FOLLOW_PID_Y_D                 (0.0f)
+#define PATH_FOLLOW_PID_I_LIMIT             (1000.0f)
+
+typedef struct
+{
+    float error_sum;
+    float last_error;
+} path_follow_pid_axis_t;
+
+static path_follow_pid_axis_t path_follow_pid_x = {0.0f, 0.0f};
+static path_follow_pid_axis_t path_follow_pid_y = {0.0f, 0.0f};
+static uint8 path_follow_pid_has_target = 0;
+static int16 path_follow_pid_target_x10 = 0;
+static int16 path_follow_pid_target_y10 = 0;
 
 static int16 path_follow_abs_int16(int16 value)
 {
@@ -15,11 +35,16 @@ static int8 path_follow_abs_int8(int8 value)
     return (value >= 0) ? value : -value;
 }
 
-static int8 path_follow_apply_sign(int16 diff, int8 value)
+static float path_follow_limit_float(float value, float min_value, float max_value)
 {
-    if(diff < 0)
+    if(value > max_value)
     {
-        return (int8)-value;
+        return max_value;
+    }
+
+    if(value < min_value)
+    {
+        return min_value;
     }
 
     return value;
@@ -116,80 +141,85 @@ static uint8 path_follow_is_arrived(const openart_pose_t *pose,
             (path_follow_abs_int16(dy) <= threshold_y10));
 }
 
+
+static void path_follow_reset_pid(float x_error, float y_error)
+{
+    path_follow_pid_x.error_sum = 0.0f;
+    path_follow_pid_x.last_error = x_error;
+    path_follow_pid_y.error_sum = 0.0f;
+    path_follow_pid_y.last_error = y_error;
+}
+
+static void path_follow_prepare_pid(int16 target_x10,
+                                    int16 target_y10,
+                                    float x_error,
+                                    float y_error)
+{
+    if((!path_follow_pid_has_target) ||
+       (path_follow_pid_target_x10 != target_x10) ||
+       (path_follow_pid_target_y10 != target_y10))
+    {
+        path_follow_reset_pid(x_error, y_error);
+        path_follow_pid_has_target = 1;
+        path_follow_pid_target_x10 = target_x10;
+        path_follow_pid_target_y10 = target_y10;
+    }
+}
+
+static int8 path_follow_pid_calc_axis(path_follow_pid_axis_t *pid,
+                                      float error,
+                                      float p,
+                                      float i,
+                                      float d,
+                                      int8 speed_limit)
+{
+    float output;
+    float limit;
+
+    limit = (float)path_follow_abs_int8(speed_limit);
+    if(limit <= 0.0f)
+    {
+        pid->last_error = error;
+        return 0;
+    }
+
+    pid->error_sum += error;
+    pid->error_sum = path_follow_limit_float(pid->error_sum,
+                                             -PATH_FOLLOW_PID_I_LIMIT,
+                                             PATH_FOLLOW_PID_I_LIMIT);
+
+    output = error * p
+           + pid->error_sum * i
+           + (error - pid->last_error) * d;
+    pid->last_error = error;
+    output = path_follow_limit_float(output, -limit, limit);
+
+    return (int8)output;
+}
+
 static void path_follow_calc_speed(int16 dx,
                                    int16 dy,
                                    int8 x_speed,
                                    int8 y_speed,
                                    path_follow_output_t *output)
 {
-    int16 abs_dx;
-    int16 abs_dy;
-    int8 max_x;
-    int8 max_y;
-    int32 x_value;
-    int32 y_value;
+    path_follow_prepare_pid(output->target_x10,
+                            output->target_y10,
+                            (float)dx,
+                            (float)dy);
 
-    output->x = 0;
-    output->y = 0;
-
-    abs_dx = path_follow_abs_int16(dx);
-    abs_dy = path_follow_abs_int16(dy);
-    max_x = path_follow_abs_int8(x_speed);
-    max_y = path_follow_abs_int8(y_speed);
-
-    if((0 == abs_dx) && (0 == abs_dy))
-    {
-        return;
-    }
-    if((0 == max_x) && (0 == max_y))
-    {
-        return;
-    }
-
-    if(0 == abs_dx)
-    {
-        output->y = path_follow_apply_sign(dy, max_y);
-        return;
-    }
-    if(0 == abs_dy)
-    {
-        output->x = path_follow_apply_sign(dx, max_x);
-        return;
-    }
-    if(0 == max_x)
-    {
-        output->y = path_follow_apply_sign(dy, max_y);
-        return;
-    }
-    if(0 == max_y)
-    {
-        output->x = path_follow_apply_sign(dx, max_x);
-        return;
-    }
-
-    if(((int32)abs_dx * max_y) > ((int32)abs_dy * max_x))
-    {
-        // x 方向差距更大时，让 x 轴跑满给定速度，y 轴按直线方向比例缩小。
-        x_value = max_x;
-        y_value = ((int32)abs_dy * max_x) / abs_dx;
-        if(0 == y_value)
-        {
-            y_value = 1;
-        }
-    }
-    else
-    {
-        // y 方向差距更大时，让 y 轴跑满给定速度，x 轴按直线方向比例缩小。
-        y_value = max_y;
-        x_value = ((int32)abs_dx * max_y) / abs_dy;
-        if(0 == x_value)
-        {
-            x_value = 1;
-        }
-    }
-
-    output->x = path_follow_apply_sign(dx, (int8)x_value);
-    output->y = path_follow_apply_sign(dy, (int8)y_value);
+    output->x = path_follow_pid_calc_axis(&path_follow_pid_x,
+                                          (float)dx,
+                                          PATH_FOLLOW_PID_X_P,
+                                          PATH_FOLLOW_PID_X_I,
+                                          PATH_FOLLOW_PID_X_D,
+                                          x_speed);
+    output->y = path_follow_pid_calc_axis(&path_follow_pid_y,
+                                          (float)dy,
+                                          PATH_FOLLOW_PID_Y_P,
+                                          PATH_FOLLOW_PID_Y_I,
+                                          PATH_FOLLOW_PID_Y_D,
+                                          y_speed);
 }
 
 path_follow_output_t path_follow_update(const openart_pose_t *pose,
@@ -211,11 +241,15 @@ path_follow_output_t path_follow_update(const openart_pose_t *pose,
     if((0 == pose) || (0 == map) || (0 == path) || (0 == path_count) ||
        (!pose->valid) || (!map->valid))
     {
+        path_follow_pid_has_target = 0;
+        path_follow_reset_pid(0.0f, 0.0f);
         return output;
     }
 
     if(0 == *path_count)
     {
+        path_follow_pid_has_target = 0;
+        path_follow_reset_pid(0.0f, 0.0f);
         output.valid = 1;
         output.finished = 1;
         return output;
@@ -241,6 +275,8 @@ path_follow_output_t path_follow_update(const openart_pose_t *pose,
     // 如果刚刚移除的是最后一个路径点，说明整条路径已经走完。
     if(0 == *path_count)
     {
+        path_follow_pid_has_target = 0;
+        path_follow_reset_pid(0.0f, 0.0f);
         output.valid = 1;
         output.finished = 1;
         return output;
