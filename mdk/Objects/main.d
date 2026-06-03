@@ -116,7 +116,6 @@
   ..\user\src\gyro_z_angle\gyro_z_angle.h \
   ..\user\src\main_control\main_control.h \
   ..\user\src\main_control\map_planner.h \
-  ..\user\src\main_control\main_control_sync.h \
   ..\user\src\openart_uart\openart_uart.h \
   ..\user\src\screen_print\openart_display.h \
   ..\user\src\screen_print\..\openart_uart\openart_uart.h
