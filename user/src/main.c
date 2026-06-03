@@ -106,7 +106,6 @@
 // ===================================================
 // ????????????????
 // ===================================================
-#ifdef OPENART_YELLOW_TEST
 
 #include "zf_common_headfile.h"
 #include "car_control/car_control.h"
@@ -156,5 +155,3 @@ int main(void)
         system_delay_ms(MAIN_TEST_DELAY_MS);
     }
 }
-
-#endif // OPENART_YELLOW_TEST
