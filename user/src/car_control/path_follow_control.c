@@ -5,8 +5,9 @@
 #include "path_follow_control.h"
 #include <math.h>
 
-#define PATH_FOLLOW_SLOW_PERCENT           (80)
-#define PATH_FOLLOW_MIN_SPEED              (4)
+#define PATH_FOLLOW_SLOW_PERCENT           (40)
+#define PATH_FOLLOW_MIN_SPEED              (8)
+#define PATH_FOLLOW_SIDE_GAIN_PERCENT      (40)
 
 static int16 path_follow_abs_int16(int16 value)
 {
@@ -60,6 +61,17 @@ static int8 path_follow_scale_speed(int8 max_speed, int16 distance, int16 slow_d
     }
 
     return (int8)value;
+}
+
+static int32 path_follow_scale_side_value(int32 value)
+{
+    value = value * PATH_FOLLOW_SIDE_GAIN_PERCENT / 100;
+    if(value < 0)
+    {
+        value = 0;
+    }
+
+    return value;
 }
 
 static void path_follow_map_diff_to_car_diff(int16 map_dx,
@@ -214,20 +226,14 @@ static void path_follow_calc_speed(int16 dx,
         // x 方向差距更大时，让 x 轴跑满给定速度，y 轴按直线方向比例缩小。
         x_value = max_x;
         y_value = ((int32)abs_dy * max_x) / abs_dx;
-        if(0 == y_value)
-        {
-            y_value = 1;
-        }
+        y_value = path_follow_scale_side_value(y_value);
     }
     else
     {
         // y 方向差距更大时，让 y 轴跑满给定速度，x 轴按直线方向比例缩小。
         y_value = max_y;
         x_value = ((int32)abs_dx * max_y) / abs_dy;
-        if(0 == x_value)
-        {
-            x_value = 1;
-        }
+        x_value = path_follow_scale_side_value(x_value);
     }
 
     output->x = path_follow_apply_sign(dx, (int8)x_value);

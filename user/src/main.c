@@ -9,7 +9,7 @@
 #include "screen_print/openart_display.h"
 
 #define MAIN_CAR_X_SPEED            (12)
-#define MAIN_CAR_Y_SPEED            (12)
+#define MAIN_CAR_Y_SPEED            (6)
 #define MAIN_CAR_ARRIVE_PERCENT     (40)
 #define MAIN_CONTROL_UPDATE_MS      (20)
 
