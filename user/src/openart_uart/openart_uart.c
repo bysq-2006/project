@@ -11,7 +11,10 @@
 #define OPENART_PACKET_REQUEST_0    ('R')
 #define OPENART_PACKET_REQUEST_1    ('Q')
 #define OPENART_REQUEST_MAP         ('M')
-#define OPENART_POSE_PAYLOAD_LEN    (8)
+#define OPENART_POSE_BASE_PAYLOAD_LEN   (8)
+#define OPENART_POSE_BOX_COUNT_LEN      (1)
+#define OPENART_POSE_BOX_PAYLOAD_LEN    (5)
+#define OPENART_POSE_PAYLOAD_LEN        (OPENART_POSE_BASE_PAYLOAD_LEN + OPENART_POSE_BOX_COUNT_LEN + (OPENART_BOX_COUNT_MAX * OPENART_POSE_BOX_PAYLOAD_LEN))
 #define OPENART_MAP_HEADER_LEN      (8)
 #define OPENART_RX_BUFFER_SIZE      (512)
 #define OPENART_RX_BUFFER_MASK      (OPENART_RX_BUFFER_SIZE - 1)
@@ -37,6 +40,74 @@ static uint16 openart_get_u16(const uint8 *data)
 static int16 openart_get_i16(const uint8 *data)
 {
     return (int16)openart_get_u16(data);
+}
+
+
+static uint16 openart_map_index(const openart_map_t *map, uint8 x, uint8 y)
+{
+    return (uint16)y * map->cols + x;
+}
+
+
+static void openart_sync_pose_boxes_to_map(const openart_pose_t *pose, openart_map_t *map)
+{
+    uint16 cell_count;
+    uint16 index;
+    int32 col;
+    int32 row;
+    uint8 i;
+    uint8 box_count;
+
+    if((0 == pose) || (0 == map) || (!map->valid) ||
+       (0 == map->cols) || (0 == map->rows) || (0 == map->width10) || (0 == map->height10))
+    {
+        return;
+    }
+
+    cell_count = (uint16)map->cols * map->rows;
+    if(cell_count > OPENART_MAP_CELL_MAX)
+    {
+        cell_count = OPENART_MAP_CELL_MAX;
+    }
+
+    for(index = 0; index < cell_count; index++)
+    {
+        if(OPENART_CELL_YELLOW_BOX == map->cells[index])
+        {
+            map->cells[index] = OPENART_CELL_BACKGROUND;
+        }
+    }
+
+    box_count = pose->box_count;
+    if(box_count > OPENART_BOX_COUNT_MAX)
+    {
+        box_count = OPENART_BOX_COUNT_MAX;
+    }
+
+    for(i = 0; i < box_count; i++)
+    {
+        if((!pose->boxes[i].valid) || (pose->boxes[i].x10 < 0) || (pose->boxes[i].y10 < 0) ||
+           ((int32)pose->boxes[i].x10 >= (int32)map->width10) ||
+           ((int32)pose->boxes[i].y10 >= (int32)map->height10))
+        {
+            continue;
+        }
+
+        col = ((int32)pose->boxes[i].x10 * map->cols) / map->width10;
+        row = ((int32)pose->boxes[i].y10 * map->rows) / map->height10;
+        if((col < 0) || (row < 0) || (col >= map->cols) || (row >= map->rows))
+        {
+            continue;
+        }
+
+        index = openart_map_index(map, (uint8)col, (uint8)row);
+        if(OPENART_CELL_BACKGROUND == map->cells[index])
+        {
+            map->cells[index] = OPENART_CELL_YELLOW_BOX;
+        }
+    }
+
+    map->updated = 1;
 }
 
 
@@ -240,7 +311,11 @@ void openart_uart_interrupt_handler(void)
 
 static uint8 openart_parse_pose_packet(openart_pose_t *pose)
 {
-    if(OPENART_POSE_PAYLOAD_LEN != packet_len)
+    uint8 i;
+    uint16 offset;
+
+    if((OPENART_POSE_BASE_PAYLOAD_LEN != packet_len) &&
+       (OPENART_POSE_PAYLOAD_LEN != packet_len))
     {
         return 0;
     }
@@ -250,6 +325,34 @@ static uint8 openart_parse_pose_packet(openart_pose_t *pose)
     pose->x10 = openart_get_i16(&packet_payload[2]);
     pose->y10 = openart_get_i16(&packet_payload[4]);
     pose->angle10 = openart_get_u16(&packet_payload[6]);
+    pose->box_count = 0;
+    for(i = 0; i < OPENART_BOX_COUNT_MAX; i++)
+    {
+        pose->boxes[i].valid = 0;
+        pose->boxes[i].x10 = 0;
+        pose->boxes[i].y10 = 0;
+    }
+
+    if(OPENART_POSE_PAYLOAD_LEN == packet_len)
+    {
+        offset = OPENART_POSE_BASE_PAYLOAD_LEN;
+        pose->box_count = packet_payload[offset++];
+        if(pose->box_count > OPENART_BOX_COUNT_MAX)
+        {
+            pose->box_count = OPENART_BOX_COUNT_MAX;
+        }
+
+        for(i = 0; i < OPENART_BOX_COUNT_MAX; i++)
+        {
+            if(i < pose->box_count)
+            {
+                pose->boxes[i].valid = packet_payload[offset] & 0x01;
+                pose->boxes[i].x10 = openart_get_i16(&packet_payload[offset + 1]);
+                pose->boxes[i].y10 = openart_get_i16(&packet_payload[offset + 3]);
+            }
+            offset = (uint16)(offset + OPENART_POSE_BOX_PAYLOAD_LEN);
+        }
+    }
     pose->updated = 1;
 
     return 1;
@@ -312,6 +415,7 @@ static void openart_handle_packet(openart_pose_t *pose, openart_map_t *map)
     {
         if(openart_parse_pose_packet(pose))
         {
+            openart_sync_pose_boxes_to_map(pose, map);
             openart_uart_status.pose_packets++;
         }
         else
@@ -324,6 +428,7 @@ static void openart_handle_packet(openart_pose_t *pose, openart_map_t *map)
     {
         if(openart_parse_map_packet(map))
         {
+            openart_sync_pose_boxes_to_map(pose, map);
             openart_uart_status.map_packets++;
         }
         else

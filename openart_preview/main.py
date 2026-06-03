@@ -18,7 +18,8 @@ DRAW_DEBUG = False
 # 每隔多少帧打印一次调试信息和 FPS�?
 PRINT_EVERY_N_FRAMES = 5
 # 每一种目标颜色最多保留多少个色块�?
-MAX_BLOBS_PER_COLOR = 6
+MAX_BLOBS_PER_COLOR = 10
+MAX_YELLOW_BOXES = 10
 # 网格检测配置：只影响地图网格识别和发送出去的地图数据�?
 GRID_DETECT_CONFIG = {
     # 是否识别地图网格�?
@@ -31,7 +32,6 @@ GRID_DETECT_CONFIG = {
     "sample_ms": 1000,
     # 网格分类用的颜色占比规则，格式：（名字，LAB阈值，最小占比）�?
     "color_ratios": (
-        ("yellow_box", ((80, 100, -25, 5, 70, 110),), 0.20),
         ("wall", ((0, 100, -14, 70, -74, 25),), 0.25),
         ("goal", ((50, 72, 66, 104, -72, -27),), 0.25),
         ("background", ((32, 52, 33, 72, -106, -75),), 0.25),
@@ -80,6 +80,7 @@ TARGETS = (
     # �?RGB 采样值换算得到的初始 LAB 阈值�?
     ("cyan_marker", ((63, 98, -71, 2, -58, 26),), (0, 255, 255), 25),
     ("green_marker", ((71, 97, -93, -32, -16, 89),), (0, 255, 0), 25),
+    ("yellow_box", ((69, 100, -46, 8, 51, 110),), (255, 255, 0), 25),
 )
 
 
@@ -151,12 +152,15 @@ while True:
     detect_roi = last_detect_roi
 
     marker_centers = {}
+    yellow_box_positions = []
     # 检测目标色�?
     detections = detect_targets(img, TARGETS, MAX_BLOBS_PER_COLOR, detect_roi)
 
     for name, blob, target_color in detections:
         if name in ("cyan_marker", "green_marker") and name not in marker_centers:
             marker_centers[name] = (blob.cx(), blob.cy())
+        elif name == "yellow_box" and detect_roi is not None and len(yellow_box_positions) < MAX_YELLOW_BOXES:
+            yellow_box_positions.append((blob.cx() - detect_roi[0], blob.cy() - detect_roi[1]))
 
     # 检测小车朝向和位置
     angle = None
@@ -180,7 +184,8 @@ while True:
         if should_print:
             print("car angle:", angle, "deg",
                   "center:", car_center, "map_pos:", car_map_pos,
-                  "cyan_front:", front, "green_back:", back)
+                  "cyan_front:", front, "green_back:", back,
+                  "yellow_boxes:", yellow_box_positions)
 
     should_draw_grid_lines = (GRID_DRAW_CONFIG["draw_lines"] and detect_roi is not None)
     should_draw_grid_symbols = (GRID_DRAW_CONFIG["draw_symbols"] and detect_roi is not None and
@@ -217,7 +222,7 @@ while True:
 
     if should_print:
         print("fps:", clock.fps())
-    send_detected_car(car_map_pos, angle)
+    send_detected_car(car_map_pos, angle, yellow_box_positions)
 
     if not map_sent:
         send_detected_map(last_grid_map, detect_roi,

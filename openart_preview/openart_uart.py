@@ -11,6 +11,7 @@ PACKET_TYPE_REQUEST = b"RQ"
 REQUEST_MAP = ord("M")
 POSE_SCALE = 10
 MAP_SIZE_SCALE = 10
+BOX_COUNT_MAX = 10
 
 CELL_CODE = {
     "background": 0,
@@ -135,8 +136,11 @@ def is_map_request(packet):
     return packet_type == PACKET_TYPE_REQUEST and len(payload) >= 1 and payload[0] == REQUEST_MAP
 
 
-def build_car_pose_payload(valid, map_x, map_y, angle_deg):
+def build_car_pose_payload(valid, map_x, map_y, angle_deg, box_positions=None):
     global _packet_seq
+
+    if box_positions is None:
+        box_positions = ()
 
     payload = bytearray()
     payload.append(_packet_seq & 0xFF)
@@ -151,19 +155,34 @@ def build_car_pose_payload(valid, map_x, map_y, angle_deg):
         _put_i16(payload, 0)
         _put_u16(payload, 0)
 
+    box_count = len(box_positions)
+    if box_count > BOX_COUNT_MAX:
+        box_count = BOX_COUNT_MAX
+    payload.append(box_count & 0xFF)
+
+    for index in range(BOX_COUNT_MAX):
+        if index < box_count and box_positions[index] is not None:
+            payload.append(1)
+            _put_i16(payload, _scaled_i16(box_positions[index][0]))
+            _put_i16(payload, _scaled_i16(box_positions[index][1]))
+        else:
+            payload.append(0)
+            _put_i16(payload, 0)
+            _put_i16(payload, 0)
+
     _packet_seq = (_packet_seq + 1) & 0xFF
     return payload
 
 
-def send_car_pose(valid, map_x, map_y, angle_deg):
-    payload = build_car_pose_payload(valid, map_x, map_y, angle_deg)
+def send_car_pose(valid, map_x, map_y, angle_deg, box_positions=None):
+    payload = build_car_pose_payload(valid, map_x, map_y, angle_deg, box_positions)
     return _send_packet(PACKET_TYPE_POSE, payload)
 
 
-def send_detected_car(car_map_pos, angle_deg):
+def send_detected_car(car_map_pos, angle_deg, box_positions=None):
     if car_map_pos is None or angle_deg is None:
-        return send_car_pose(False, 0, 0, 0)
-    return send_car_pose(True, car_map_pos[0], car_map_pos[1], angle_deg)
+        return send_car_pose(False, 0, 0, 0, box_positions)
+    return send_car_pose(True, car_map_pos[0], car_map_pos[1], angle_deg, box_positions)
 
 
 def _grid_size(grid_map, default_cols, default_rows):

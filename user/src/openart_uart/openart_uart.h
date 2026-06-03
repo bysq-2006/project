@@ -18,6 +18,7 @@
 #define OPENART_MAP_ROWS_MAX        (16)
 // 接收缓存中可保存的最大地图格子数量。
 #define OPENART_MAP_CELL_MAX        (OPENART_MAP_COLS_MAX * OPENART_MAP_ROWS_MAX)
+#define OPENART_BOX_COUNT_MAX       (10)
 
 // 地图格子数值：背景或空白区域。
 #define OPENART_CELL_BACKGROUND     (0)
@@ -38,6 +39,13 @@
 
 typedef struct
 {
+    uint8 valid;
+    int16 x10;
+    int16 y10;
+} openart_box_t;
+
+typedef struct
+{
     // 1 表示最新车位姿有效，0 表示 OpenART 没有找到完整车位姿。
     uint8 valid;
     // 1 表示收到了一包新的车位姿数据，用户读取后可清零。
@@ -50,6 +58,8 @@ typedef struct
     int16 y10;
     // 车的角度，单位是角度乘以 10。
     uint16 angle10;
+    uint8 box_count;
+    openart_box_t boxes[OPENART_BOX_COUNT_MAX];
 } openart_pose_t;
 
 typedef struct
