@@ -5,8 +5,8 @@
 #include "gyro_z_angle.h"
 
 #define GYRO_Z_DEAD_ZONE_RAW        (6)
-#define GYRO_Z_OUTPUT_SCALE         (0.002f)
-#define GYRO_Z_INTEGRAL_LIMIT_RAW   (2137500)
+#define GYRO_Z_OUTPUT_SCALE         (0.0000885f)
+#define GYRO_Z_INTEGRAL_LIMIT_RAW   (0)
 
 static int16 gyro_z_raw;
 static int32 gyro_z_integral;

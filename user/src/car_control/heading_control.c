@@ -6,14 +6,18 @@
 #include "car_control.h"
 #include "../gyro_z_angle/gyro_z_angle.h"
 
-#define HEADING_CONTROL_P                   (0.1f)
-#define HEADING_CONTROL_I                   (0.001f)
-#define HEADING_CONTROL_D                   (0.5f)
-#define HEADING_CONTROL_I_LIMIT             (5000.0f)
+#define HEADING_CONTROL_P                   (2.26f)
+#define HEADING_CONTROL_I                   (0.0226f)
+#define HEADING_CONTROL_D                   (11.3f)
+#define HEADING_CONTROL_I_LIMIT             (221.0f)
+#define HEADING_CONTROL_W_LIMIT             (100.0f)
+#define HEADING_CONTROL_OUTPUT_GAIN         (1.0f)
+#define HEADING_CONTROL_OUTPUT_DIR          (1.0f)
 
 // 注意单位不是弧度，也不是角度
 static uint8 heading_sensor_ready = 0;
 static int16 heading_initial_x_raw = 0;
+static float heading_target_angle = 0.0f;
 static float heading_x_raw_error = 0.0f;
 static float heading_last_x_raw_error = 0.0f;
 static float heading_x_raw_error_sum = 0.0f;
@@ -28,14 +32,14 @@ static void heading_sensor_read_raw(void)
 // 限制旋转输出范围
 static int8 heading_limit_w(float w)
 {
-    if(w > 100.0f)
+    if(w > HEADING_CONTROL_W_LIMIT)
     {
-        return 100;
+        return (int8)HEADING_CONTROL_W_LIMIT;
     }
 
-    if(w < -100.0f)
+    if(w < -HEADING_CONTROL_W_LIMIT)
     {
-        return -100;
+        return (int8)-HEADING_CONTROL_W_LIMIT;
     }
 
     return (int8)w;
@@ -79,15 +83,27 @@ void heading_sensor_update(int8 x, int8 y, int8 w)
     if(heading_sensor_ready)
     {
         int8 heading_w;
+        float target_angle;
+        float control_output;
 
         heading_sensor_read_raw();
+        target_angle = (float)w;
+        if(target_angle != heading_target_angle)
+        {
+            heading_target_angle = target_angle;
+            heading_x_raw_error_sum = 0.0f;
+            heading_last_x_raw_error = 0.0f;
+        }
+
         heading_last_x_raw_error = heading_x_raw_error;
-        heading_x_raw_error = gyro_z_angle_get_output();
+        heading_x_raw_error = gyro_z_angle_get_output() - heading_target_angle;
         heading_update_integral();
-        heading_w = heading_limit_w((float)heading_x_raw_error * HEADING_CONTROL_P
+        control_output = ((float)heading_x_raw_error * HEADING_CONTROL_P
             + heading_x_raw_error_sum * HEADING_CONTROL_I
-            + (float)(heading_x_raw_error - heading_last_x_raw_error) * HEADING_CONTROL_D);
-        w = heading_limit_w((float)w + heading_w);
+            + (float)(heading_x_raw_error - heading_last_x_raw_error) * HEADING_CONTROL_D)
+            * HEADING_CONTROL_OUTPUT_GAIN * HEADING_CONTROL_OUTPUT_DIR;
+        heading_w = heading_limit_w(control_output);
+        w = heading_w;
         gyro_z_angle_set_w(w);
         car_move_xyw(x, y, w);
     }
