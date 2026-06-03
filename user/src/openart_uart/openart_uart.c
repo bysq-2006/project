@@ -12,8 +12,11 @@
 #define OPENART_PACKET_REQUEST_1    ('Q')
 #define OPENART_REQUEST_MAP         ('M')
 #define OPENART_POSE_BASE_PAYLOAD_LEN   (8)
+#define OPENART_POSE_BOX_COUNT_LEN      (1)
 #define OPENART_POSE_BOX_PAYLOAD_LEN    (5)
-#define OPENART_POSE_PAYLOAD_LEN        (OPENART_POSE_BASE_PAYLOAD_LEN + (OPENART_BOX_COUNT_MAX * OPENART_POSE_BOX_PAYLOAD_LEN))
+#define OPENART_POSE_LEGACY_BOX_COUNT   (2)
+#define OPENART_POSE_LEGACY_PAYLOAD_LEN (OPENART_POSE_BASE_PAYLOAD_LEN + (OPENART_POSE_LEGACY_BOX_COUNT * OPENART_POSE_BOX_PAYLOAD_LEN))
+#define OPENART_POSE_PAYLOAD_LEN        (OPENART_POSE_BASE_PAYLOAD_LEN + OPENART_POSE_BOX_COUNT_LEN + (OPENART_BOX_COUNT_MAX * OPENART_POSE_BOX_PAYLOAD_LEN))
 #define OPENART_MAP_HEADER_LEN      (8)
 #define OPENART_RX_BUFFER_SIZE      (512)
 #define OPENART_RX_BUFFER_MASK      (OPENART_RX_BUFFER_SIZE - 1)
@@ -246,6 +249,7 @@ static uint8 openart_parse_pose_packet(openart_pose_t *pose)
     uint16 offset;
 
     if((OPENART_POSE_BASE_PAYLOAD_LEN != packet_len) &&
+       (OPENART_POSE_LEGACY_PAYLOAD_LEN != packet_len) &&
        (OPENART_POSE_PAYLOAD_LEN != packet_len))
     {
         return 0;
@@ -256,6 +260,7 @@ static uint8 openart_parse_pose_packet(openart_pose_t *pose)
     pose->x10 = openart_get_i16(&packet_payload[2]);
     pose->y10 = openart_get_i16(&packet_payload[4]);
     pose->angle10 = openart_get_u16(&packet_payload[6]);
+    pose->box_count = 0;
     for(i = 0; i < OPENART_BOX_COUNT_MAX; i++)
     {
         pose->boxes[i].valid = 0;
@@ -263,14 +268,38 @@ static uint8 openart_parse_pose_packet(openart_pose_t *pose)
         pose->boxes[i].y10 = 0;
     }
 
-    if(packet_len >= OPENART_POSE_PAYLOAD_LEN)
+    if(OPENART_POSE_LEGACY_PAYLOAD_LEN == packet_len)
     {
         offset = OPENART_POSE_BASE_PAYLOAD_LEN;
-        for(i = 0; i < OPENART_BOX_COUNT_MAX; i++)
+        for(i = 0; i < OPENART_POSE_LEGACY_BOX_COUNT; i++)
         {
             pose->boxes[i].valid = packet_payload[offset] & 0x01;
             pose->boxes[i].x10 = openart_get_i16(&packet_payload[offset + 1]);
             pose->boxes[i].y10 = openart_get_i16(&packet_payload[offset + 3]);
+            if(pose->boxes[i].valid)
+            {
+                pose->box_count++;
+            }
+            offset = (uint16)(offset + OPENART_POSE_BOX_PAYLOAD_LEN);
+        }
+    }
+    else if(OPENART_POSE_PAYLOAD_LEN == packet_len)
+    {
+        offset = OPENART_POSE_BASE_PAYLOAD_LEN;
+        pose->box_count = packet_payload[offset++];
+        if(pose->box_count > OPENART_BOX_COUNT_MAX)
+        {
+            pose->box_count = OPENART_BOX_COUNT_MAX;
+        }
+
+        for(i = 0; i < OPENART_BOX_COUNT_MAX; i++)
+        {
+            if(i < pose->box_count)
+            {
+                pose->boxes[i].valid = packet_payload[offset] & 0x01;
+                pose->boxes[i].x10 = openart_get_i16(&packet_payload[offset + 1]);
+                pose->boxes[i].y10 = openart_get_i16(&packet_payload[offset + 3]);
+            }
             offset = (uint16)(offset + OPENART_POSE_BOX_PAYLOAD_LEN);
         }
     }

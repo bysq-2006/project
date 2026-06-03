@@ -11,7 +11,7 @@
 #define OPENART_MAP_COLS_MAX        (12)
 #define OPENART_MAP_ROWS_MAX        (16)
 #define OPENART_MAP_CELL_MAX        (OPENART_MAP_COLS_MAX * OPENART_MAP_ROWS_MAX)
-#define OPENART_BOX_COUNT_MAX       (2)
+#define OPENART_BOX_COUNT_MAX       (10)
 
 #define OPENART_CELL_BACKGROUND     (0)
 #define OPENART_CELL_WALL           (1)
@@ -38,6 +38,7 @@ typedef struct
     int16 x10;
     int16 y10;
     uint16 angle10;
+    uint8 box_count;
     openart_box_t boxes[OPENART_BOX_COUNT_MAX];
 } openart_pose_t;
 

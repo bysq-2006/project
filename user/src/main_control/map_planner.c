@@ -144,6 +144,7 @@ uint16 main_control_find_pose_boxes(const openart_pose_t *pose,
     main_control_map_pos_t box_pos;
     uint16 count;
     uint16 j;
+    uint8 source_count;
     uint8 i;
     uint8 duplicated;
 
@@ -153,7 +154,13 @@ uint16 main_control_find_pose_boxes(const openart_pose_t *pose,
         return 0;
     }
 
-    for(i = 0; i < OPENART_BOX_COUNT_MAX; i++)
+    source_count = pose->box_count;
+    if(source_count > OPENART_BOX_COUNT_MAX)
+    {
+        source_count = OPENART_BOX_COUNT_MAX;
+    }
+
+    for(i = 0; i < source_count; i++)
     {
         if(!main_control_pose_box_to_map_pos(&pose->boxes[i], map, &box_pos))
         {

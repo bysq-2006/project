@@ -11,7 +11,7 @@ PACKET_TYPE_REQUEST = b"RQ"
 REQUEST_MAP = ord("M")
 POSE_SCALE = 10
 MAP_SIZE_SCALE = 10
-BOX_COUNT_MAX = 2
+BOX_COUNT_MAX = 10
 
 CELL_CODE = {
     "background": 0,
@@ -155,8 +155,13 @@ def build_car_pose_payload(valid, map_x, map_y, angle_deg, box_positions=None):
         _put_i16(payload, 0)
         _put_u16(payload, 0)
 
+    box_count = len(box_positions)
+    if box_count > BOX_COUNT_MAX:
+        box_count = BOX_COUNT_MAX
+    payload.append(box_count & 0xFF)
+
     for index in range(BOX_COUNT_MAX):
-        if index < len(box_positions) and box_positions[index] is not None:
+        if index < box_count and box_positions[index] is not None:
             payload.append(1)
             _put_i16(payload, _scaled_i16(box_positions[index][0]))
             _put_i16(payload, _scaled_i16(box_positions[index][1]))

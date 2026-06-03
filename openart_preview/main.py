@@ -19,7 +19,7 @@ DRAW_DEBUG = False
 PRINT_EVERY_N_FRAMES = 5
 # 每一种目标颜色最多保留多少个色块�?
 MAX_BLOBS_PER_COLOR = 6
-MAX_YELLOW_BOXES = 2
+MAX_YELLOW_BOXES = 10
 # 网格检测配置：只影响地图网格识别和发送出去的地图数据�?
 GRID_DETECT_CONFIG = {
     # 是否识别地图网格�?
