@@ -5,12 +5,13 @@
 #include "path_follow_control.h"
 #include <math.h>
 
-#define PATH_FOLLOW_PID_X_P                 (0.10f)
-#define PATH_FOLLOW_PID_X_I                 (0.0010f)
-#define PATH_FOLLOW_PID_X_D                 (0.0f)
-#define PATH_FOLLOW_PID_Y_P                 (0.08f)
-#define PATH_FOLLOW_PID_Y_I                 (0.0010f)
-#define PATH_FOLLOW_PID_Y_D                 (0.0f)
+#define PATH_FOLLOW_PID_X_P                 (0.2f)
+#define PATH_FOLLOW_PID_X_I                 (0.001f)
+#define PATH_FOLLOW_PID_X_D                 (1.2f)
+
+#define PATH_FOLLOW_PID_Y_P                 (0.15f)
+#define PATH_FOLLOW_PID_Y_I                 (0.001f)
+#define PATH_FOLLOW_PID_Y_D                 (1.2f)
 #define PATH_FOLLOW_PID_I_LIMIT             (1000.0f)
 
 typedef struct
@@ -50,11 +51,26 @@ static float path_follow_limit_float(float value, float min_value, float max_val
     return value;
 }
 
+static int8 path_follow_float_to_int8(float value)
+{
+    if(value > 0.0f)
+    {
+        return (int8)(value + 0.5f);
+    }
+
+    if(value < 0.0f)
+    {
+        return (int8)(value - 0.5f);
+    }
+
+    return 0;
+}
+
 static void path_follow_map_diff_to_car_diff(int16 map_dx,
                                              int16 map_dy,
                                              uint16 angle10,
-                                             int16 *car_dx,
-                                             int16 *car_dy)
+                                             float *car_dx,
+                                             float *car_dy)
 {
     float angle_rad;
     float sin_angle;
@@ -64,8 +80,8 @@ static void path_follow_map_diff_to_car_diff(int16 map_dx,
     sin_angle = sinf(angle_rad);
     cos_angle = cosf(angle_rad);
 
-    *car_dx = (int16)((float)map_dx * sin_angle + (float)map_dy * cos_angle);
-    *car_dy = (int16)((float)map_dx * cos_angle - (float)map_dy * sin_angle);
+    *car_dx = (float)map_dx * sin_angle + (float)map_dy * cos_angle;
+    *car_dy = (float)map_dx * cos_angle - (float)map_dy * sin_angle;
 }
 
 static void path_follow_shift_path(main_control_map_pos_t *path, uint16 *path_count)
@@ -194,28 +210,28 @@ static int8 path_follow_pid_calc_axis(path_follow_pid_axis_t *pid,
     pid->last_error = error;
     output = path_follow_limit_float(output, -limit, limit);
 
-    return (int8)output;
+    return path_follow_float_to_int8(output);
 }
 
-static void path_follow_calc_speed(int16 dx,
-                                   int16 dy,
+static void path_follow_calc_speed(float dx,
+                                   float dy,
                                    int8 x_speed,
                                    int8 y_speed,
                                    path_follow_output_t *output)
 {
     path_follow_prepare_pid(output->target_x10,
                             output->target_y10,
-                            (float)dx,
-                            (float)dy);
+                            dx,
+                            dy);
 
     output->x = path_follow_pid_calc_axis(&path_follow_pid_x,
-                                          (float)dx,
+                                          dx,
                                           PATH_FOLLOW_PID_X_P,
                                           PATH_FOLLOW_PID_X_I,
                                           PATH_FOLLOW_PID_X_D,
                                           x_speed);
     output->y = path_follow_pid_calc_axis(&path_follow_pid_y,
-                                          (float)dy,
+                                          dy,
                                           PATH_FOLLOW_PID_Y_P,
                                           PATH_FOLLOW_PID_Y_I,
                                           PATH_FOLLOW_PID_Y_D,
@@ -235,8 +251,8 @@ path_follow_output_t path_follow_update(const openart_pose_t *pose,
     int16 target_y10;
     int16 dx;
     int16 dy;
-    int16 car_dx;
-    int16 car_dy;
+    float car_dx;
+    float car_dy;
 
     if((0 == pose) || (0 == map) || (0 == path) || (0 == path_count) ||
        (!pose->valid) || (!map->valid))

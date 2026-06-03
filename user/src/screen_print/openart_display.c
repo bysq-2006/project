@@ -616,7 +616,7 @@ static void render_status_debug_text(const openart_pose_t *pose, const openart_m
     uint16 box_count;
     uint16 goal_count;
 
-    box_count = main_control_find_boxes(map, boxes, OPENART_MAP_CELL_MAX);
+    box_count = main_control_find_pose_boxes(pose, map, boxes, OPENART_MAP_CELL_MAX);
     goal_count = main_control_find_goals(map, goals, OPENART_MAP_CELL_MAX);
 
     sprintf(line, "S:%u V:%u X:%d Y:%d",

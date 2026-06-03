@@ -112,6 +112,112 @@ uint16 main_control_find_boxes(const openart_map_t *map, main_control_map_pos_t 
 }
 
 // 在地图中查找所有目标点坐标。
+static uint8 main_control_pose_box_to_map_pos(const openart_box_t *box,
+                                              const openart_map_t *map,
+                                              main_control_map_pos_t *box_pos)
+{
+    int32 col;
+    int32 row;
+
+    if((0 == box) || (0 == map) || (0 == box_pos) || (!box->valid) || (!map->valid) ||
+       (0 == map->cols) || (0 == map->rows) || (0 == map->width10) || (0 == map->height10) ||
+       (box->x10 < 0) || (box->y10 < 0) ||
+       ((int32)box->x10 >= (int32)map->width10) || ((int32)box->y10 >= (int32)map->height10))
+    {
+        return 0;
+    }
+
+    col = ((int32)box->x10 * map->cols) / map->width10;
+    row = ((int32)box->y10 * map->rows) / map->height10;
+
+    box_pos->x = (uint8)col;
+    box_pos->y = (uint8)row;
+
+    return 1;
+}
+
+uint16 main_control_find_pose_boxes(const openart_pose_t *pose,
+                                    const openart_map_t *map,
+                                    main_control_map_pos_t *boxes,
+                                    uint16 max_boxes)
+{
+    main_control_map_pos_t box_pos;
+    uint16 count;
+    uint16 j;
+    uint8 source_count;
+    uint8 i;
+    uint8 duplicated;
+
+    count = 0;
+    if((0 == pose) || (0 == map) || (0 == boxes) || (0 == max_boxes))
+    {
+        return 0;
+    }
+
+    source_count = pose->box_count;
+    if(source_count > OPENART_BOX_COUNT_MAX)
+    {
+        source_count = OPENART_BOX_COUNT_MAX;
+    }
+
+    for(i = 0; i < source_count; i++)
+    {
+        if(!main_control_pose_box_to_map_pos(&pose->boxes[i], map, &box_pos))
+        {
+            continue;
+        }
+
+        duplicated = 0;
+        for(j = 0; j < count; j++)
+        {
+            if((boxes[j].x == box_pos.x) && (boxes[j].y == box_pos.y))
+            {
+                duplicated = 1;
+                break;
+            }
+        }
+        if(duplicated)
+        {
+            continue;
+        }
+
+        if(count < max_boxes)
+        {
+            boxes[count] = box_pos;
+        }
+        count++;
+    }
+
+    return count;
+}
+
+void main_control_overlay_boxes(openart_map_t *map,
+                                const main_control_map_pos_t *boxes,
+                                uint16 box_count)
+{
+    uint16 i;
+    uint16 index;
+
+    if((0 == map) || (0 == boxes) || (!map->valid))
+    {
+        return;
+    }
+
+    for(i = 0; i < box_count; i++)
+    {
+        if((boxes[i].x >= map->cols) || (boxes[i].y >= map->rows))
+        {
+            continue;
+        }
+
+        index = main_control_map_index(map, boxes[i].x, boxes[i].y);
+        if(!main_control_is_box_cell(map->cells[index]))
+        {
+            map->cells[index] = OPENART_CELL_YELLOW_BOX;
+        }
+    }
+}
+
 uint16 main_control_find_goals(const openart_map_t *map, main_control_map_pos_t *goals, uint16 max_goals)
 {
     uint8 row;

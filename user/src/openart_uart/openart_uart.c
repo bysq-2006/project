@@ -14,6 +14,7 @@
 #define OPENART_POSE_BASE_PAYLOAD_LEN   (8)
 #define OPENART_POSE_BOX_COUNT_LEN      (1)
 #define OPENART_POSE_BOX_PAYLOAD_LEN    (5)
+
 #define OPENART_POSE_PAYLOAD_LEN        (OPENART_POSE_BASE_PAYLOAD_LEN + OPENART_POSE_BOX_COUNT_LEN + (OPENART_BOX_COUNT_MAX * OPENART_POSE_BOX_PAYLOAD_LEN))
 #define OPENART_MAP_HEADER_LEN      (8)
 #define OPENART_RX_BUFFER_SIZE      (512)
@@ -315,6 +316,7 @@ static uint8 openart_parse_pose_packet(openart_pose_t *pose)
     uint16 offset;
 
     if((OPENART_POSE_BASE_PAYLOAD_LEN != packet_len) &&
+
        (OPENART_POSE_PAYLOAD_LEN != packet_len))
     {
         return 0;

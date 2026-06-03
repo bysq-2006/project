@@ -338,6 +338,7 @@ uint8 main_control_build_best_plan(main_control_context_t *ctx,
                                    const openart_pose_t *pose,
                                    const openart_map_t *map)
 {
+    openart_map_t plan_map;
     main_control_map_pos_t car_pos;
     uint32 best_cost;
     uint16 i;
@@ -349,7 +350,8 @@ uint8 main_control_build_best_plan(main_control_context_t *ctx,
     }
 
     ctx->has_active_plan = 0;
-    ctx->box_count = main_control_find_boxes(map, ctx->boxes, OPENART_MAP_CELL_MAX);
+    plan_map = *map;
+    ctx->box_count = main_control_find_pose_boxes(pose, map, ctx->boxes, OPENART_MAP_CELL_MAX);
     ctx->goal_count = main_control_find_goals(map, ctx->goals, OPENART_MAP_CELL_MAX);
     ctx->plan_count = 0;
     ctx->best_plan_index = 0;
@@ -369,7 +371,9 @@ uint8 main_control_build_best_plan(main_control_context_t *ctx,
         return 0;
     }
 
-    if(!main_control_get_car_map_pos(pose, map, &car_pos))
+    main_control_overlay_boxes(&plan_map, ctx->boxes, ctx->box_count);
+
+    if(!main_control_get_car_map_pos(pose, &plan_map, &car_pos))
     {
         main_control_add_task(ctx, MAIN_CONTROL_STATE_ERROR);
         main_control_shift_task(ctx);
@@ -386,7 +390,7 @@ uint8 main_control_build_best_plan(main_control_context_t *ctx,
     for(i = 0; i < plan_count; i++)
     {
         ctx->plans[i].valid = 0;
-        if(main_control_build_box_plan(&ctx->plans[i], map, car_pos, ctx->boxes[i], ctx->goals, ctx->goal_count))
+        if(main_control_build_box_plan(&ctx->plans[i], &plan_map, car_pos, ctx->boxes[i], ctx->goals, ctx->goal_count))
         {
             ctx->plan_count++;
             if(ctx->plans[i].total_cost < best_cost)
