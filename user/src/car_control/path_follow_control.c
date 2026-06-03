@@ -5,13 +5,13 @@
 #include "path_follow_control.h"
 #include <math.h>
 
-#define PATH_FOLLOW_PID_X_P                 (0.05f)
-#define PATH_FOLLOW_PID_X_I                 (0.0002f)
-#define PATH_FOLLOW_PID_X_D                 (0.03f)
+#define PATH_FOLLOW_PID_X_P                 (0.2f)
+#define PATH_FOLLOW_PID_X_I                 (0.001f)
+#define PATH_FOLLOW_PID_X_D                 (1.2f)
 
-#define PATH_FOLLOW_PID_Y_P                 (0.04f)
-#define PATH_FOLLOW_PID_Y_I                 (0.0002f)
-#define PATH_FOLLOW_PID_Y_D                 (0.03f)
+#define PATH_FOLLOW_PID_Y_P                 (0.15f)
+#define PATH_FOLLOW_PID_Y_I                 (0.001f)
+#define PATH_FOLLOW_PID_Y_D                 (1.2f)
 #define PATH_FOLLOW_PID_I_LIMIT             (1000.0f)
 
 typedef struct

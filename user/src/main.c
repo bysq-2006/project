@@ -4,13 +4,12 @@
 #include "car_control/path_follow_control.h"
 #include "gyro_z_angle/gyro_z_angle.h"
 #include "main_control/main_control.h"
-#include "main_control/main_control_sync.h"
 #include "openart_uart/openart_uart.h"
 #include "screen_print/openart_display.h"
 
-#define MAIN_CAR_X_SPEED            (12)
-#define MAIN_CAR_Y_SPEED            (6)
-#define MAIN_CAR_ARRIVE_PERCENT     (30)
+#define MAIN_CAR_X_SPEED            (8)
+#define MAIN_CAR_Y_SPEED            (4)
+#define MAIN_CAR_ARRIVE_PERCENT     (20)
 #define MAIN_CONTROL_UPDATE_MS      (20)
 
 static void main_drive_path(main_control_context_t *ctx,
@@ -77,7 +76,6 @@ int main(void)
     openart_uart_init();
     openart_display_init();
     main_control_init(&main_control, MAIN_CONTROL_UPDATE_MS);
-    main_control_sync_reset();
 
     openart_uart_request_map();
 
@@ -88,7 +86,6 @@ int main(void)
 
         if(openart_pose.valid && openart_map.valid)
         {
-            main_control_sync_update(&openart_pose, &openart_map);
             main_control_update(&main_control, &openart_pose, &openart_map);
             main_drive_path(&main_control, &openart_pose, &openart_map);
         }

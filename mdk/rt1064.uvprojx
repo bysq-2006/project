@@ -454,11 +454,6 @@
               <FileType>1</FileType>
               <FilePath>..\user\src\main_control\main_control_plan.c</FilePath>
             </File>
-            <File>
-              <FileName>main_control_sync.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\user\src\main_control\main_control_sync.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -528,11 +523,6 @@
               <FileName>main_control_plan.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\user\src\main_control\main_control_plan.h</FilePath>
-            </File>
-            <File>
-              <FileName>main_control_sync.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\user\src\main_control\main_control_sync.h</FilePath>
             </File>
           </Files>
         </Group>
