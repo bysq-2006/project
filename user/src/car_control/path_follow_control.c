@@ -5,8 +5,6 @@
 #include "path_follow_control.h"
 #include <math.h>
 
-#define PATH_FOLLOW_SIDE_GAIN_PERCENT      (40)
-
 static int16 path_follow_abs_int16(int16 value)
 {
     return (value >= 0) ? value : -value;
@@ -22,17 +20,6 @@ static int8 path_follow_apply_sign(int16 diff, int8 value)
     if(diff < 0)
     {
         return (int8)-value;
-    }
-
-    return value;
-}
-
-static int32 path_follow_scale_side_value(int32 value)
-{
-    value = value * PATH_FOLLOW_SIDE_GAIN_PERCENT / 100;
-    if(value < 0)
-    {
-        value = 0;
     }
 
     return value;
@@ -185,14 +172,20 @@ static void path_follow_calc_speed(int16 dx,
         // x 方向差距更大时，让 x 轴跑满给定速度，y 轴按直线方向比例缩小。
         x_value = max_x;
         y_value = ((int32)abs_dy * max_x) / abs_dx;
-        y_value = path_follow_scale_side_value(y_value);
+        if(0 == y_value)
+        {
+            y_value = 1;
+        }
     }
     else
     {
         // y 方向差距更大时，让 y 轴跑满给定速度，x 轴按直线方向比例缩小。
         y_value = max_y;
         x_value = ((int32)abs_dx * max_y) / abs_dy;
-        x_value = path_follow_scale_side_value(x_value);
+        if(0 == x_value)
+        {
+            x_value = 1;
+        }
     }
 
     output->x = path_follow_apply_sign(dx, (int8)x_value);
