@@ -21,6 +21,13 @@ typedef struct
 #define MAIN_CONTROL_ASTAR_STATE_MAX    (OPENART_MAP_CELL_MAX * MAIN_CONTROL_ASTAR_DIR_COUNT)
 
 uint16 main_control_find_boxes(const openart_map_t *map, main_control_map_pos_t *boxes, uint16 max_boxes);
+uint16 main_control_find_pose_boxes(const openart_pose_t *pose,
+                                    const openart_map_t *map,
+                                    main_control_map_pos_t *boxes,
+                                    uint16 max_boxes);
+void main_control_overlay_boxes(openart_map_t *map,
+                                const main_control_map_pos_t *boxes,
+                                uint16 box_count);
 uint16 main_control_find_goals(const openart_map_t *map, main_control_map_pos_t *goals, uint16 max_goals);
 uint8 main_control_get_car_map_pos(const openart_pose_t *pose, const openart_map_t *map, main_control_map_pos_t *car_pos);
 uint32 main_control_astar_find_path(const openart_map_t *map,

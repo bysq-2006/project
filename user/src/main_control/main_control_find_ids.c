@@ -240,16 +240,20 @@ uint8 main_control_find_ids_main(main_control_context_t *ctx,
                                  const openart_pose_t *pose,
                                  const openart_map_t *map)
 {
+    openart_map_t scan_map;
+
     if((0 == ctx) || (0 == pose) || (0 == map))
     {
         return 0;
     }
 
-    ctx->box_count = main_control_find_boxes(map, ctx->boxes, OPENART_MAP_CELL_MAX);
+    scan_map = *map;
+    ctx->box_count = main_control_find_pose_boxes(pose, map, ctx->boxes, OPENART_MAP_CELL_MAX);
     ctx->goal_count = main_control_find_goals(map, ctx->goals, OPENART_MAP_CELL_MAX);
+    main_control_overlay_boxes(&scan_map, ctx->boxes, ctx->box_count);
 
-    if(main_control_find_ids_build_task(ctx, pose, map, ctx->goals, ctx->goal_count, 1) ||
-       main_control_find_ids_build_task(ctx, pose, map, ctx->boxes, ctx->box_count, 0))
+    if(main_control_find_ids_build_task(ctx, pose, &scan_map, ctx->goals, ctx->goal_count, 1) ||
+       main_control_find_ids_build_task(ctx, pose, &scan_map, ctx->boxes, ctx->box_count, 0))
     {
         ctx->has_active_plan = 0;
         main_control_add_task(ctx, MAIN_CONTROL_STATE_RUN_PATH);

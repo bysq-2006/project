@@ -63,12 +63,16 @@ static uint8 main_control_count_id_cell(const openart_map_t *map,
 }
 
 static void main_control_scan_id_local(main_control_context_t *ctx,
+                                       const openart_pose_t *pose,
                                        openart_map_t *map)
 {
+    main_control_map_pos_t boxes[OPENART_BOX_COUNT_MAX];
     uint16 index;
+    uint16 box_count;
+    uint16 i;
     uint8 id;
 
-    if((0 == ctx) || (0 == map) || (!map->valid) ||
+    if((0 == ctx) || (0 == pose) || (0 == map) || (!map->valid) ||
        (ctx->active_goal.x >= map->cols) || (ctx->active_goal.y >= map->rows))
     {
         return;
@@ -84,6 +88,19 @@ static void main_control_scan_id_local(main_control_context_t *ctx,
     {
         id = main_control_count_id_cell(map, OPENART_CELL_BOX_ID_BASE, OPENART_CELL_BOX_ID_MAX);
         map->cells[index] = OPENART_CELL_BOX_ID_BASE + id;
+    }
+    else
+    {
+        box_count = main_control_find_pose_boxes(pose, map, boxes, OPENART_BOX_COUNT_MAX);
+        for(i = 0; i < box_count; i++)
+        {
+            if((boxes[i].x == ctx->active_goal.x) && (boxes[i].y == ctx->active_goal.y))
+            {
+                id = main_control_count_id_cell(map, OPENART_CELL_BOX_ID_BASE, OPENART_CELL_BOX_ID_MAX);
+                map->cells[index] = OPENART_CELL_BOX_ID_BASE + id;
+                break;
+            }
+        }
     }
 
     map->updated = 1;
@@ -228,6 +245,7 @@ main_control_output_t main_control_update(main_control_context_t *ctx,
         case MAIN_CONTROL_STATE_SCAN_ID:
             // 本地模拟时先直接给当前目标格子一个编号，后面再替换成摄像头结果。
             main_control_scan_id_local(ctx, map);
+            main_control_scan_id_local(ctx, pose, map);
             main_control_shift_task(ctx);
             break;
 
