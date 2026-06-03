@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 #define MAIN_CONTROL_UPDATE_MS      (20)
-#define MAIN_HEADING_HOLD_ANGLE     (90)
+#define MAIN_HEADING_HOLD_ANGLE     (0)
 
 static void main_format_fixed3(char *buffer, int32 value1000)
 {

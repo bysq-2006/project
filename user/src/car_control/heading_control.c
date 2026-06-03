@@ -6,12 +6,21 @@
 #include "car_control.h"
 #include "../gyro_z_angle/gyro_z_angle.h"
 
-#define HEADING_CONTROL_P                   (2.80f)
+// P：角度误差比例项，越大修正越快，过大容易抖动或过冲。
+#define HEADING_CONTROL_P                   (2.30f)
+// I：累计误差积分项，用来消除长期偏差，过大容易越积越猛。
 #define HEADING_CONTROL_I                   (0.0280f)
+// D：误差变化微分项，用来抑制过冲，过大容易对噪声敏感。
 #define HEADING_CONTROL_D                   (14.0f)
+// I_LIMIT：积分项累计上限，限制 I 项过度累积。
 #define HEADING_CONTROL_I_LIMIT             (178.6f)
+// W_LIMIT：最终旋转输出最大值，限制给底盘的最大转向力度。
 #define HEADING_CONTROL_W_LIMIT             (100.0f)
+// W_MIN：最终旋转输出最小值，用来克服电机小占空比不动的问题，0 表示关闭。
+#define HEADING_CONTROL_W_MIN               (8.0f)
+// OUTPUT_GAIN：PID 总输出倍率，整体放大或缩小修正力度。
 #define HEADING_CONTROL_OUTPUT_GAIN         (1.0f)
+// OUTPUT_DIR：PID 输出方向
 #define HEADING_CONTROL_OUTPUT_DIR          (1.0f)
 
 // 注意单位不是弧度，也不是角度
@@ -32,6 +41,16 @@ static void heading_sensor_read_raw(void)
 // 限制旋转输出范围
 static int8 heading_limit_w(float w)
 {
+    if((w > 0.0f) && (w < HEADING_CONTROL_W_MIN))
+    {
+        return (int8)HEADING_CONTROL_W_MIN;
+    }
+
+    if((w < 0.0f) && (w > -HEADING_CONTROL_W_MIN))
+    {
+        return (int8)-HEADING_CONTROL_W_MIN;
+    }
+
     if(w > HEADING_CONTROL_W_LIMIT)
     {
         return (int8)HEADING_CONTROL_W_LIMIT;
