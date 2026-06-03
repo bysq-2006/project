@@ -8,6 +8,7 @@ PACKET_HEADER = b"\xAA\x55"
 PACKET_TYPE_POSE = b"PO"
 PACKET_TYPE_MAP = b"MP"
 PACKET_TYPE_REQUEST = b"RQ"
+PACKET_TYPE_YELLOW_BOX = b"YB"
 REQUEST_MAP = ord("M")
 POSE_SCALE = 10
 MAP_SIZE_SCALE = 10
@@ -192,6 +193,34 @@ def build_map_payload(valid, grid_map, map_width, map_height, default_cols, defa
 
     _packet_seq = (_packet_seq + 1) & 0xFF
     return payload
+
+
+
+def build_yellow_boxes_payload(yellow_boxes):
+    global _packet_seq
+
+    count = len(yellow_boxes)
+    if count > 255:
+        count = 255
+        yellow_boxes = yellow_boxes[:255]
+
+    payload = bytearray()
+    payload.append(_packet_seq & 0xFF)
+    payload.append(count & 0xFF)
+
+    for bx, by in yellow_boxes:
+        _put_i16(payload, _scaled_i16(bx))
+        _put_i16(payload, _scaled_i16(by))
+
+    _packet_seq = (_packet_seq + 1) & 0xFF
+    return payload
+
+
+def send_yellow_boxes(yellow_boxes):
+    if not yellow_boxes:
+        return
+    payload = build_yellow_boxes_payload(yellow_boxes)
+    return _send_packet(PACKET_TYPE_YELLOW_BOX, payload)
 
 
 def send_map(valid, grid_map, map_width, map_height, default_cols, default_rows):

@@ -101,10 +101,15 @@ void openart_uart_init(void)
 }
 
 
-void openart_uart_clear_updated(openart_pose_t *pose, openart_map_t *map)
+void openart_uart_clear_updated(openart_pose_t *pose, openart_map_t *map,
+                             openart_yellow_boxes_t *yellow_boxes)
 {
     pose->updated = 0;
     map->updated = 0;
+    if(yellow_boxes)
+    {
+        yellow_boxes->updated = 0;
+    }
 }
 
 
@@ -305,7 +310,44 @@ static uint8 openart_parse_map_packet(openart_map_t *map)
 }
 
 
-static void openart_handle_packet(openart_pose_t *pose, openart_map_t *map)
+static uint8 openart_parse_yellow_boxes_packet(openart_yellow_boxes_t *boxes)
+{
+    uint8 count;
+    uint8 i;
+
+    if(packet_len < 2)
+    {
+        return 0;
+    }
+
+    boxes->seq = packet_payload[0];
+    count = packet_payload[1];
+
+    if(count > OPENART_YELLOW_BOX_MAX)
+    {
+        count = OPENART_YELLOW_BOX_MAX;
+    }
+
+    if(packet_len != (uint16)(2 + count * 4))
+    {
+        return 0;
+    }
+
+    boxes->valid = (count > 0) ? 1 : 0;
+    boxes->count = count;
+    boxes->updated = 1;
+
+    for(i = 0; i < count; i++)
+    {
+        boxes->x[i] = openart_get_i16(&packet_payload[2 + i * 4]);
+        boxes->y[i] = openart_get_i16(&packet_payload[2 + i * 4 + 2]);
+    }
+
+    return 1;
+}
+
+static void openart_handle_packet(openart_pose_t *pose, openart_map_t *map,
+                               openart_yellow_boxes_t *yellow_boxes)
 {
     if((OPENART_PACKET_POSE_0 == packet_type0) &&
        (OPENART_PACKET_POSE_1 == packet_type1))
@@ -331,6 +373,19 @@ static void openart_handle_packet(openart_pose_t *pose, openart_map_t *map)
             openart_uart_status.format_errors++;
         }
     }
+    else if((OPENART_PACKET_YELLOW_0 == packet_type0) &&
+            (OPENART_PACKET_YELLOW_1 == packet_type1))
+    {
+        if(openart_parse_yellow_boxes_packet(yellow_boxes))
+        {
+            openart_uart_status.map_packets++;
+        }
+        else
+        {
+            openart_uart_status.format_errors++;
+        }
+    }
+
     else
     {
         openart_uart_status.format_errors++;
@@ -338,10 +393,11 @@ static void openart_handle_packet(openart_pose_t *pose, openart_map_t *map)
 }
 
 
-void openart_uart_update(openart_pose_t *pose, openart_map_t *map)
+void openart_uart_update(openart_pose_t *pose, openart_map_t *map,
+                      openart_yellow_boxes_t *yellow_boxes)
 {
     while(openart_try_receive_packet())
     {
-        openart_handle_packet(pose, map);
+        openart_handle_packet(pose, map, yellow_boxes);
     }
 }

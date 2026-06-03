@@ -27,6 +27,10 @@
 #define OPENART_CELL_GOAL           (2)
 // 地图格子数值：黄色箱子。
 #define OPENART_CELL_YELLOW_BOX     (3)
+
+#define OPENART_PACKET_YELLOW_0     ('Y')
+#define OPENART_PACKET_YELLOW_1     ('B')
+
 // 带编号目标点：20-29 对应编号 0-9。
 #define OPENART_CELL_GOAL_ID_BASE   (20)
 #define OPENART_CELL_GOAL_ID_MAX    (29)
@@ -35,6 +39,19 @@
 #define OPENART_CELL_BOX_ID_MAX     (39)
 // 地图格子数值：未知或不匹配结果。
 #define OPENART_CELL_UNKNOWN        (255)
+
+// 最大黄色箱子数量（砖块一般不超过10，这里留16个余量）
+#define OPENART_YELLOW_BOX_MAX  (16)
+
+typedef struct
+{
+    uint8 valid;
+    uint8 updated;
+    uint8 seq;
+    uint8 count;
+    int16 x[OPENART_YELLOW_BOX_MAX];
+    int16 y[OPENART_YELLOW_BOX_MAX];
+} openart_yellow_boxes_t;
 
 typedef struct
 {
@@ -98,10 +115,12 @@ void openart_uart_init(void);
 // 向 OpenART 请求发送地图数据包
 void openart_uart_request_map(void);
 // 非阻塞 UART 解析函数，建议在主循环中反复调用。
-void openart_uart_update(openart_pose_t *pose, openart_map_t *map);
+void openart_uart_update(openart_pose_t *pose, openart_map_t *map,
+                         openart_yellow_boxes_t *yellow_boxes);
 // 将待处理的 UART 数据搬运到软件接收缓冲区。
 void openart_uart_interrupt_handler(void);
 // 只清除 updated 标志，不清除已经接收到的数据。
-void openart_uart_clear_updated(openart_pose_t *pose, openart_map_t *map);
+void openart_uart_clear_updated(openart_pose_t *pose, openart_map_t *map,
+                                openart_yellow_boxes_t *yellow_boxes);
 
 #endif

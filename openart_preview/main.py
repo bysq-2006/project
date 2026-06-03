@@ -9,7 +9,7 @@ import cmm
 from blob_detect import detect_targets
 from draw_utils import draw_blob, draw_grid, draw_grid_results
 from map_detect import build_confident_map
-from openart_uart import is_map_request, receive_packet, send_detected_car, send_detected_map
+from openart_uart import is_map_request, receive_packet, send_detected_car, send_detected_map, send_yellow_boxes
 
 
 # OpenMV �?LAB 阈值格式：（L最小，L最大，A最小，A最大，B最小，B最大）�?
@@ -31,7 +31,6 @@ GRID_DETECT_CONFIG = {
     "sample_ms": 1000,
     # 网格分类用的颜色占比规则，格式：（名字，LAB阈值，最小占比）�?
     "color_ratios": (
-        ("yellow_box", ((80, 100, -25, 5, 70, 110),), 0.20),
         ("wall", ((0, 100, -14, 70, -74, 25),), 0.25),
         ("goal", ((50, 72, 66, 104, -72, -27),), 0.25),
         ("background", ((32, 52, 33, 72, -106, -75),), 0.25),
@@ -80,6 +79,7 @@ TARGETS = (
     # �?RGB 采样值换算得到的初始 LAB 阈值�?
     ("cyan_marker", ((63, 98, -71, 2, -58, 26),), (0, 255, 255), 25),
     ("green_marker", ((71, 97, -93, -32, -16, 89),), (0, 255, 0), 25),
+    ("yellow_box", ((80, 100, -25, 5, 70, 110),), (255, 255, 0), 100),
 )
 
 
@@ -158,6 +158,14 @@ while True:
         if name in ("cyan_marker", "green_marker") and name not in marker_centers:
             marker_centers[name] = (blob.cx(), blob.cy())
 
+    # yellow boxes map coords
+    yellow_boxes = []
+    for name, blob, target_color in detections:
+        if name == "yellow_box" and detect_roi is not None:
+            bx = blob.cx() - detect_roi[0]
+            by = blob.cy() - detect_roi[1]
+            yellow_boxes.append((bx, by))
+
     # 检测小车朝向和位置
     angle = None
     angle_points = None
@@ -218,6 +226,7 @@ while True:
     if should_print:
         print("fps:", clock.fps())
     send_detected_car(car_map_pos, angle)
+    send_yellow_boxes(yellow_boxes)
 
     if not map_sent:
         send_detected_map(last_grid_map, detect_roi,
