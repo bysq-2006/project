@@ -17,7 +17,7 @@ static void main_drive_path(main_control_context_t *ctx,
                             const openart_pose_t *pose,
                             const openart_map_t *map)
 {
-    path_follow_output_t follow = {0};
+    path_follow_output_t follow;
 
     if((0 == ctx) || (0 == pose) || (0 == map))
     {
