@@ -10,8 +10,24 @@
 
 #define MAIN_CAR_X_SPEED            (18)
 #define MAIN_CAR_Y_SPEED            (12)
-#define MAIN_CAR_ARRIVE_PERCENT     (40)
+#define MAIN_CAR_ARRIVE_PERCENT     (60)
 #define MAIN_CONTROL_UPDATE_MS      (20)
+#define MAIN_START_RIGHT_SPEED      (18)
+#define MAIN_START_RIGHT_MS         (1000)
+
+static void main_start_move_right(void)
+{
+    uint16 elapsed_ms;
+
+    for(elapsed_ms = 0; elapsed_ms < MAIN_START_RIGHT_MS; elapsed_ms += MAIN_CONTROL_UPDATE_MS)
+    {
+        gyro_z_angle_update(MAIN_CONTROL_UPDATE_MS);
+        heading_sensor_update(MAIN_START_RIGHT_SPEED, 0, 0);
+        system_delay_ms(MAIN_CONTROL_UPDATE_MS);
+    }
+
+    car_stop();
+}
 
 static void main_drive_path(main_control_context_t *ctx,
                             const openart_pose_t *pose,
@@ -74,6 +90,8 @@ int main(void)
     car_init();
     heading_sensor_init();
     gyro_z_angle_init();
+    main_start_move_right();
+
     openart_uart_init();
     openart_display_init();
     main_control_init(&main_control, MAIN_CONTROL_UPDATE_MS);

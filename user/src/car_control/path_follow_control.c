@@ -4,10 +4,10 @@
 
 #include "path_follow_control.h"
 
-#define PATH_FOLLOW_PID_X_P                 (0.16f)
+#define PATH_FOLLOW_PID_X_P                 (0.18f)
 #define PATH_FOLLOW_PID_X_I                 (0.0010f)
 #define PATH_FOLLOW_PID_X_D                 (0.1f)
-#define PATH_FOLLOW_PID_Y_P                 (0.09f)
+#define PATH_FOLLOW_PID_Y_P                 (0.12f)
 #define PATH_FOLLOW_PID_Y_I                 (0.0010f)
 #define PATH_FOLLOW_PID_Y_D                 (0.1f)
 #define PATH_FOLLOW_PID_I_LIMIT             (1000.0f)
