@@ -9,11 +9,27 @@
 #include "screen_print/openart_display.h"
 
 #define MAIN_CAR_X_SPEED            (18)
-#define MAIN_CAR_Y_SPEED            (12)
+#define MAIN_CAR_Y_SPEED            (10)
 #define MAIN_CAR_ARRIVE_PERCENT     (60)
 #define MAIN_CONTROL_UPDATE_MS      (20)
+#define MAIN_START_STABLE_MS        (500)
 #define MAIN_START_RIGHT_SPEED      (18)
 #define MAIN_START_RIGHT_MS         (1000)
+#define MAIN_RUN_TOTAL_COUNT        (2)
+#define MAIN_MAP_REQUEST_MS         (100)
+
+static void main_start_wait_stable(void)
+{
+    uint16 elapsed_ms;
+
+    car_stop();
+    for(elapsed_ms = 0; elapsed_ms < MAIN_START_STABLE_MS; elapsed_ms += MAIN_CONTROL_UPDATE_MS)
+    {
+        gyro_z_angle_update(MAIN_CONTROL_UPDATE_MS);
+        system_delay_ms(MAIN_CONTROL_UPDATE_MS);
+    }
+    gyro_z_angle_reset();
+}
 
 static void main_start_move_right(void)
 {
@@ -27,6 +43,79 @@ static void main_start_move_right(void)
     }
 
     car_stop();
+}
+
+static void main_clear_openart_data(openart_pose_t *pose, openart_map_t *map)
+{
+    if(0 != pose)
+    {
+        pose->valid = 0;
+        pose->updated = 0;
+    }
+
+    if(0 != map)
+    {
+        map->valid = 0;
+        map->updated = 0;
+    }
+}
+
+static void main_restart_run(main_control_context_t *ctx,
+                             openart_pose_t *pose,
+                             openart_map_t *map)
+{
+    main_start_wait_stable();
+    main_start_move_right();
+
+    main_control_init(ctx, MAIN_CONTROL_UPDATE_MS);
+    main_control_sync_reset();
+    main_clear_openart_data(pose, map);
+    openart_uart_request_map();
+}
+
+static void main_request_map_until_valid(const openart_map_t *map,
+                                         uint16 *elapsed_ms)
+{
+    if((0 == map) || (0 == elapsed_ms))
+    {
+        return;
+    }
+
+    if(map->valid)
+    {
+        *elapsed_ms = 0;
+        return;
+    }
+
+    if(*elapsed_ms >= MAIN_MAP_REQUEST_MS)
+    {
+        openart_uart_request_map();
+        *elapsed_ms = 0;
+    }
+    else
+    {
+        *elapsed_ms += MAIN_CONTROL_UPDATE_MS;
+    }
+}
+
+static void main_handle_finished(main_control_context_t *ctx,
+                                 openart_pose_t *pose,
+                                 openart_map_t *map,
+                                 uint8 *finished_count)
+{
+    if((0 == ctx) || (0 == finished_count) ||
+       (MAIN_CONTROL_STATE_FINISHED != ctx->state[0]) ||
+       (*finished_count >= MAIN_RUN_TOTAL_COUNT))
+    {
+        return;
+    }
+
+    car_stop();
+    (*finished_count)++;
+    if(*finished_count < MAIN_RUN_TOTAL_COUNT)
+    {
+        main_restart_run(ctx, pose, map);
+    }
 }
 
 static void main_drive_path(main_control_context_t *ctx,
@@ -83,6 +172,8 @@ int main(void)
     static main_control_context_t main_control;
     openart_pose_t openart_pose = {0};
     openart_map_t openart_map = {0};
+    uint8 finished_count = 0;
+    uint16 map_request_elapsed_ms = 0;
 
     clock_init(SYSTEM_CLOCK_600M);
     system_delay_ms(100);
@@ -90,6 +181,7 @@ int main(void)
     car_init();
     heading_sensor_init();
     gyro_z_angle_init();
+    main_start_wait_stable();
     main_start_move_right();
 
     openart_uart_init();
@@ -103,12 +195,14 @@ int main(void)
     {
         gyro_z_angle_update(MAIN_CONTROL_UPDATE_MS);
         openart_uart_update(&openart_pose, &openart_map);
+        main_request_map_until_valid(&openart_map, &map_request_elapsed_ms);
 
         if(openart_pose.valid && openart_map.valid)
         {
             main_control_sync_update(&openart_pose, &openart_map);
             main_control_update(&main_control, &openart_pose, &openart_map);
             main_drive_path(&main_control, &openart_pose, &openart_map);
+            main_handle_finished(&main_control, &openart_pose, &openart_map, &finished_count);
         }
         else
         {
